@@ -1,0 +1,43 @@
+% PEG-like monadic parser combinator
+
+@require: list
+@require: option
+@import: option2
+
+type 's 'a parser = 's -> ('a * 's) option
+
+module Parser : sig
+  % type 's 'a parser
+  val return : 'a -> 's 'a parser
+  val bind : 's 'a parser -> ('a -> 's 'b parser) -> 's 'b parser
+  val (>>=) : 's 'a parser -> ('a -> 's 'b parser) -> 's 'b parser
+  val (>>) : 's 'a parser -> 's 'b parser -> 's 'b parser
+  val fail : 's 'a parser
+  val alt : 's 'a parser -> 's 'a parser -> 's 'a parser
+  val (<|>) : 's 'a parser -> 's 'a parser -> 's 'a parser
+  val many1 : 's 'a parser -> 's ('a list) parser
+  val many : 's 'a parser -> 's ('a list) parser
+  val sepby1 : 's 'a parser -> 's 'b parser -> 's ('b list) parser
+  val sepby : 's 'a parser -> 's 'b parser -> 's ('b list) parser
+  val lookahead : ('s -> bool) -> 's unit parser
+end = struct
+  let return x s = Some (x, s)
+  let bind p f s = p s |> Option.map (fun (x,s) -> f x s) |> Option2.join
+  let (>>=) = bind
+  let (>>) = fun p q -> p >>= (fun _ -> q)
+  let fail s = None
+  let alt p q s = match p s with
+  | None -> q s
+  | Some x -> Some x
+  let (<|>) = alt
+
+  let-rec many1 p =
+    p >>= (fun x -> (many1 p <|> return []) >>= (fun xs -> return (x :: xs)))
+  let many p = many1 p <|> return []
+
+  let-rec sepby1 sep p =
+    p >>= (fun x -> (many (sep >> p) <|> return []) >>= (fun xs -> return (x :: xs)))
+  let sepby sep p = sepby1 sep p <|> return []
+    
+  let lookahead f s = if f s then Some ((), s) else None
+end

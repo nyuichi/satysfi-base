@@ -1,0 +1,5 @@
+@import: base0
+@require: standalone
+
+let id x = x
+let dummy-main = standalone '<>

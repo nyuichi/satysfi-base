@@ -1,0 +1,9 @@
+module Error : sig
+  val error : string -> 'a
+end = struct
+  type 'a 'b result =
+    | Ok of 'a
+    | Error of 'b
+
+  let error msg = let (Ok x) = Error msg in x % hope the runtime print the value stored in msg
+end

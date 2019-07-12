@@ -1,0 +1,17 @@
+@require: list
+
+module List2 : sig
+  val intersperse : 'a -> 'a list -> 'a list
+  val find : ('a -> bool) -> 'a list -> 'a option
+end = struct
+  let intersperse s xs =
+    match xs with
+    | [] -> []
+    | (x :: xs) ->
+      x :: List.concat (xs |> List.map (fun x -> [s; x]))
+
+  let-rec find f xs =
+    match xs with
+    | [] -> None
+    | x :: xs -> if f x then Some x else find f xs
+end

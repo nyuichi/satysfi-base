@@ -1,0 +1,54 @@
+@require: list
+@import: char
+
+module String : sig
+  val equal : string -> string -> bool
+  val length : string -> int
+  val sub : string -> int -> int -> string
+  val of-bool : bool -> string
+  val of-int : int -> string
+  val of-float : float -> string
+  val of-empty : string
+  val of-codepoints : int list -> string
+  val of-char : Char.t -> string
+  val append : string -> string -> string
+  val concat : string list -> string
+  val empty : string -> bool
+  val starts-with : string -> string -> bool
+  val ends-with : string -> string -> bool
+  val to-list : string -> Char.t list
+end = struct
+  let equal = string-same
+  let length = string-length
+  let sub = string-sub
+  let of-bool b = if b then `true` else `false`
+  let of-int = arabic
+  let of-float = show-float
+  let of-empty = ` `
+  let of-codepoints = string-unexplode
+  let of-char = Char.to-string
+  let append s1 s2 = s1 ^ s2
+
+  let-rec concat xs = match xs with
+  | [] -> of-empty
+  | s :: xs -> s ^ concat xs
+
+  let empty s =
+    equal s of-empty
+
+  let starts-with p s =
+    let s-len = length s in
+    let p-len = length p in
+    s-len >= p-len && equal (sub s 0 p-len) p
+
+  let ends-with p s =
+    let s-len = length s in
+    let p-len = length p in
+    s-len >= p-len && equal (sub s (s-len - 1 - p-len) p-len) p
+
+  let to-list s =
+    let-rec go i acc = (match i with
+    | 0 -> acc
+    | _ -> go (i - 1) (Char.at (i - 1) s :: acc)) in
+    go (length s) []
+end

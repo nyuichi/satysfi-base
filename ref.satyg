@@ -1,0 +1,19 @@
+module Ref : sig
+  type 'a t
+  val make : 'a -> 'a t
+  val get : 'a t -> 'a
+  val set : 'a t -> 'a -> unit
+end = struct
+  type 'a t = Ref of (unit -> 'a) * ('a -> unit)
+
+  let make v =
+    let-mutable x <- v in
+    Ref ((fun () -> !x), (fun y -> (x <- y)))
+
+  let get (Ref (getter, _)) =
+    getter ()
+
+  let set (Ref (_, setter)) v =
+    setter v
+end
+  

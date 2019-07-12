@@ -1,0 +1,77 @@
+@require: stdjareport
+@require: list
+@import: ../ref
+@import: ../string
+@import: ../debug
+@import: ../error
+@import: ../array
+@import: ../regexp
+@import: ../list2
+@import: ../option2
+@import: ../lexer
+@import: ../parser
+
+open RegExp in
+
+let r = Ref.make 1 in
+let () = Ref.get r |> String.of-int |> Debug.log in
+let () = Ref.set r 2 in
+let () = Ref.get r |> String.of-int |> Debug.print in
+let () = Debug.print (String.concat [`a`; `b`; `c`;]) in
+let () = Debug.print (String.of-bool (String.empty `  `)) in
+let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.print)) in
+%let _ = Error.error `hoge` in
+let a = Array.make 3 42 in
+let () = a |> Array.get 0 |> String.of-int |> Debug.log in
+let () = a |> Array.set 0 43 in
+let () = a |> Array.get 0 |> String.of-int |> Debug.log in
+%let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
+
+let print-result r =
+  r |> List.iter (fun s -> (
+    match s with
+    | None -> Debug.log `None`
+    | Some (i, s) -> Debug.log (`Some(` ^ String.of-int i ^ `, "` ^ s ^ `")`)
+  )) in
+
+%let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
+%let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
+let char-a = char (Char.make `a`) in
+let char-b = char (Char.make `b`) in
+let char-c = char (Char.make `c`) in
+let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
+let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
+let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in
+let re1 = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
+let (iseq1, _) = compile re1 in
+let () = print-iseq iseq1 in
+let ss = exec re1 `aabbb` |> print-result in
+let re3 = many (many char-a) in
+let (iseq3, _) = compile (seq (many-ng any) (group re3)) in
+let () = print-iseq iseq3 in
+let () = `aaaaa` |> test re3 |> String.of-bool |> Debug.log in
+let re4 = seq (group (seq any (char (Char.make `e`)))) eof in
+let () = `the apple` |> exec re4 |> print-result in
+let re6 = sequence [bol; string `apple`; eol] in
+let () = `the apple
+apple
+leapple` |> exec re6 |> print-result in
+let () = exec spaces #`  asdf`# |> print-result in
+% % backreference
+% let re2 = seq (group (alt (string `cat`) (string `dog`))) (ref 1) in
+% let () = `dogdog` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `dogcat` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `catcat` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `aaadogdogbbb` |> test re2 |> String.of-bool |> Debug.log in
+% % aaaba vs (a*)a*b\1
+% let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
+% let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
+
+let rules = [
+  (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
+  (| kind = `whitespace`; regexp = spaces |);
+] in
+let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
+let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
+
+dummy-main

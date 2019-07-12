@@ -1,0 +1,21 @@
+module Char : sig
+  type t
+  val equal : t -> t -> bool
+  val of-codepoint : int -> t
+  val newline : t
+  val tab : t
+  val space : t
+  val to-string : t -> string
+  val at : int -> string -> t
+  val make : string -> t % unsafe but useful
+end = struct
+  type t = string
+  let equal = string-same
+  let of-codepoint c = string-unexplode [c]
+  let newline = of-codepoint 10
+  let tab = of-codepoint 9
+  let space = of-codepoint 32
+  let to-string c = c
+  let at i s = string-sub s i 1
+  let make = at 0
+end

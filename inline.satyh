@@ -1,0 +1,20 @@
+% module for inline-boxes
+@require: list
+
+module Inline : sig
+  val nil : inline-boxes
+  val append : inline-boxes -> inline-boxes -> inline-boxes
+  val concat : inline-boxes list -> inline-boxes
+  val skip : length -> inline-boxes
+  val glue : length -> length -> length -> inline-boxes
+  val fil : inline-boxes
+  val of-math : math -> context -> inline-boxes
+end = struct
+  let nil = inline-nil
+  let append ib1 ib2 = ib1 ++ ib2
+  let concat ibs = List.fold-right append nil ibs
+  let skip = inline-skip
+  let glue = inline-glue
+  let fil = inline-fil
+  let of-math m ctx = embed-math ctx m
+end
