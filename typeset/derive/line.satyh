@@ -1,0 +1,36 @@
+@require: gr
+
+type derivation-line = context -> point -> length -> length -> graphics list
+
+module PoheDeriveLine : sig
+
+    val standard-line : derivation-line
+    val no-line       : derivation-line
+    val dotted-line   : length -> length -> derivation-line
+
+end = struct
+    let standard-line = fun ctx pt width thickness -> (
+        let color = get-text-color ctx in
+        match pt with
+        | (x, y) ->
+            [ fill color (Gr.rectangle pt (x +' width, y +' thickness)) ]
+    )
+
+    let no-line = fun _ _ _ _ -> []
+
+    let dotted-line = fun dotlen spacing ->
+        (fun ctx pt width thickness -> (
+            let color = get-text-color ctx in
+            let-rec write-dots x y len =
+                if len <' dotlen then
+                    [fill color (Gr.rectangle (x, y) (x +' len, y +' thickness))]
+                else if len <' (dotlen +' spacing) then
+                    [fill color (Gr.rectangle (x, y) (x +' dotlen, y +' thickness))]
+                else
+                    (fill color (Gr.rectangle (x, y) (x +' dotlen, y +' thickness)))
+                    :: (write-dots (x +' dotlen +' spacing) y (len -' dotlen -' spacing)) in
+            
+            match pt with
+            | (x, y) -> write-dots x y width))
+
+end

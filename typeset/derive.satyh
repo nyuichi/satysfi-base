@@ -1,0 +1,14 @@
+@import: derive/ast
+@import: derive/render
+
+module PoheDerive : sig
+
+    val \proven : [derivation-ast] math-cmd
+
+end = struct
+    
+    open PoheDeriveRender
+
+    let-math \proven ast = render-math ast
+
+end
