@@ -37,6 +37,9 @@ module List2 : sig
   val mini : ('a -> 'a -> int) -> 'a list -> 'a option
   val bubblesort : ('a -> 'a -> int) -> 'a list -> 'a list
 end = struct
+
+  open Option2
+
   let intersperse s xs =
     match xs with
     | [] -> []
@@ -114,9 +117,9 @@ end = struct
           if f y then
             span-sub (y :: lst1) ys
           else
-            (reverse lst1, lst2)
+            (List.reverse lst1, lst2)
         )
-      | _ -> (reverse lst1, lst2)
+      | _ -> (List.reverse lst1, lst2)
     in
       span-sub [] lst
 
@@ -126,11 +129,11 @@ end = struct
       match lst2 with
       | y :: ys -> (
           if f y then
-            (reverse lst1, lst2)
+            (List.reverse lst1, lst2)
           else
             break-sub (y :: lst1) ys
         )
-      | [] -> (reverse lst1, lst2)
+      | [] -> (List.reverse lst1, lst2)
     in
       break-sub [] lst
 
@@ -222,7 +225,7 @@ end = struct
   let partition f lst =
     let-rec part yes no lst =
     match lst with
-      | []      -> (reverse yes, reverse no)
+      | []      -> (List.reverse yes, List.reverse no)
       | x :: xs -> if f x then part (x :: yes) no xs else part yes (x :: no) xs
     in
       part [] [] lst
@@ -268,7 +271,7 @@ end = struct
     if n == 0 then
       []
     else
-      append lst (make-cycle (n - 1) lst)
+      List.append lst (make-cycle (n - 1) lst)
 
 
   let-rec max f lst =
