@@ -13,10 +13,11 @@ module String : sig
   val of-char : Char.t -> string
   val append : string -> string -> string
   val concat : string list -> string
-  val empty : string -> bool
+  val is-empty : string -> bool
   val starts-with : string -> string -> bool
   val ends-with : string -> string -> bool
   val to-list : string -> Char.t list
+  val pow : int -> string -> string
 end = struct
   let equal = string-same
   let length = string-length
@@ -33,7 +34,7 @@ end = struct
   | [] -> of-empty
   | s :: xs -> s ^ concat xs
 
-  let empty s =
+  let is-empty s =
     equal s of-empty
 
   let starts-with p s =
@@ -51,4 +52,8 @@ end = struct
     | 0 -> acc
     | _ -> go (i - 1) (Char.at (i - 1) s :: acc)) in
     go (length s) []
+
+  let pow n s =
+    let-rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in
+    go 0 of-empty
 end

@@ -1,3 +1,5 @@
+@import: error
+
 module Char : sig
   type t
   val equal : t -> t -> bool
@@ -7,7 +9,7 @@ module Char : sig
   val space : t
   val to-string : t -> string
   val at : int -> string -> t
-  val make : string -> t % unsafe but useful
+  val make : string -> t % e.g. Char.make `a`
 end = struct
   type t = string
   let equal = string-same
@@ -17,5 +19,5 @@ end = struct
   let space = of-codepoint 32
   let to-string c = c
   let at i s = string-sub s i 1
-  let make = at 0
+  let make s = if string-length s == 1 then at 0 s else Error.error `invalid argument`
 end

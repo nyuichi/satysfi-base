@@ -13,7 +13,15 @@ Our repository contains:
 
 ## Convention
 
-We roughly follow the convention adopted by [Jane Street's core library](https://opensource.janestreet.com/core/).
+As of this writing, we have not yet fixed a coding convention to be used throughout the library.
+Each file may have different coding styles and interfaces.
+We will refactor the whole library and make the interfaces consistent only after more functions are added.
+
+Here we only list some pointers that can be useful for deciding your APIs:
+
+- [The standard library of OCaml](https://caml.inria.fr/pub/docs/manual-ocaml/libref/index.html)
+- [Jane Street's core library](https://opensource.janestreet.com/core/)
+- [F# Core library Reference](https://msdn.microsoft.com/en-us/visualfsharpdocs/conceptual/fsharp-core-library-reference)
 
 ## Contribution
 

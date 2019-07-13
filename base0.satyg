@@ -1,4 +1,7 @@
 @stage: 0
 
-let (&&&) b1 b2 = &(if ~b1 then ~b2 else false)
+% short-circuit operators
+% example:
+%   if ~(&(i < String.length s) &&& &(Char.equal (Char.at i s) Char.space)) then ...
+let ( &&& ) b1 b2 = &(if ~b1 then ~b2 else false)
 let ( ||| ) b1 b2 = &(if ~b1 then true else ~b2)
