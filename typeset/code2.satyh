@@ -1,0 +1,174 @@
+@require: pervasives
+@require: color
+@require: gr
+@require: vdecoset
+@require: list
+@import: ../string
+@import: ../regexp
+@import: ../lexer
+@import: ../debug
+@import: ../inline
+
+type syntax-def = (|groups : ((|color : color; keywords : string list|)) list; ident-regexp : RegExp.t|)
+
+module Code2 : sig
+
+  val scheme : deco-set -> color -> context -> syntax-def option -> string -> block-boxes
+  direct +code : [syntax-def?; string] block-cmd
+  direct +console : [syntax-def?; string] block-cmd
+  direct \code : [string] inline-cmd
+  direct \console : [syntax-def?; string] inline-cmd
+  direct \d-code : [syntax-def?; string] inline-cmd
+
+end = struct
+
+  let code-text-color = Gray(0.1)
+  let code-fill-color = Gray(0.875)
+  let code-stroke-color = Gray(0.625)
+  let console-fill-color = Gray(0.25)
+
+
+  let decoset-code =
+    VDecoSet.simple-frame 1pt code-stroke-color code-fill-color
+
+
+  let dummy _ =
+    let strokef = stroke 1pt code-stroke-color in
+    let gr-back x y w d h =
+      fill code-fill-color (Gr.rectangle (x, y -' d) (x +' w, y +' h))
+    in
+    let decoS (x, y) w h d =
+      [
+        gr-back x y w d h;
+        strokef (Gr.rectangle (x, y -' d) (x +' w, y +' h));
+      ]
+    in
+    let decoH (x, y) w h d =
+      [
+        gr-back x y w d h;
+        strokef (Gr.poly-line (x, y -' d) [(x, y +' h); (x +' w, y +' h); (x +' w, y -' d);])
+      ]
+    in
+    let decoM (x, y) w h d =
+      [
+        gr-back x y w d h;
+        strokef (Gr.line (x, y -' d) (x, y +' h));
+        strokef (Gr.line (x +' w, y -' d) (x +' w, y +' h));
+      ]
+    in
+    let decoT (x, y) w h d =
+      [
+        gr-back x y w d h;
+        strokef (Gr.poly-line (x, y +' h) [(x, y -' d); (x +' w, y -' d); (x +' w, y +' h)])
+      ]
+    in
+      (decoS, decoH, decoM, decoT)
+
+
+  let decoset-console =
+    let deco (x, y) w h d =
+      [ fill console-fill-color (Gr.rectangle (x, y -' d) (x +' w, y +' h)) ]
+    in
+      (deco, deco, deco, deco)
+
+
+  let set-code-font ctx =
+    ctx |> set-font Latin (`DejaVuSansMono`, 1.,0.)
+        |> set-font OtherScript (`DejaVuSansMono`, 1.,0.)
+        |> set-font-size (get-font-size ctx *' .75)
+        |> set-leading 13.5pt
+        |> set-hyphen-penalty 100000
+
+  let get-color syntax ident =
+    let keywords-re kws =
+      kws |> List.map RegExp.string |> RegExp.choice |> RegExp.between RegExp.bof RegExp.eof in
+    let g-opt = List2.find (fun g -> (RegExp.test (keywords-re g#keywords) ident)) syntax#groups in
+    match g-opt with
+    | None -> None
+    | Some g -> Some g#color
+
+  let scheme decoset txtcolor ctx syntax-opt code =
+    let syntax = match syntax-opt with
+    | None -> (| ident-regexp = RegExp.fail; groups = []; |)
+    | Some s -> s in
+    let rules = [
+      (| kind = `identifier`; regexp = syntax#ident-regexp |);
+      (| kind = `space`; regexp = RegExp.space |);
+      (| kind = `other`; regexp = RegExp.any |);
+    ] in
+    let pads = (5pt, 5pt, 5pt, 5pt) in
+    block-frame-breakable ctx pads decoset (fun ctx -> (
+      let fontsize = get-font-size ctx in
+      let ctx = ctx |> set-code-font in
+      let charwid = get-natural-width (read-inline ctx {0}) in
+      let ctx-code =
+        ctx |> set-space-ratio (charwid /' fontsize) 0. 0.
+            |> set-text-color txtcolor
+      in
+
+      let lstraw = split-into-lines code in
+      let lst =
+        match lstraw with
+        | []        -> lstraw
+        | x :: []   -> lstraw
+        | _ :: tail -> tail
+      in
+      let ib-code =
+        lst |> List.fold-left-adjacent (fun ibacc (i, s) _ optnext -> (
+          let ib-last =
+            match optnext with
+            | Some(_) -> inline-fil ++ discretionary 0 (inline-skip ((get-text-width ctx) *' 2.)) inline-nil inline-nil
+            | None    -> inline-fil
+          in
+          let ib-main =
+            let (Some(tokens)) = Lexer.lex rules s in
+            tokens 
+              |> List.map (fun tk ->
+                (if String.equal tk#kind `space`
+                then inline-skip charwid
+                else if String.equal tk#kind `identifier`
+                then match get-color syntax tk#data with
+                | None -> read-inline ctx-code (embed-string tk#data)
+                | Some c -> read-inline (ctx-code |> set-text-color c) (embed-string tk#data)
+                else read-inline ctx-code (embed-string tk#data)))
+              |> Inline.concat
+          in 
+          let ib =
+            inline-skip (charwid *' (float i))
+              ++ ib-main
+              ++ ib-last
+          in
+            ibacc ++ ib
+        )) inline-nil
+      in
+        line-break true true ctx ib-code
+    ))
+
+
+  let-block ctx +code ?:syntax-def code =
+    scheme decoset-code code-text-color ctx syntax-def code
+
+
+  let-inline ctx \d-code ?:syntax-def code =
+    inline-fil ++ embed-block-breakable ctx
+      (match syntax-def with
+      | None -> read-block ctx '<+code(code);>
+      | Some s -> read-block ctx '<+code?:(s)(code);>)
+
+
+  let-block ctx +console ?:syntax-def code =
+    scheme decoset-console Color.white ctx syntax-def code
+
+
+  let-inline ctx \console ?:syntax-def code =
+    inline-fil ++ embed-block-breakable ctx
+      (match syntax-def with
+      | None -> read-block ctx '<+console(code);>
+      | Some s -> read-block ctx '<+console?:(s)(code);>)
+
+
+  let-inline ctx \code code =
+    script-guard Latin
+      (read-inline (ctx |> set-code-font) (embed-string code))
+
+end
