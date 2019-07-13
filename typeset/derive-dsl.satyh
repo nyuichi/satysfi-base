@@ -3,35 +3,40 @@
 @import: derive/line
 
 open PoheDeriveAst
-open PoheDeriveLine
-
-type label-position =
-| Left
-| Right
 
 module PoheDeriveDSL : sig
 
     val derive: math -> derivation-ast
-    val by: label-position?-> inline-text -> derivation-ast -> derivation-ast 
+    val by: inline-text -> derivation-ast -> derivation-ast
+    val byOp: inline-text -> derivation-ast -> derivation-ast
     val from: derivation-ast list -> derivation-ast -> derivation-ast
     val withLine: derivation-line -> derivation-ast -> derivation-ast
 
     val assume: math -> derivation-ast
 
+    % Lines
+    val standard-line : derivation-line
+    val no-line       : derivation-line
+    val dotted-line   : length -> length -> derivation-line
+
 end = struct
+
+    let standard-line = PoheDeriveLine.standard-line
+    let no-line = PoheDeriveLine.no-line
+    let dotted-line = PoheDeriveLine.dotted-line
+
     
     let derive conclusion = make-ast None None conclusion [] standard-line
 
-    let by ?:position label-text ast =
-        match position |> Option.from Left with
-        | Left -> (
-            match ast with
+    let by label-text ast =
+        match ast with
             | Ast(_, rlabel-text, conclusion, assumptions, line) ->
-                Ast(Some(label-text), rlabel-text, conclusion, assumptions, line))
-        | Right -> (
-            match ast with
+                Ast(Some(label-text), rlabel-text, conclusion, assumptions, line)
+
+    let byOp label-text ast =
+        match ast with
             | Ast(llabel-text, _, conclusion, assumptions, line) ->
-                Ast(llabel-text, Some(label-text), conclusion, assumptions, line))
+                Ast(llabel-text, Some(label-text), conclusion, assumptions, line)
 
     let from assumptions ast =
         match ast with

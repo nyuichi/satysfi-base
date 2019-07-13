@@ -1,14 +1,22 @@
+@require: option
 @import: derive/ast
 @import: derive/render
 
+type derive-config = (|
+    default-label-position : label-position;
+    bar-top-bottom-margin : length;
+    label-left-right-margin : length;
+    bar-thickness : length;
+|)
+
 module PoheDerive : sig
 
-    val \proven : [derivation-ast] math-cmd
+    val \proven : [derive-config?; derivation-ast] math-cmd
 
 end = struct
-    
+
     open PoheDeriveRender
 
-    let-math \proven ast = render-math ast
+    let-math \proven ?:config ast = render-math (config |> Option.from default-config) ast
 
 end
