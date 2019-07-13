@@ -13,7 +13,7 @@ type derive-config = (|
     bar-thickness : length;
 |)
 
-module PoheDeriveRender : sig
+module DeriveRender : sig
 
     val default-config : derive-config
     val render-math   : derive-config -> derivation-ast -> math

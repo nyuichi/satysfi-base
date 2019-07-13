@@ -2,10 +2,11 @@
 @import: derive/ast
 @import: derive/line
 
-open PoheDeriveAst
+open DeriveAst
 
-module PoheDeriveDSL : sig
+module DeriveDSL : sig
 
+    % DSL
     val derive: math -> derivation-ast
     val by: inline-text -> derivation-ast -> derivation-ast
     val byOp: inline-text -> derivation-ast -> derivation-ast
@@ -21,9 +22,9 @@ module PoheDeriveDSL : sig
 
 end = struct
 
-    let standard-line = PoheDeriveLine.standard-line
-    let no-line = PoheDeriveLine.no-line
-    let dotted-line = PoheDeriveLine.dotted-line
+    let standard-line = DeriveLine.standard-line
+    let no-line = DeriveLine.no-line
+    let dotted-line = DeriveLine.dotted-line
 
     
     let derive conclusion = make-ast None None conclusion [] standard-line

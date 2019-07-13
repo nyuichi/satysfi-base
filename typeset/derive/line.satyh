@@ -2,7 +2,7 @@
 
 type derivation-line = context -> point -> length -> length -> graphics list
 
-module PoheDeriveLine : sig
+module DeriveLine : sig
 
     val standard-line : derivation-line
     val no-line       : derivation-line

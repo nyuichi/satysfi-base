@@ -9,13 +9,13 @@ type derive-config = (|
     bar-thickness : length;
 |)
 
-module PoheDerive : sig
+module Derive : sig
 
     val \proven : [derive-config?; derivation-ast] math-cmd
 
 end = struct
 
-    open PoheDeriveRender
+    open DeriveRender
 
     let-math \proven ?:config ast = render-math (config |> Option.from default-config) ast
 

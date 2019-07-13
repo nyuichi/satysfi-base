@@ -7,7 +7,7 @@ type derivation-ast =
            * derivation-ast list    % assumptions
            * derivation-line        % line
 
-module PoheDeriveAst : sig
+module DeriveAst : sig
 
     val make-ast : inline-text option -> inline-text option -> math -> derivation-ast list -> derivation-line -> derivation-ast
 
