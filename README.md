@@ -1,5 +1,13 @@
 # satysfi-lib
 
+    =========================== CAUTION ===========================
+    All contents in this repository are still under development.
+    APIs are quite unstable and subject to change.
+    It is possible that there are many bugs in the implementation.
+    We assume the users are able to fix issues by theirselves in case of trouble.
+    (Any contribution is welcome; see below for details.)
+    ===============================================================
+
 This repository contains a collection of utility functions and modules for SATySFi.
 Because the library bundled with the default installation configuration of SATySFi is currently not rich enough, this project aims to provide a complementary library sufficient for most situations in typesetting.
 
@@ -10,6 +18,12 @@ Our repository contains:
 - program controls (e.g. Error, Ref, etc)
 - text processing (e.g. RegExp, Lexer, Parser, etc)
 - extra typesetting functions (e.g. Inline, etc)
+
+We also provide some specific packages for typesetting:
+
+- `code2`: display program sources with syntax highlight
+- `derive`: display proof trees
+- `derive-dsl`: DSL to construct proof trees
 
 ## Convention
 
