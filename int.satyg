@@ -1,3 +1,6 @@
+@import: string
+@import: char
+
 module Int : sig
   val abs : int -> int
   val pow : int -> int -> int
@@ -14,6 +17,8 @@ module Int : sig
   val land : int -> int -> int
   val lor : int -> int -> int
   val lxor : int -> int -> int
+
+  val of-string : string -> int % may throw an error
 end = struct
   let abs i = if i < 0 then -i else i
   let-rec pow p i =
@@ -52,4 +57,24 @@ end = struct
       asr shift i
     else
       i |> asr shift |> land ((2 |> pow (bitsize - shift)) - 1)
+
+  let of-string s =
+    let cs = String.to-list s in
+    match cs with
+    | [] -> error `Int.of-string: invalid string`
+    | c :: cs2 ->
+      let (sign, cs) = if Char.equal c (Char.make `-`) then (-1, cs2) else (1, cs) in
+      let num = cs |> List.fold-left (fun i c -> (match String.of-char c with
+        | `0` -> i * 10
+        | `1` -> i * 10 + 1
+        | `2` -> i * 10 + 2
+        | `3` -> i * 10 + 3
+        | `4` -> i * 10 + 4
+        | `5` -> i * 10 + 5
+        | `6` -> i * 10 + 6
+        | `7` -> i * 10 + 7
+        | `8` -> i * 10 + 8
+        | `9` -> i * 10 + 9
+        | _   -> error `Int.of-string: invalid string`)) 0 in
+      sign * num
 end
