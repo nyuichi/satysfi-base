@@ -5,4 +5,8 @@ let id x = x
 
 type 'a thunk = unit -> 'a
 
+type 'ok 'err result =
+| Ok of 'ok
+| Error of 'err
+
 let dummy-main = standalone '<>
