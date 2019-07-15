@@ -10,38 +10,63 @@
 @import: ../option2
 @import: ../lexer
 @import: ../parser
+@import: ../int
+@import: ../map
 
 open RegExp in
 
+let () = Debug.log `==== Ref ====` in
 let r = Ref.make 1 in
 let () = r |> Ref.get |> String.of-int |> Debug.log in
 let () = r |> Ref.set 2 in
-let () = r |> Ref.get |> String.of-int |> Debug.print in
-let () = Debug.print (String.concat [`a`; `b`; `c`;]) in
-let () = Debug.print (String.of-bool (String.is-empty `  `)) in
-let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.print)) in
-%let _ = Error.error `hoge` in
+let () = r |> Ref.get |> String.of-int |> Debug.log in
+let r1 = Ref.make 1 in
+let r2 = Ref.make 2 in
+let () = Ref.swap r1 r2 in
+let () = Debug.log (String.of-int (Ref.get r1) ^ `:` ^ String.of-int (Ref.get r2)) in % 2:1
+let r = Ref.make 1 in
+let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get r))) in % 2
+let () = Debug.log (String.of-int (Ref.get r)) in % 1
+
+let () = Debug.log `==== String ====` in
+let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
+let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
+let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
+
+let () = Debug.log `==== Array ====` in
 let a = Array.make 3 42 in
 let () = a |> Array.get 0 |> String.of-int |> Debug.log in
 let () = a |> Array.set 0 43 in
 let () = a |> Array.get 0 |> String.of-int |> Debug.log in
-%let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
+let a = 10 |> Array.init id in
+let is = [0;1;2;3;4;5;6;7;8;9] in
+let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
+let () = is |> List.iter (fun i -> a |> Array.set i (10 - i)) in
+let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
+let () = a |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
+let a1 = Array.of-list [0;1;2;3;4;] in
+let a2 = Array.of-list [5;6;7;8;9] in
+let a = Array.append a1 a2 in
+let () = Debug.log (String.of-int (Array.get 0 a)) in
+let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
 
+let () = Debug.log `==== ReExp ====` in
+%let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
 let print-result r =
   r |> List.iter (fun s -> (
     match s with
     | None -> Debug.log `None`
     | Some (i, s) -> Debug.log (`Some(` ^ String.of-int i ^ `, "` ^ s ^ `")`)
   )) in
-
 %let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
 %let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
 let char-a = char (Char.make `a`) in
 let char-b = char (Char.make `b`) in
 let char-c = char (Char.make `c`) in
-let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
+let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in % true
 let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
-let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in
+let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in % true
+% (a+|(c))(b+)
 let re1 = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
 let (iseq1, _) = compile re1 in
 let () = print-iseq iseq1 in
@@ -67,6 +92,7 @@ let () = exec spaces #`  asdf`# |> print-result in
 % let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
 % let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
 
+let () = Debug.log `==== Lexer ====` in
 let rules = [
   (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
   (| kind = `whitespace`; regexp = spaces |);
@@ -74,13 +100,37 @@ let rules = [
 let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
 let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
 
-let r1 = Ref.make 1 in
-let r2 = Ref.make 2 in
-let () = Ref.swap r1 r2 in
-let () = Debug.log (String.of-int (Ref.get r1) ^ `:` ^ String.of-int (Ref.get r2)) in
+let () = Debug.log `==== Int ====` in
+let p i = i |> String.of-int |> Debug.log in
+let () = p (13 |> Int.lsl 2) in %==52
+let () = p (13 |> Int.asr 0) in %==13
+let () = p (13 |> Int.asr 1) in %==6
+let () = p (13 |> Int.asr 2) in %==3
+let () = p (13 |> Int.asr 3) in %==1
+let () = p (13 |> Int.asr 4) in %==0
+let () = p (13 |> Int.asr 5) in %==0
+let () = p (-13 |> Int.asr 0) in %==-13
+let () = p (-13 |> Int.asr 1) in %==-7
+let () = p (-13 |> Int.asr 2) in %==-4
+let () = p (-13 |> Int.asr 3) in %==-2
+let () = p (-13 |> Int.asr 4) in %==-1
+let () = p (-13 |> Int.asr 5) in %==-1
+let () = p (13 |> Int.land 10) in %==8
+let () = p (-13 |> Int.land 31) in %==19
+let () = p (13 |> Int.lor 10) in %==15
+let () = p (13 |> Int.lxor 10) in %==7
+let () = p (13 |> Int.lsr 2) in %==3
+let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
 
-let r = Ref.make 1 in
-let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get r))) in
-let () = Debug.log (String.of-int (Ref.get r)) in
+let () = Debug.log `==== Map ====` in
+let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
+let option-force (Some v) = v in
+let () = m |> Map.get 1 |> option-force |> Debug.log in
+let () = m |> Map.get 2 |> option-force |> Debug.log in
+let () = m |> Map.get 3 |> option-force |> Debug.log in
+let m = m |> Map.bind 2 `d` in
+let () = m |> Map.get 1 |> option-force |> Debug.log in
+let () = m |> Map.get 2 |> option-force |> Debug.log in
+let () = m |> Map.get 3 |> option-force |> Debug.log in
 
 dummy-main

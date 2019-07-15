@@ -3,6 +3,11 @@
 
 let id x = x
 
+let fst (x, _) = x
+let snd (_, y) = y
+
+let compose f g x = f (g x)
+
 type 'a thunk = unit -> 'a
 
 type 'ok 'err result =

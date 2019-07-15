@@ -1,0 +1,55 @@
+module Int : sig
+  val abs : int -> int
+  val pow : int -> int -> int
+
+  val bitsize : int
+  val max-int : int
+  val min-int : int
+
+  % bitwise operations
+  val lsl : int -> int -> int
+  val asr : int -> int -> int
+  val lsr : int -> int -> int
+  val lnot : int -> int
+  val land : int -> int -> int
+  val lor : int -> int -> int
+  val lxor : int -> int -> int
+end = struct
+  let abs i = if i < 0 then -i else i
+  let-rec pow p i =
+    if p == 0 then
+      1
+    else
+      i * pow (p - 1) i
+
+  let bitsize = 63 % assume 64-bit machine
+  let max-int = pow bitsize 2 - 1
+  let min-int = max-int + 1
+
+  let lnot i = (-i) - 1
+
+  let-rec lsl shift i = i * pow shift 2
+  let-rec asr shift i =
+    if i >= 0 then
+      i / pow shift 2
+    else
+      lnot (asr shift (lnot i))
+
+  let bitwise-op op i j =
+    let-rec aux n i j =
+      if n == 0 then
+        0
+      else
+        (aux (n - 1) (i |> asr 1) (j |> asr 1)) * 2 + op (abs (i mod 2)) (abs (j mod 2))
+    in aux bitsize i j
+
+  let land = bitwise-op (fun i j -> i * j)
+  let lxor = bitwise-op (fun i j -> (i + j) mod 2)
+  let lor = bitwise-op (fun i j -> 1 - (1 - i) * (1 - j))
+
+  let lsr shift i =
+    if i >= 0 then
+      asr shift i
+    else
+      i |> asr shift |> land ((2 |> pow (bitsize - shift)) - 1)
+end

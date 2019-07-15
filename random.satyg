@@ -1,0 +1,10 @@
+module Random : sig
+  val random : unit -> int
+  val rand-max : int
+end = struct
+  let-mutable state <- 1073741823  % mean of 0..rand_max
+  let random () =
+    let () = state <- (48271 * !state) mod 2147483647 in
+    !state
+  let rand-max = 2147483647 - 1
+end

@@ -5,10 +5,10 @@ module String : sig
   val equal : string -> string -> bool
   val length : string -> int
   val sub : string -> int -> int -> string
+  val empty : string
   val of-bool : bool -> string
   val of-int : int -> string
   val of-float : float -> string
-  val of-empty : string
   val of-codepoints : int list -> string
   val of-char : Char.t -> string
   val append : string -> string -> string
@@ -25,17 +25,17 @@ end = struct
   let of-bool b = if b then `true` else `false`
   let of-int = arabic
   let of-float = show-float
-  let of-empty = ` `
+  let empty = ` `
   let of-codepoints = string-unexplode
   let of-char = Char.to-string
   let append s1 s2 = s1 ^ s2
 
   let-rec concat xs = match xs with
-  | [] -> of-empty
+  | [] -> empty
   | s :: xs -> s ^ concat xs
 
   let is-empty s =
-    equal s of-empty
+    equal s empty
 
   let starts-with p s =
     let s-len = length s in
@@ -55,5 +55,5 @@ end = struct
 
   let pow n s =
     let-rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in
-    go 0 of-empty
+    go 0 empty
 end
