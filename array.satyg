@@ -1,6 +1,5 @@
 @require: list
 @import: ref
-@import: error
 
 % # Polyfill for mutable array structure
 % The current implementation is based on singly-linked lists and is very slow.
@@ -34,10 +33,10 @@ end = struct
   | (Cons (r, _), 0) -> Some r
   | (Cons (_, a), i) -> nth (i - 1) a
   let get i a = match nth i a with
-  | None -> Error.error `array: index out of range`
+  | None -> error `array: index out of range`
   | Some r -> Ref.get r
   let set i v a = match nth i a with
-  | None -> Error.error `array: index out of range`
+  | None -> error `array: index out of range`
   | Some r -> r |> Ref.set v
   let make n v =
     let-rec go i acc = if i == n then acc else go (i + 1) (Cons (Ref.make v, acc)) in

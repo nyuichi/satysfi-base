@@ -3,7 +3,6 @@
 @import: ../ref
 @import: ../string
 @import: ../debug
-@import: ../error
 @import: ../array
 @import: ../regexp
 @import: ../list2

@@ -4,7 +4,6 @@
 % We do not intend to use this as an actual interface in high-level programming.
 
 @import: base
-@import: error
 @require: list
 
 module Treap : sig
@@ -65,7 +64,7 @@ end = struct
         (ll, make k p lr r)
 
   let-rec at index n = match n with
-    | Node(None) -> Error.error `Treap.at: index out of range`
+    | Node(None) -> error `Treap.at: index out of range`
     | Node(Some(k, _, _, left, right)) ->
       let ls = size left in
       if ls == index then

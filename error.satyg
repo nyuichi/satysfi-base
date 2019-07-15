@@ -1,5 +1,0 @@
-module Error : sig
-  val error : string -> 'a
-end = struct
-  let error = abort-with-message
-end

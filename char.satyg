@@ -1,4 +1,4 @@
-@import: error
+@import: base
 
 module Char : sig
   type t
@@ -19,5 +19,5 @@ end = struct
   let space = of-codepoint 32
   let to-string c = c
   let at i s = string-sub s i 1
-  let make s = if string-length s == 1 then at 0 s else Error.error `invalid argument`
+  let make s = if string-length s == 1 then at 0 s else error `invalid argument`
 end
