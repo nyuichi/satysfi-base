@@ -10,6 +10,7 @@
 @import: ../option2
 @import: ../lexer
 @import: ../parser
+@import: ../int
 
 open RegExp in
 
@@ -82,5 +83,26 @@ let () = Debug.log (String.of-int (Ref.get r1) ^ `:` ^ String.of-int (Ref.get r2
 let r = Ref.make 1 in
 let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get r))) in
 let () = Debug.log (String.of-int (Ref.get r)) in
+
+let p i = i |> String.of-int |> Debug.log in
+let () = p (13 |> Int.lsl 2) in %==52
+let () = p (13 |> Int.asr 0) in %==13
+let () = p (13 |> Int.asr 1) in %==6
+let () = p (13 |> Int.asr 2) in %==3
+let () = p (13 |> Int.asr 3) in %==1
+let () = p (13 |> Int.asr 4) in %==0
+let () = p (13 |> Int.asr 5) in %==0
+let () = p (-13 |> Int.asr 0) in %==-13
+let () = p (-13 |> Int.asr 1) in %==-7
+let () = p (-13 |> Int.asr 2) in %==-4
+let () = p (-13 |> Int.asr 3) in %==-2
+let () = p (-13 |> Int.asr 4) in %==-1
+let () = p (-13 |> Int.asr 5) in %==-1
+let () = p (13 |> Int.land 10) in %==8
+let () = p (-13 |> Int.land 31) in %==19
+let () = p (13 |> Int.lor 10) in %==15
+let () = p (13 |> Int.lxor 10) in %==7
+let () = p (13 |> Int.lsr 2) in %==3
+let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
 
 dummy-main
