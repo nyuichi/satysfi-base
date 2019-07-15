@@ -10,7 +10,6 @@
 module Array : sig
   type 'a t
   val length : 'a t -> int
-  val nth : int -> 'a t -> ('a Ref.t) option
   val get : int -> 'a t -> 'a
   val set : int -> 'a -> 'a t -> unit
   val make : int -> 'a -> 'a t
@@ -39,7 +38,7 @@ end = struct
   | Some r -> Ref.get r
   let set i v a = match nth i a with
   | None -> Error.error `array: index out of range`
-  | Some r -> Ref.set r v
+  | Some r -> r |> Ref.set v
   let make n v =
     let-rec go i acc = if i == n then acc else go (i + 1) (Cons (Ref.make v, acc)) in
     go 0 Nil

@@ -1,8 +1,15 @@
+@import: base
+
 module Ref : sig
   type 'a t
   val make : 'a -> 'a t
   val get : 'a t -> 'a
-  val set : 'a t -> 'a -> unit
+  val set : 'a -> 'a t -> unit   % e.g. ``r |> Ref.set 1``
+  val update : ('a -> 'a) -> 'a t -> unit
+  val swap : 'a t -> 'a t -> unit
+  val set-temporarily : 'a -> 'b thunk -> 'a t -> 'b
+  val inc : int t -> unit
+  val dec : int t -> unit
 end = struct
   type 'a t = Ref of (unit -> 'a) * ('a -> unit)
 
@@ -13,7 +20,29 @@ end = struct
   let get (Ref (getter, _)) =
     getter ()
 
-  let set (Ref (_, setter)) v =
+  let set v (Ref (_, setter)) =
     setter v
+
+  let update f r =
+    let v = r |> get in
+    r |> set (f v)
+
+  let swap r1 r2 =
+    let v1 = r1 |> get in
+    r1 |> set (r2 |> get) before
+    r2 |> set v1
+
+  let set-temporarily v f r =
+    let v-orig = r |> get in
+    let () = r |> set v in
+    let ret = f () in
+    let () = r |> set v-orig in
+    ret
+
+  let inc r =
+    r |> update (fun x -> x + 1)
+  let dec r =
+    r |> update (fun x -> x - 1)
+
 end
   

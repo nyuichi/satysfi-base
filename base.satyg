@@ -3,4 +3,6 @@
 
 let id x = x
 
+type 'a thunk = unit -> 'a
+
 let dummy-main = standalone '<>

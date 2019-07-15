@@ -14,9 +14,9 @@
 open RegExp in
 
 let r = Ref.make 1 in
-let () = Ref.get r |> String.of-int |> Debug.log in
-let () = Ref.set r 2 in
-let () = Ref.get r |> String.of-int |> Debug.print in
+let () = r |> Ref.get |> String.of-int |> Debug.log in
+let () = r |> Ref.set 2 in
+let () = r |> Ref.get |> String.of-int |> Debug.print in
 let () = Debug.print (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.print (String.of-bool (String.is-empty `  `)) in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.print)) in
@@ -73,5 +73,14 @@ let rules = [
 ] in
 let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
 let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
+
+let r1 = Ref.make 1 in
+let r2 = Ref.make 2 in
+let () = Ref.swap r1 r2 in
+let () = Debug.log (String.of-int (Ref.get r1) ^ `:` ^ String.of-int (Ref.get r2)) in
+
+let r = Ref.make 1 in
+let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get r))) in
+let () = Debug.log (String.of-int (Ref.get r)) in
 
 dummy-main
