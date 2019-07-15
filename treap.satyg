@@ -1,0 +1,99 @@
+% immutable treap
+
+% This provides a set of low level interfaces of immutable treap.
+% We do not intend to use this as an actual interface in high-level programming.
+
+@import: base
+@import: error
+@require: list
+
+module Treap : sig
+  type 'a t
+  val empty : 'a t
+  val make : 'a -> int -> 'a t -> 'a t -> 'a t
+  val is-empty : 'a t -> bool
+  val size : 'a t -> int                    % O(1)
+  val merge : 'a t -> 'a t -> 'a t          % O(logN)
+  val split : int -> 'a t -> 'a t * 'a t    % O(logN)
+  val at : int -> 'a t -> 'a                % O(logN); may raise an error for invalid index
+
+  % ``index key compare tree`
+  % 1) returns `Ok (e, i)` if `tree` contains `e` at `i`
+  % 2) returns `Error i` if `key` is no in `tree` and `i` is the position where key is to be inserted
+  val index : 'a -> ('a -> 'a -> int) -> 'a t -> ('a * int) int result  % O(logN)
+
+  val top : 'a t -> 'a
+  val to-list : 'a t -> 'a list
+end = struct
+  type 'a node = Node of ('a * int * int * 'a node * 'a node) option
+
+  type 'a t = 'a node
+
+  let empty = Node (None)
+
+  let is-empty (Node n) = match n with
+    | None -> true
+    | Some(_) -> false
+
+  let size (Node n) = match n with
+    | None -> 0
+    | Some(_, _, size, _, _) -> size
+
+  let make k p l r =
+    Node (Some (k, p, size l + size r + 1, l, r))
+
+  let-rec merge
+    | (Node(None)) r = r
+    | l (Node(None)) = l
+    | l r =
+      let (Node (Some (lk, lp, _, ll, lr))) = l in
+      let (Node (Some (rk, rp, _, rl, rr))) = r in
+      if lp < rp then
+        make rk rp (merge l rl) rr
+      else
+        make lk lp ll (merge lr r)
+
+  let-rec split index n = match n with % (take index n, drop index n)
+    | Node(None) -> (empty, empty)
+    | Node(Some (k, p, _, l, r)) ->
+      let ls = size l in
+      if ls < index then
+        let (rl, rr) = r |> split (index - ls - 1) in
+        (make k p l rl, rr)
+      else
+        let (ll, lr) = l |> split index in
+        (ll, make k p lr r)
+
+  let-rec at index n = match n with
+    | Node(None) -> Error.error `Treap.at: index out of range`
+    | Node(Some(k, _, _, left, right)) ->
+      let ls = size left in
+      if ls == index then
+        k
+      else if index < ls then
+        at index left
+      else
+        at (index - ls - 1) right
+
+  let index key compare n =
+    let-rec index n acc = match n with
+      | Node(None) -> Error acc
+      | Node(Some(k, _, _, left, right)) ->
+        let r = compare key k in
+        if r < 0 then
+          index left acc
+        else if r > 0 then
+          index right (acc + size left + 1)
+        else
+          Ok (k, acc + size left)
+    in index n 0
+
+  let top n =
+    let (Node(Some(k, _, _, _, _))) = n in
+    k
+
+  let-rec to-list n = match n with
+  | Node(None) -> []
+  | Node(Some(k, p, s, l, r)) ->
+    List.append (to-list l) (k :: to-list r)
+end

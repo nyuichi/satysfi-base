@@ -1,0 +1,79 @@
+@import: random
+@import: treap
+
+% immutable map
+
+% Currently key is fixed to the int type
+
+module Map : sig
+  type 'a t
+  val empty : 'a t
+  val is-empty : 'a t -> bool
+  val size : 'a t -> int
+  val get : int -> 'a t -> 'a option
+  val bind : int -> 'a -> 'a t -> 'a t
+  val unbind : int -> 'a t -> 'a t
+  val of-list : (int * 'a) list -> 'a t
+  val to-list : 'a t -> (int * 'a) list % returns sorted list
+end = struct
+  type 'a u = (int * 'a) Treap.t % see #184 at github.com/gfngfn/SATySFi
+  type 'a t = 'a u
+
+  let compare (k1, _) (k2, _) = k1 - k2
+
+  let size m = Treap.size m
+
+  let empty = Treap.empty
+
+  let is-empty m = Treap.is-empty m
+
+  let index k m = % REQUIRE(not (m |> is-empty))
+    let (_, default-val) = Treap.top m in
+    match m |> Treap.index (k, default-val) compare with
+    | Ok((k, v), i) -> (Some v, i)
+    | Error(i) -> (None, i)
+
+  let single k v =
+    let rn = Random.random () in
+    Treap.make (k, v) rn Treap.empty Treap.empty
+
+  let get k m =
+    if m |> is-empty then
+      None
+    else
+      let (ret, _) = m |> index k in
+      ret
+
+  let bind k v m =
+    let n = single k v in
+    if m |> is-empty then
+      n
+    else
+      match m |> index k with
+      | (None, i) ->
+        let (l, r) = m |> Treap.split i in
+        Treap.merge l (Treap.merge n r)
+      | (_, i) ->
+        let (l, r) = m |> Treap.split i in
+        let (_, r) = r |> Treap.split 1 in
+        Treap.merge l (Treap.merge n r)
+
+  let unbind k m =
+    if m |> is-empty then
+      m
+    else
+      match m |> index k with
+      | (None, i) ->
+        m
+      | (_, i) ->
+        let (l, r) = m |> Treap.split i in
+        let (_, r) = r |> Treap.split 1 in
+        Treap.merge l r
+
+  let-rec of-list kvs = match kvs with
+  | [] -> empty
+  | (k, v) :: kvs ->
+    bind k v (of-list kvs)
+
+  let to-list m = m |> Treap.to-list
+end
