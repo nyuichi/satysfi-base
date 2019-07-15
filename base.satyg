@@ -14,4 +14,4 @@ type 'ok 'err result =
 | Ok of 'ok
 | Error of 'err
 
-let dummy-main = standalone '<>
+let finish = standalone '<>
