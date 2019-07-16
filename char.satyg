@@ -7,9 +7,11 @@ module Char : sig
   val newline : t
   val tab : t
   val space : t
+  val return : t
   val to-string : t -> string
   val at : int -> string -> t
   val make : string -> t % e.g. Char.make `a`
+  val mem : string -> t -> bool
 end = struct
   type t = string
   let equal = string-same
@@ -17,7 +19,12 @@ end = struct
   let newline = of-codepoint 10
   let tab = of-codepoint 9
   let space = of-codepoint 32
+  let return = of-codepoint 13
   let to-string c = c
   let at i s = string-sub s i 1
   let make s = if string-length s == 1 then at 0 s else error `invalid argument`
+  let mem s =
+    let len = string-length s in
+    let-rec loop i c = ~(&(i < len) &&& (&(equal c (string-sub s i 1)) ||| &(loop (i + 1) c))) in
+    (fun c -> loop 0 c)
 end

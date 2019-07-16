@@ -62,6 +62,7 @@ let print-result r =
 let char-a = char (Char.make `a`) in
 let char-b = char (Char.make `b`) in
 let char-c = char (Char.make `c`) in
+% (a+)(b+)
 let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in % true
 let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
 let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in % true
@@ -90,6 +91,16 @@ let () = exec spaces #`  asdf`# |> print-result in
 % % aaaba vs (a*)a*b\1
 % let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
 % let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
+let () = RegExp.of-string `a` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `.` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `((a))` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a*?)` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a(c))(b)` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a+|(c))(b+)` |> RegExp.print |> Debug.log in
+let () = `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`) |> String.of-bool |> Debug.log in
+let () = RegExp.of-string `\n\r\t\$\(\)\*\?` |> RegExp.print |> Debug.log in
+let _ = RegExp.of-string `^\s\d$` in
+%let _ = RegExp.of-string `[a-z]` in
 
 let () = Debug.log `==== Lexer ====` in
 let rules = [

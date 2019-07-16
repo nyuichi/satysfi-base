@@ -8,6 +8,7 @@
 @require: list
 @import: list2
 @import: char
+@import: parser
 
 module RegExp : sig
   type t
@@ -52,6 +53,9 @@ module RegExp : sig
   val spaces : t
   val between : t -> t -> t -> t
 
+  % perl-like representation of regexp (only a subset is implemented)
+  val of-string : string -> t
+
   val test : t -> string -> bool
   val exec : t -> string -> ((int * string) option) list
 
@@ -59,6 +63,7 @@ module RegExp : sig
   type vm-inst
   val compile : t -> vm-inst Array.t * int
   val print-iseq : vm-inst Array.t -> unit
+  val print : t -> string
 end = struct
 
   type anchor = BOF | EOF | BOL | EOL | NOWHERE
@@ -99,7 +104,7 @@ end = struct
         | ANY -> if sp < len then loop (pc + 1) (sp + 1) else false
         | STRING c ->
           let l = String.length c in
-          ~(&(sp + l <= len) &&& &(String.equal c (String.sub s sp l)) &&& &(loop (pc + 1) (sp + l)))
+          ~(&(sp + l <= len) &&& &(String.equal c (s |> String.sub sp l)) &&& &(loop (pc + 1) (sp + l)))
         | SAVE i ->
           let old = trace |> Array.get i in
           let () = trace |> Array.set i (Some sp) in
@@ -112,9 +117,9 @@ end = struct
         %   (match trace |> Array.get (2 * i + 1) with
         %   | None -> Error.error `unbound backreference`
         %   | Some(j) -> let (Some st) = trace |> Array.get (2 * i) in
-        %     let c = String.sub s st (j - st) in
+        %     let c = s |> String.sub st (j - st) in
         %     let l = String.length c in
-        %     if sp + l <= len then if String.equal c (String.sub s sp l) then loop (pc + 1) (sp + l) else false else false)
+        %     if sp + l <= len then if String.equal c (s |> String.sub sp l) then loop (pc + 1) (sp + l) else false else false)
         | ANCHOR a ->
           ~(&(match a with
               | BOF -> sp == 0
@@ -125,7 +130,7 @@ end = struct
             &&& &(loop (pc + 1) sp))
         | PRED f ->
           ~(&(sp < len) &&& &(f (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
-        | REGEXP re -> ~(&(sp < len) &&& &(string-match re (String.sub s sp 1)) &&& &(loop (pc + 1) (sp + 1))) in
+        | REGEXP re -> ~(&(sp < len) &&& &(string-match re (s |> String.sub sp 1)) &&& &(loop (pc + 1) (sp + 1))) in
       memoize2 main pc sp in
     let r = loop 0 0 in
     (r, trace)
@@ -285,8 +290,47 @@ end = struct
       | None -> None :: subs (i + 1)
       | Some(e) ->
         let (Some st) = trace |> Array.get (2 * i) in
-        Some (st, String.sub s st (e - st)) :: subs (i + 1) in
+        Some (st, s |> String.sub st (e - st)) :: subs (i + 1) in
     subs 0
+
+  let of-string s =
+    let is-meta-char = Char.mem `$^[](){}*+?\|` in
+    open Parser in
+    let meta = satisfy is-meta-char in
+    let non-meta = satisfy (fun c -> not (is-meta-char c)) in
+    let-mutable expr-main <- fail in % avoid value restriction
+    let expr s = !expr-main s in
+    let primary =
+          ((expr |> between (string `(`) (string `)`)) >>= (fun x -> return (group x)))
+      <|> (string `.` >> return any)  % . matches with newline
+      <|> (string `\` >>
+            ((string `n` >> return (P-char Char.newline))
+         <|> (string `r` >> return (P-char Char.return))
+         <|> (string `t` >> return (P-char Char.tab))
+         <|> (string `s` >> return space)
+         <|> (string `d` >> return digit)
+         <|> (meta >>= (fun c -> return (P-char c)))))
+      <|> (string `^` >> return bol) <|> (string `$` >> return eol)  % $ and ^ detect boundaries of lines
+      <|> (string `[` >> (fun s -> error `RegExp.of-string: character class specification using [...] is unimplemented`))
+      <|> (non-meta >>= (fun c -> return (P-char c))) in
+    let quant = primary >>= (fun x ->
+          (string `*?` >> return (many-ng x))
+      <|> (string `+?` >> return (many1-ng x))
+      <|> (string `??` >> return (opt-ng x))
+      <|> (string `*` >> return (P-many x))
+      <|> (string `+` >> return (P-many1 x))
+      <|> (string `?` >> return (opt x))
+      <|> (return x)) in
+    let seq = (quant |> many1) >>= (fun xs -> return (sequence xs)) in
+    let () = expr-main <- (seq |> sepby1 (string `|`)) >>= (fun xs -> return (choice xs))
+    in
+      match expr |> Parser.run s with
+      | None -> error (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
+      | Some(x, t) ->
+        if String.length t == 0 then
+          x
+        else
+          error (`RegExp.of-string: invalid string: "` ^ s ^`"`)
 
   let print-iseq iseq =
     let-rec loop i xs =
@@ -314,4 +358,20 @@ end = struct
         let () = Debug.log (String.of-int i ^ `: `# ^ inst) in
         loop (i + 1) xs in
     loop 0 (Array.to-list iseq)
+
+  let-rec print re = match re with
+  | P-alt (re1, re2) -> `(` ^ print re1 ^ `)|(` ^ print re2 ^ `)`
+  | P-seq (re1, re2) -> `(` ^ print re1 ^ `)(` ^ print re2 ^ `)`
+  | P-any -> `.`
+  | P-empty -> ` `
+  | P-string s -> s
+  | P-char c -> String.of-char c
+  | P-many re -> `(` ^ print re ^ `)*`
+  | P-many1 re -> `(` ^ print re ^ `)+`
+  | P-opt re -> `(` ^ print re ^ `)?`
+  | P-many-ng re -> `(` ^ print re ^ `)*?`
+  | P-many1-ng re -> `(` ^ print re ^ `)+?`
+  | P-opt-ng re -> `(` ^ print re ^ `)??`
+  | P-group re -> `\(` ^ print re ^ `\)`
+  | P-anchor (NOWHERE) -> ` `
 end

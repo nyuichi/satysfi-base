@@ -20,7 +20,7 @@ end = struct
       if i == len
       then Some (List.reverse acc)
       else
-        let s = String.sub src i (len - i) in
+        let s = src |> String.sub i (len - i) in
         let-rec iter rules = match rules with
         | [] -> None
         | (r :: rules) -> let (m :: _) = RegExp.exec (RegExp.seq RegExp.bof r#regexp) s in

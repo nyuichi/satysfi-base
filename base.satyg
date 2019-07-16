@@ -6,6 +6,8 @@ let id x = x
 let fst (x, _) = x
 let snd (_, y) = y
 
+let const x y = x
+
 let compose f g x = f (g x)
 
 type 'a thunk = unit -> 'a
