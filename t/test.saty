@@ -135,6 +135,8 @@ let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
 let () = p (`12345678` |> Int.of-string ?:10) in
 let () = p (`-123` |> Int.of-string ?:10) in
 let () = p (`ffff` |> Int.of-string ?:16) in
+let () = p (2 |> Int.pow 3) in
+let () = p (2 |> Int.pow 0) in
 
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in

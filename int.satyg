@@ -21,11 +21,15 @@ module Int : sig
   val of-string : int ?-> string -> int % may throw an error
 end = struct
   let abs i = if i < 0 then -i else i
-  let-rec pow p i =
-    if p == 0 then
-      1
-    else
-      i * pow (p - 1) i
+  let pow p base = % REQUIRE(p >= 0)
+    let-rec aux p pp acc =
+      if p == 0 then
+        acc
+      else if p mod 2 == 1 then
+        aux (p / 2) (pp * pp) (acc * pp)
+      else
+        aux (p / 2) (pp * pp) acc
+    in aux p base 1
 
   let bitsize = 63 % assume 64-bit machine
   let max-int = pow bitsize 2 - 1
