@@ -14,10 +14,10 @@ Because the library bundled with the default installation configuration of SATyS
 Our repository contains:
 
 - basic types and utilities (e.g. String, Char, etc)
-- data structures (e.g. Array, etc)
-- program controls (e.g. Error, Ref, etc)
+- data structures (e.g. Array, Map, etc)
+- program controls (e.g. Ref, Lazy, etc)
 - text processing (e.g. RegExp, Lexer, Parser, etc)
-- extra typesetting functions (e.g. Inline, etc)
+- extra typesetting functions (e.g. Inline, Pager, etc)
 
 We also provide some specific packages for typesetting:
 
