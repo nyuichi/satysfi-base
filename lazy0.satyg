@@ -1,0 +1,7 @@
+@stage: 0
+@import: ref
+
+type 'a promise = Promise of (('a (unit -> 'a promise) either) Ref.t) Ref.t
+
+let delay-force e = &(Promise (Ref.make (Ref.make (Right (fun () -> ~e)))))
+let delay e = delay-force &(Promise (Ref.make (Ref.make (Left (~e)))))

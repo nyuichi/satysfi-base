@@ -1,4 +1,4 @@
-@import: base
+@stage: persistent
 
 module Ref : sig
   type 'a t
@@ -7,7 +7,7 @@ module Ref : sig
   val set : 'a -> 'a t -> unit   % e.g. ``r |> Ref.set 1``
   val update : ('a -> 'a) -> 'a t -> unit
   val swap : 'a t -> 'a t -> unit
-  val set-temporarily : 'a -> 'b thunk -> 'a t -> 'b
+  val set-temporarily : 'a -> (unit -> 'b) -> 'a t -> 'b
   val inc : int t -> unit
   val dec : int t -> unit
 end = struct

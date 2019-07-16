@@ -5,3 +5,5 @@
 %   if ~(&(i < String.length s) &&& &(Char.equal (Char.at i s) Char.space)) then ...
 let ( &&& ) b1 b2 = &(if ~b1 then ~b2 else false)
 let ( ||| ) b1 b2 = &(if ~b1 then true else ~b2)
+
+type 'a 'b either = Left of 'a | Right of 'b

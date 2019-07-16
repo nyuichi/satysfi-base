@@ -1,5 +1,6 @@
 @require: list
 @import: ref
+@import: base
 
 % # Polyfill for mutable array structure
 % The current implementation is based on singly-linked lists and is very slow.

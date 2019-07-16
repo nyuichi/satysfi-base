@@ -12,6 +12,7 @@
 @import: ../int
 @import: ../map
 @import: ../color2
+@import: ../lazy
 
 open RegExp in
 
@@ -151,5 +152,11 @@ let () = m |> Map.get 3 |> option-force |> Debug.log in
 
 let _ = Color2.of-css `#F5F5DC` in
 let _ = Color2.of-css `beige` in
+
+let () = Debug.log `==== Lazy ====` in
+let p = ~(delay &(let () = Debug.log `foo` in 1)) in
+let () = Debug.log `bar` in
+let _ = force p in
+let _ = force p in
 
 finish
