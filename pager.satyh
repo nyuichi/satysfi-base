@@ -1,0 +1,46 @@
+@require: pervasives
+
+type mergin-fn =
+  (| page-number : int |)
+  ->
+  (| text-height : length;
+     text-origin : point |)
+
+type header-footer-fn =
+  (| page-number : int |)
+  ->
+  (| header-content : block-boxes;
+     header-origin : point;
+     footer-content : block-boxes;
+     footer-origin : point |)
+
+module Pager : sig
+  val a0 : page
+  val a1 : page
+  val a2 : page
+  val a3 : page
+  val a4 : page
+  val a5 : page
+  val us-letter : page
+  val us-legal : page
+  val custom : length -> length -> page
+
+  val break : page -> mergin-fn -> header-footer-fn -> block-boxes -> document
+  val clear : block-boxes  % hard page break
+  val make-footnote : block-boxes -> inline-boxes
+  val make-hook : ( (| page-number : int |) -> point -> unit ) -> inline-boxes
+end = struct
+  let a0 = A0Paper
+  let a1 = A1Paper
+  let a2 = A2Paper
+  let a3 = A3Paper
+  let a4 = A4Paper
+  let a5 = A5Paper
+  let us-letter = USLetter
+  let us-legal = USLegal
+  let custom l1 l2 = UserDefinedPaper(l1,l2)
+  let break = page-break
+  let make-hook = hook-page-break
+  let clear = clear-page
+  let make-footnote = add-footnote
+end
