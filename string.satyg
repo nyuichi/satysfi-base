@@ -19,6 +19,7 @@ module String : sig
   val to-list : string -> Char.t list
   val pow : int -> string -> string
   val split : int -> string -> string * string
+  val index : Char.t -> string -> int option
 end = struct
   let equal = string-same
   let length = string-length
@@ -60,4 +61,11 @@ end = struct
 
   let split i s =
     (sub 0 i s, sub i (length s - i) s)
+  
+  let index c s =
+    let cs = to-list s in
+    let-rec aux cs acc = match cs with
+    | [] -> None
+    | (x::xs) -> if Char.equal c x then Some(acc) else aux xs (acc + 1) in
+    aux cs 0
 end

@@ -5,6 +5,7 @@ module Option2 : sig
   val is-none : 'a option -> bool
   val is-some : 'a option -> bool
   val join : ('a option) option -> 'a option
+  val value : 'a -> 'a option -> 'a
   val (^&&) : bool option -> bool option -> bool option
   val (^||) : bool option -> bool option -> bool option
   val (^::) : 'a option -> ('a list) option -> ('a list) option
@@ -34,6 +35,10 @@ end = struct
     match (b-opt1, b-opt2) with
     | (Some(b1), Some(b2)) -> Some(b1 && b2)
     | (_, _)               -> None
+
+  let value default-val opt = match opt with
+  | None -> default-val
+  | Some v -> v
 
   let (^||) b-opt1 b-opt2 =
     match (b-opt1, b-opt2) with

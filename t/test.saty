@@ -11,6 +11,7 @@
 @import: ../parser
 @import: ../int
 @import: ../map
+@import: ../color2
 
 open RegExp in
 
@@ -131,8 +132,9 @@ let () = p (13 |> Int.lor 10) in %==15
 let () = p (13 |> Int.lxor 10) in %==7
 let () = p (13 |> Int.lsr 2) in %==3
 let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
-let () = p (`12345678` |> Int.of-string) in
-let () = p (`-123` |> Int.of-string) in
+let () = p (`12345678` |> Int.of-string ?:10) in
+let () = p (`-123` |> Int.of-string ?:10) in
+let () = p (`ffff` |> Int.of-string ?:16) in
 
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
@@ -144,5 +146,8 @@ let m = m |> Map.bind 2 `d` in
 let () = m |> Map.get 1 |> option-force |> Debug.log in
 let () = m |> Map.get 2 |> option-force |> Debug.log in
 let () = m |> Map.get 3 |> option-force |> Debug.log in
+
+let _ = Color2.of-css `#F5F5DC` in
+let _ = Color2.of-css `beige` in
 
 finish

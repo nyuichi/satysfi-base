@@ -1,0 +1,25 @@
+@require: list
+
+type 'k 'v assoc = ('k * 'v) list
+
+module Assoc : sig
+  val get : ('a -> 'a -> bool) -> 'a -> 'a 'b assoc -> 'b option
+  val bind : 'a -> 'b -> 'a 'b assoc -> 'a 'b assoc
+  val unbind : ('a -> 'a -> bool) -> 'a -> 'a 'b assoc -> 'a 'b assoc
+  val map : ('a -> 'b) -> 'k 'a assoc -> 'k 'b assoc
+end = struct
+  let-rec get equal k a = match a with
+  | [] -> None
+  | (k2,v) :: a -> if equal k k2 then Some(v) else get equal k a
+  let bind k v a = (k, v) :: a
+  let-rec unbind equal k a = match a with
+  | [] -> []
+  | (k2, v) :: a ->
+    if equal k k2 then
+      unbind equal k a
+    else
+      (k2, v) :: unbind equal k a
+  let-rec map f a =
+    a |> List.fold-left (fun a (k, v) -> (k, f v) :: a) []
+      |> List.reverse
+end
