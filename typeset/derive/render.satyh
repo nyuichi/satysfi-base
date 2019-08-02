@@ -16,11 +16,12 @@ end = struct
         bar-top-bottom-margin = 2pt;
         label-left-right-margin = 3pt;
         bar-thickness = 0.5pt;
+        content-left-right-padding = 3pt;
     |)
 
     type layout = (|
-        left-padding: length;
-        right-padding: length;
+        left-width: length;
+        right-width: length;
         inner-width: length;
     |)
 
@@ -71,15 +72,15 @@ end = struct
         (|
             rendered = bar;
             layout   = (|
-                left-padding  = (get-natural-width llabel) +' config#label-left-right-margin;
-                right-padding = (get-natural-width rlabel) +' config#label-left-right-margin;
+                left-width  = (get-natural-width llabel) +' config#label-left-right-margin;
+                right-width = (get-natural-width rlabel) +' config#label-left-right-margin;
                 inner-width   = bar-width;
             |)
         |)
 
     let align-and-stack assumptions bar conclusion =
-        let get-left-width med  = med#layout#left-padding +' (med#layout#inner-width *' 0.5) in
-        let get-right-width med = med#layout#right-padding +' (med#layout#inner-width *' 0.5) in
+        let get-left-width med  = med#layout#left-width +' (med#layout#inner-width *' 0.5) in
+        let get-right-width med = med#layout#right-width +' (med#layout#inner-width *' 0.5) in
         let get-aligned-left-width meds  = meds |> List.map get-left-width |> length-max in
         let get-aligned-right-width meds = meds |> List.map get-right-width |> length-max in
 
@@ -95,8 +96,8 @@ end = struct
             let left-width  = get-aligned-left-width meds in
             let right-width = get-aligned-right-width meds in
             (|
-                left-padding  = left-width -' (get-left-width conclusion);
-                right-padding = right-width -' (get-right-width conclusion);
+                left-width  = left-width -' (get-left-width conclusion);
+                right-width = right-width -' (get-right-width conclusion);
                 inner-width   = conclusion#layout#inner-width;
             |) in
 
@@ -106,13 +107,14 @@ end = struct
             layout   = align-layout meds conclusion;
         |)
 
-    let render-conclusion ctx conclusion =
-        let rendered = embed-math ctx conclusion in
+    let render-conclusion ctx config conclusion =
+        let padding = config#content-left-right-padding in
+        let rendered = inline-skip padding ++ embed-math ctx conclusion ++ inline-skip padding in
         (|
             rendered = rendered;
             layout = (|
-                left-padding  = 0pt;
-                right-padding = 0pt;
+                left-width  = 0pt;
+                right-width = 0pt;
                 inner-width  = get-natural-width rendered;
             |)
         |)
@@ -121,8 +123,8 @@ end = struct
         let empty-med-result = (|
             rendered = inline-nil;
             layout = (|
-                left-padding  = 0pt;
-                right-padding = 0pt;
+                left-width  = 0pt;
+                right-width = 0pt;
                 inner-width   = 0pt;
             |)
         |) in
@@ -133,12 +135,12 @@ end = struct
             | Some _ -> 
                 let spacing = 10pt in
                 let new-rendered = med-l#rendered ++ (inline-skip spacing) ++ med-r#rendered in
-                let new-inner-width = med-l#layout#inner-width +' med-l#layout#right-padding +' spacing +' med-r#layout#left-padding +' med-r#layout#inner-width in
+                let new-inner-width = med-l#layout#inner-width +' med-l#layout#right-width +' spacing +' med-r#layout#left-width +' med-r#layout#inner-width in
                 (|
                     rendered = new-rendered;
                     layout = (|
-                        left-padding = med-l#layout#left-padding;
-                        right-padding = med-r#layout#right-padding;
+                        left-width = med-l#layout#left-width;
+                        right-width = med-r#layout#right-width;
                         inner-width = new-inner-width;
                     |)
                 |) in
@@ -151,7 +153,7 @@ end = struct
         match ast with
         | Ast(llabel, rlabel, conclusion, assumptions, line) ->
             let med-assumptions = render-assumptions ctx config assumptions in
-            let med-conclusion = render-conclusion ctx conclusion in
+            let med-conclusion = render-conclusion ctx config conclusion in
             let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
             let med-bar = render-bar-with-label ctx config line llabel rlabel bar-width in
 

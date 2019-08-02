@@ -7,4 +7,5 @@ type derive-config = (|
     bar-top-bottom-margin : length;
     label-left-right-margin : length;
     bar-thickness : length;
+    content-left-right-padding : length;
 |)
