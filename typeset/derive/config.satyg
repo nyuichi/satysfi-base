@@ -1,0 +1,10 @@
+type label-position =
+    | LabelLeft
+    | LabelRight
+
+type derive-config = (|
+    default-label-position : label-position;
+    bar-top-bottom-margin : length;
+    label-left-right-margin : length;
+    bar-thickness : length;
+|)

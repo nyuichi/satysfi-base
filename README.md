@@ -23,7 +23,6 @@ We also provide some specific packages for typesetting:
 
 - `code2`: display program sources with syntax highlight
 - `derive`: display proof trees
-- `derive-dsl`: DSL to construct proof trees
 
 ## Convention
 

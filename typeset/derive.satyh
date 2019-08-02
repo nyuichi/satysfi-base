@@ -1,13 +1,7 @@
 @require: option
 @import: derive/ast
 @import: derive/render
-
-type derive-config = (|
-    default-label-position : label-position;
-    bar-top-bottom-margin : length;
-    label-left-right-margin : length;
-    bar-thickness : length;
-|)
+@import: derive/config
 
 module Derive : sig
 
@@ -18,5 +12,55 @@ end = struct
     open DeriveRender
 
     let-math \proven ?:config ast = render-math (config |> Option.from default-config) ast
+
+end
+
+module DeriveDSL : sig
+
+    % DSL
+    val derive: math -> derivation-ast
+    val by: inline-text -> derivation-ast -> derivation-ast
+    val byOp: inline-text -> derivation-ast -> derivation-ast
+    val from: derivation-ast list -> derivation-ast -> derivation-ast
+    val withLine: derivation-line -> derivation-ast -> derivation-ast
+
+    val assume: math -> derivation-ast
+
+    % Lines
+    val standard-line : derivation-line
+    val no-line       : derivation-line
+    val dotted-line   : length -> length -> derivation-line
+
+end = struct
+
+    open DeriveAst
+
+    let standard-line = DeriveLine.standard-line
+    let no-line = DeriveLine.no-line
+    let dotted-line = DeriveLine.dotted-line
+
+    let derive conclusion = make-ast None None conclusion [] standard-line
+
+    let by label-text ast =
+        match ast with
+            | Ast(_, rlabel-text, conclusion, assumptions, line) ->
+                Ast(Some(label-text), rlabel-text, conclusion, assumptions, line)
+
+    let byOp label-text ast =
+        match ast with
+            | Ast(llabel-text, _, conclusion, assumptions, line) ->
+                Ast(llabel-text, Some(label-text), conclusion, assumptions, line)
+
+    let from assumptions ast =
+        match ast with
+        | Ast(llabel-text, rlabel-text, conclusion, _, line) ->
+            Ast(llabel-text, rlabel-text, conclusion, assumptions, line)
+
+    let withLine line ast =
+        match ast with
+        | Ast(llabel-text, rlabel-text, conclusion, assumptions, _) ->
+            Ast(llabel-text, rlabel-text, conclusion, assumptions, line)
+
+    let assume assumption = make-ast None None assumption [] no-line
 
 end

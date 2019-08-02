@@ -1,17 +1,7 @@
 @require: gr
 @require: option
 @import: ast
-
-type label-position = 
-    | Left
-    | Right
-
-type derive-config = (|
-    default-label-position : label-position;
-    bar-top-bottom-margin : length;
-    label-left-right-margin : length;
-    bar-thickness : length;
-|)
+@import: config
 
 module DeriveRender : sig
 
@@ -22,7 +12,7 @@ module DeriveRender : sig
 end = struct
 
     let default-config = (|
-        default-label-position = Left;
+        default-label-position = LabelLeft;
         bar-top-bottom-margin = 2pt;
         label-left-right-margin = 3pt;
         bar-thickness = 0.5pt;
@@ -70,12 +60,12 @@ end = struct
                 )) in 
 
         let llabel = match config#default-label-position with 
-        | Left -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
-        | Right -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
         in
         let rlabel = match config#default-label-position with
-        | Left -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
-        | Right -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
         in
         let bar = make-bar ctx config line llabel rlabel bar-width in
         (|
