@@ -3,11 +3,12 @@
 
 module Int : sig
   val bitsize : int
-  val max-int : int
-  val min-int : int
+  val max-value : int
+  val min-value : int
 
   val succ : int -> int
   val pred : int -> int
+  val neg : int -> int
   val abs : int -> int
   val pow : int -> int -> int
   val max : int -> int -> int
@@ -28,6 +29,7 @@ module Int : sig
 end = struct
   let succ i = i + 1
   let pred i = i - 1
+  let neg i = -i
   let abs i = if i < 0 then -i else i
   let pow p base = % REQUIRE(p >= 0)
     let-rec aux p pp acc =
@@ -39,15 +41,15 @@ end = struct
         aux (p / 2) (pp * pp) acc
     in aux p base 1
   let bitsize = 63 % assume 64-bit machine
-  let max-int = (2 |> pow (bitsize - 1)) - 1
-  let min-int = max-int + 1
+  let max-value = (2 |> pow (bitsize - 1)) - 1
+  let min-value = max-value + 1
   let max i j = if i < j then j else i
   let min i j = if i < j then i else j
   let-rec sup
-  | [] = min-int
+  | [] = min-value
   | (x :: xs) = max x (sup xs)
   let-rec inf
-  | [] = max-int
+  | [] = max-value
   | (x :: xs) = min x (inf xs)
 
   let lnot i = (-i) - 1

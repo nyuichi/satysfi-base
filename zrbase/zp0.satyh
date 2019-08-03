@@ -4,7 +4,7 @@
 %   GitHub:   https://github.com/zr-tex8r
 %   Twitter:  @zr_tex8r
 % Distributed under the MIT License.
-@require: zexn0
+@import: zexn0
 
 %=========================================================== module ZP0
 module ZP0 : sig

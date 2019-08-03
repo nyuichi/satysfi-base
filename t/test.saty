@@ -14,6 +14,7 @@
 @import: ../color2
 @import: ../lazy
 @import: ../fn
+@import: ../float
 
 open Fn in
 open RegExp in
