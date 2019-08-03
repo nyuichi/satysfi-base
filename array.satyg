@@ -21,45 +21,35 @@ module Array : sig
   val of-list : 'a list -> 'a t
   val map : ('a -> 'b) -> 'a t -> 'b t
 end = struct
-% type 'a t = ('a Ref.t) list
-  type 'a b = 'a Ref.t
-  type 'a t =
-    | Nil
-    | Cons of ('a b) * ('a t)
-  let-rec length a = match a with
-  | Nil -> 0
-  | Cons (_, a) -> 1 + length a
-  let-rec nth i a = match (a, i) with
-  | (Nil, _) -> None
-  | (Cons (r, _), 0) -> Some r
-  | (Cons (_, a), i) -> nth (i - 1) a
-  let get i a = match nth i a with
+  type 'a u = ('a Ref.t) list
+  type 'a t = 'a u
+  let length = List.length
+  let get i a = match a |> List.nth i with
   | None -> error `array: index out of range`
   | Some r -> Ref.get r
-  let set i v a = match nth i a with
+  let set i v a = match a |> List.nth i with
   | None -> error `array: index out of range`
   | Some r -> r |> Ref.set v
   let make n v =
-    let-rec go i acc = if i == n then acc else go (i + 1) (Cons (Ref.make v, acc)) in
-    go 0 Nil
+    let-rec aux i acc =
+      if i == n then
+        acc
+      else
+        aux (i + 1) (Ref.make v :: acc)
+    in aux 0 []
   let init f n =
-    let-rec go i = if i == n then Nil else let v = f i in Cons (Ref.make v, go (i + 1)) in
-    go 0
-  let-rec append a1 a2 = match a1 with
-  | Nil -> a2
-  | Cons (r, a1) -> Cons (r, append a1 a2)
-  let-rec concat xs = match xs with
-  | [] -> Nil
-  | x :: xs -> append x (concat xs)
-  let-rec to-list a = match a with
-  | Nil -> []
-  | Cons (r, a) -> Ref.get r :: to-list a
-  let-rec of-list l = match l with
-  | [] -> Nil
-  | x :: xs -> Cons (Ref.make x, of-list xs)
-  let-rec map f a = match a with
-  | Nil -> Nil
-  | Cons (r, a) -> Cons (Ref.make (f (Ref.get r)), map f a)
+    let-rec aux i =
+      if i == n then
+        []
+      else
+        let v = f i in
+        Ref.make v :: aux (i + 1)
+    in aux 0
+  let append = List.append
+  let concat = List.concat
+  let to-list a = List.map Ref.get a
+  let of-list l = List.map Ref.make l
+  let map f a = of-list (List.map f (to-list a))
 
   % The following implementation is abandoned due to bad performance.
   % We will need more tuning and optimizations if we want to make this default.
