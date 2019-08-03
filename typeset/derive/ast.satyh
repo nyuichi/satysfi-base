@@ -5,14 +5,14 @@ type derivation-ast =
            * inline-text option     % right labelz
            * math                   % conclusion
            * derivation-ast list    % assumptions
-           * derivation-line        % line
+           * derivation-line option % line
 
 module DeriveAst : sig
 
-    val make-ast : inline-text option -> inline-text option -> math -> derivation-ast list -> derivation-line -> derivation-ast
+    val make-ast : inline-text option -> inline-text option -> math -> derivation-ast list -> derivation-line option -> derivation-ast
 
 end = struct
-    
+
     let make-ast llabel rlabel conclusion assumptions line =
         Ast(llabel, rlabel, conclusion, assumptions, line)
 

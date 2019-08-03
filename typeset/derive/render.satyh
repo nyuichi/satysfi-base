@@ -2,6 +2,7 @@
 @require: option
 @import: ast
 @import: config
+@import: line
 
 module DeriveRender : sig
 
@@ -13,6 +14,7 @@ end = struct
 
     let default-config = (|
         default-label-position = LabelLeft;
+        default-line = DeriveLine.standard-line;
         bar-top-bottom-margin = 2pt;
         label-left-right-margin = 3pt;
         bar-thickness = 0.5pt;
@@ -151,10 +153,11 @@ end = struct
 
     and render ctx config ast =
         match ast with
-        | Ast(llabel, rlabel, conclusion, assumptions, line) ->
+        | Ast(llabel, rlabel, conclusion, assumptions, lineOpt) ->
             let med-assumptions = render-assumptions ctx config assumptions in
             let med-conclusion = render-conclusion ctx config conclusion in
             let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
+            let line = lineOpt |> Option.from config#default-line in
             let med-bar = render-bar-with-label ctx config line llabel rlabel bar-width in
 
             align-and-stack med-assumptions med-bar med-conclusion

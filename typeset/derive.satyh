@@ -1,7 +1,8 @@
 @require: option
 @import: derive/ast
-@import: derive/render
 @import: derive/config
+@import: derive/line
+@import: derive/render
 
 module Derive : sig
 
@@ -39,7 +40,11 @@ end = struct
     let no-line = DeriveLine.no-line
     let dotted-line = DeriveLine.dotted-line
 
-    let derive conclusion = make-ast None None conclusion [] standard-line
+    let derive conclusion = make-ast None None conclusion [] None
+
+    let assume assumption =
+        let lineOpt = Some(DeriveLine.no-line) in
+        make-ast None None assumption [] None
 
     let by label-text ast =
         match ast with
@@ -59,8 +64,6 @@ end = struct
     let withLine line ast =
         match ast with
         | Ast(llabel-text, rlabel-text, conclusion, assumptions, _) ->
-            Ast(llabel-text, rlabel-text, conclusion, assumptions, line)
-
-    let assume assumption = make-ast None None assumption [] no-line
+            Ast(llabel-text, rlabel-text, conclusion, assumptions, Some(line))
 
 end
