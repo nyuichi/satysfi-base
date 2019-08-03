@@ -1,0 +1,45 @@
+% zexn0.satyh: ZR modules for pseudo-exceptions
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+
+%=========================================================== module ZExn0
+module ZExn0 : sig
+
+% ZExn0 defines pseudo-exceptions, where are merely run-time errors. (Argh!)
+% A pseudo-exception forces the program to abort, without giving any methods
+% to recover from it.
+
+type t
+% `make name message` is a pseudo-exception with the given name and message.
+val make : string -> string -> t
+% Aborts the program.
+val stop : unit -> 'a
+% Raises a pseudo-exception.
+val raise : t -> 'a
+
+end = struct
+
+type t = Exn of string * string
+
+let make nam msg = Exn (nam, msg)
+
+let-rec stop () =
+  let-rec intr true = () in
+  let () = intr false in % causing run-time error
+  % This function is deemed to be non-halting, so that the return type
+  % will be unrestricted; in reality, the program has already aborted.
+  stop ()
+
+let message (Exn (nam, msg)) =
+  `! [Exception `# ^ nam ^ `] `# ^ msg
+
+let raise exn =
+  let () = display-message (message exn) in
+  stop ()
+
+end
+%=========================================================== all done
+%% EOF

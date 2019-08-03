@@ -1,0 +1,56 @@
+% zlog0.satyh: ZR modules for logging
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+@require: zexn0
+
+%=========================================================== module ZLog0
+module ZLog0 : sig
+
+% Sets the verbosity.
+val set-verbosity : int -> unit
+% Sets the logger.
+% A logger is a function to implement `log`.
+val set-logger : (int -> string -> string -> unit) -> unit
+% `log level label message` shows a log message of a specified level and
+% a specified label (`WARN` etc).
+val log : int -> string -> string -> unit
+% Shows a debug-level log message. (Level 2)
+val debug : string -> unit
+% Shows an info-level log message. (Level 1)
+val info : string -> unit
+% Shows an warn-level log message. (Level 0)
+val warn : string -> unit
+% Shows an error-level log message. (Level -1)
+val errorlog : string -> unit
+% `error ename msg` shows an error-level log message and then aborts
+% with the pseudo-exception.
+val error : string -> string -> unit
+
+end = struct
+
+let-mutable verbosity <- 1
+let set-verbosity v = verbosity <- v
+
+let-mutable logger <- fun level label msg ->
+  display-message (#`  [` ^ label ^ `] `# ^ msg)
+let set-logger v = logger <- v
+
+let log level label msg =
+  if level <= !verbosity then !logger level label msg
+  else ()
+
+let debug = log 2 `DEBUG`
+let info = log 1 `INFO`
+let warn = log 0 `WARN`
+let errorlog = log (-1) `ERROR`
+
+let error enam msg =
+  let () = log (-1) `ERROR` msg in
+  ZExn0.raise (ZExn0.make enam `(message shown in error log)`)
+
+end
+%=========================================================== all done
+%% EOF

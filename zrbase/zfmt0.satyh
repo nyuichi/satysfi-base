@@ -1,0 +1,171 @@
+% zfmt0.satyh: ZR modules for formatted strings
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+@require: zexn0
+@require: zl0
+@require: znum0
+@require: zp0
+
+% let snowman = 9731 in
+% ZFmt0.format (fun f -> [`snowman = 0x`;f#ux snowman])
+% %--> `snowman = 0x2603`
+%
+% let data = (42, 1mm, true, `SATySFi`) in
+% ZFmt0.format (fun f -> [`data = `#;f#t4(f#d,f#l,f#t,f#s) data])
+% %--> `data = (42,2.83464566929pt,true,SATySFi)`
+
+%=========================================================== module ZFmtIntr0
+module ZFmtIntr0 : sig
+
+val verbs : (|
+b   : int    -> string;
+bls : string?-> string?-> ('a -> string) -> 'a list -> string;
+c   : int    -> string;
+d   : int    -> string;
+f   : float  -> string;
+g   : float  -> string;
+l   : length -> string;
+ls  : string?-> ('a -> string) -> 'a list -> string;
+lw  : string?-> int -> ('a -> string) -> 'a -> string;
+o   : int    -> string;
+op  : ('a -> string) -> 'a option -> string;
+s   : string -> string;
+t   : bool   -> string;
+t2  : ('a1 -> string) * ('a2 -> string)
+      -> ('a1 * 'a2) -> string;
+t3  : ('a1 -> string) * ('a2 -> string) * ('a3 -> string)
+      -> ('a1 * 'a2 * 'a3) -> string;
+t4  : ('a1 -> string) * ('a2 -> string) * ('a3 -> string) * ('a4 -> string)
+      -> ('a1 * 'a2 * 'a3 * 'a4) -> string;
+t5  : ('a1 -> string) * ('a2 -> string) * ('a3 -> string) * ('a4 -> string) * ('a5 -> string)
+      -> ('a1 * 'a2 * 'a3 * 'a4 * 'a5) -> string;
+un  : unit   -> string;
+ux  : int    -> string;
+x   : int    -> string;
+w   : string?-> int -> ('a -> string) -> 'a -> string;
+zw  : string?-> int -> ('a -> string) -> 'a -> string;
+|)
+
+val concat : string list -> string
+%val fold : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+%val map : ('a -> 'b) -> 'a list -> 'b list
+
+end = struct
+
+% helpers
+let fold fn r0 xs =
+  let-rec iter | [] r = r
+               | (x::xs) r = iter xs (fn r x) in
+  iter xs r0
+let map fn xs =
+  let-rec iter | [] = []
+               | (x::xs) = (fn x) :: (iter xs) in
+  iter xs
+let-rec join | sep [] = ` `
+             | sep (m::ms) = 
+  fold (fun r m -> r ^ sep ^ m) m ms
+let-rec get-opt | _ (Some v) = v
+                | dv (None) = dv
+let char-at str p =
+  if 0 <= p && p < string-length str then string-sub str p 1
+  else ` `
+let string-rep n str =
+  let tlen = string-length str * n in
+  let-rec iter s =
+    if string-length s >= tlen then s else iter (s ^ s) in
+  if tlen > 0 then string-sub (iter str) 0 tlen else ` `
+let invalid-arg = ZP0.invalid-arg
+
+% atoms
+let verb-t bv = ZP0.string-of-bool bv
+let verb-un () = `()`
+let verb-ux iv = ZNum0.string-of-int-radix-u 16 iv
+let verb-b iv = ZNum0.string-of-int-radix 2 iv
+let verb-c iv = string-unexplode [iv]
+let verb-d iv = arabic iv
+let verb-f fv = show-float fv
+let verb-g fv = show-float fv
+let verb-l lv = ZL0.string-of-length lv
+let verb-o iv = ZNum0.string-of-int-radix 8 iv
+let verb-s : string -> string | sv = sv
+let verb-x iv = ZNum0.string-of-int-radix 16 iv
+
+% tuples
+let show-tuple xs = `(` ^ join `,` xs ^ `)`
+let verb-t2 (v1,v2) (x1,x2) =
+  show-tuple [v1 x1;v2 x2]
+let verb-t3 (v1,v2,v3) (x1,x2,x3) =
+  show-tuple [v1 x1;v2 x2;v3 x3]
+let verb-t4 (v1,v2,v3,v4) (x1,x2,x3,x4) =
+  show-tuple [v1 x1;v2 x2;v3 x3;v4 x4]
+let verb-t5 (v1,v2,v3,v4,v5) (x1,x2,x3,x4,x5) =
+  show-tuple [v1 x1;v2 x2;v3 x3;v4 x4;v5 x5]
+
+% options
+let verb-op va opx =
+  match opx with (Some v) -> va v
+               | (None)   -> ` `
+
+% lists
+let verb-ls ?:sep va xs =
+  join (get-opt `,` sep) (map va xs)
+let verb-bls ?:brk ?:sep va xs =
+  let brkf pos = char-at (get-opt `[]` brk) pos in
+  brkf 0 ^ join (get-opt `;` sep) (map va xs) ^ brkf 1
+
+% decorators
+let pad-string left paddef padopt wid va x =
+  let pad = get-opt paddef padopt in
+  if string-length pad <> 1 then invalid-arg `bad pad string`
+  else if wid < 0 then invalid-arg `bad width value`
+  else
+    let m = va x in
+    let padstr = string-rep (wid - string-length m) pad in
+    if left then m ^ padstr else padstr ^ m
+let verb-w ?:pad wid = pad-string false #` `# pad wid
+let verb-zw ?:pad wid = pad-string false `0` pad wid
+let verb-lw ?:pad wid = pad-string true #` `# pad wid
+
+let verbs = (|
+b   = verb-b;
+bls = verb-bls;
+c   = verb-c;
+d   = verb-d;
+f   = verb-f;
+g   = verb-g;
+l   = verb-l;
+ls  = verb-ls;
+lw  = verb-lw;
+o   = verb-o;
+op  = verb-op;
+s   = verb-s;
+t   = verb-t;
+t2  = verb-t2;
+t3  = verb-t3;
+t4  = verb-t4;
+t5  = verb-t5;
+un  = verb-un;
+ux  = verb-ux;
+x   = verb-x;
+w   = verb-w;
+zw  = verb-zw;
+|)
+
+let concat = fold (^) ` `
+
+end
+%=========================================================== module ZFmt0
+module ZFmt0 = struct
+% This module shall be signature-less, to avoid writing that type name....
+
+let verbs = ZFmtIntr0.verbs
+
+let format-using vbs gen = ZFmtIntr0.concat (gen vbs)
+let format = format-using ZFmtIntr0.verbs
+
+end
+%=========================================================== all done
+%% EOF

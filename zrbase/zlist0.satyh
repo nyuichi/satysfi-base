@@ -1,0 +1,74 @@
+% zlist0.satyh: ZR modules for lists
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+@require: zexn0
+
+%=========================================================== module ZL0
+module ZList0 : sig
+
+val is-empty : 'a list -> bool
+val iota : int -> int list
+val take : int -> 'a list -> 'a list
+val drop : int -> 'a list -> 'a list
+%val slow-sort : ('a -> 'a -> int) -> 'a list -> 'a list
+
+%val compare-lengths : 'a list -> 'b list -> int
+%val compare-length-with : 'a list -> int -> int
+val cons : 'a -> 'a list -> 'a list
+val hd : 'a list -> 'a
+val tl : 'a list -> 'a list
+%val nth : 'a list -> int -> 'a
+%val init : int -> (int -> 'a) -> 'a list
+%val rev-append : 'a list -> 'a list -> 'a list
+%val rev-map : ('a -> 'b) -> 'a list -> 'b list
+%val for-all : ('a -> bool) -> 'a list -> bool
+%val exists : ('a -> bool) -> 'a list -> bool
+%val member : 'a -> 'a list -> bool
+%val find : ('a -> bool) -> 'a list -> 'a
+%val find-opt : ('a -> bool) -> 'a list -> 'a option
+%val filter : ('a -> bool) -> 'a list -> 'a list
+%val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
+%val assoc : 'a -> ('a * 'b) list -> 'b
+%val assoc-opt : 'a -> ('a * 'b) list -> 'b option
+%val remove-assoc : 'a -> ('a * 'b) list -> ('a * 'b) list
+%val split : ('a * 'b) list -> 'a list * 'b list
+val combine : 'a list -> 'b list -> ('a * 'b) list
+
+end = struct
+% helpers
+let notyet msg = ZExn0.raise (ZExn0.make `Unimplemented` msg)
+let invalid-arg msg = ZExn0.raise (ZExn0.make `Invalid_argument` msg)
+
+let-rec is-empty | [] = true
+                 | _ = false
+
+let iota n =
+  let-rec iter | 0 rs = rs
+               | k rs = iter (k - 1) ((k - 1) :: rs) in
+    iter n []
+
+let-rec take | 0 _ = []
+             | _ [] = invalid-arg `drop: list is too short`
+             | k (x::xs) = x :: (take (k - 1) xs)
+
+let-rec drop | 0 xs = xs
+             | _ [] = invalid-arg `drop: list is too short`
+             | k (_::xs) = drop (k - 1) xs
+
+let cons x xs = x :: xs
+
+let-rec hd | [] = invalid-arg `hd: empty list`
+           | (x::_) = x
+
+let-rec tl | [] = invalid-arg `tl: empty list`
+           | (_::xs) = xs
+
+let-rec combine | (x :: xs) (y :: ys) = (x, y) :: (combine xs ys)
+                | _ _ = []
+
+end
+%=========================================================== all done
+%% EOF

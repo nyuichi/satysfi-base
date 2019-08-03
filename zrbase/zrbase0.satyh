@@ -1,0 +1,111 @@
+% zrbase0.satyh: ZR basic package
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+@require: zp0
+@require: zl0
+@require: zfmt0
+@require: zexn0
+@require: zlist0
+@require: zlog0
+@require: znum0
+@require: zresult0
+@require: zs0
+
+% This package does the follwoing:
+% - Requires several ZR packages (see the actual @require lines).
+% - "Opens" the modules ZP0 and ZL0, with a few exceptions.
+% - Imports some functions from other (required) modules.
+%    - `fnear` from ZNum0
+%    - `debug` `info`, `warn`, `error` from ZLog0, with prefix `z-`
+%      (i.e. `z-debug`, `z-info`, `z-warn`, `z-error` are availbale).
+%    - `format` from ZFmt0, as `z-format`
+% - Defines new functions for formatted log messages:
+%    - `z-infof` etc.; this is a simple composition of `z-info` (etc.)
+%    - and `format`.
+%    - `z-infol` etc.; this is a composition of `z-info` (etc.) and
+%      string-concatenation. (See below for usage.)
+%
+% Examples of formatted log messages:
+%    %[info without formatting]
+%    z-info `snowman`
+%    %--> shows `  [INFO] snowman`
+%    %[normal fomatting method]
+%    z-infof (fun f -> [`snowman = U+`;f#ux 9731])
+%    %--> shows `  [INFO] snowman = U+2603`
+%    %[alternative method]
+%    let f = ZFmt0.verbs in
+%    z-infol [`snowman = U+`;f#ux 9731]
+%    %--> shows `  [INFO] snowman = U+2603`
+%    % The above example actually does the below:
+%    let f = ZFmt0.verbs in
+%    z-info (`snowman = U+` ^ f#ux 9731)
+%    %--> shows `  [INFO] snowman = U+2603`
+
+%=========================================================== global
+let invalid-arg = ZP0.invalid-arg
+let failwith = ZP0.failwith
+let min = ZP0.min
+let max = ZP0.max
+let succ = ZP0.succ
+let pred = ZP0.pred
+let abs = ZP0.abs
+let max-int = ZP0.max-int
+let min-int = ZP0.min-int
+let pow = ZP0.pow
+let sqrt = ZP0.sqrt
+let exp = ZP0.exp
+let log = ZP0.log
+let log10 = ZP0.log10
+let ceil = ZP0.ceil
+let floor = ZP0.floor
+let abs-float = ZP0.abs-float
+let mod-float = ZP0.mod-float
+let frexp = ZP0.frexp
+let ldexp = ZP0.ldexp
+let float-of-int = ZP0.float-of-int
+let int-of-float = ZP0.int-of-float
+let max-float = ZP0.max-float
+let min-float = ZP0.min-float
+let epsilon-float = ZP0.epsilon-float
+let fneg = ZP0.fneg
+let fmin = ZP0.fmin
+let fmax = ZP0.fmax
+let ignore = ZP0.ignore
+let string-of-bool = ZP0.string-of-bool
+let bool-of-string = ZP0.bool-of-string
+let bool-of-string-opt = ZP0.bool-of-string-opt
+let string-of-int = ZP0.string-of-int
+let int-of-string = ZP0.int-of-string
+let int-of-string-opt = ZP0.int-of-string-opt
+let string-of-float = ZP0.string-of-float
+let fst = ZP0.fst
+let snd = ZP0.snd
+let incr = ZP0.incr
+let decr = ZP0.decr
+let lneg = ZL0.lneg
+let lnear = ZL0.lnear
+let lmin = ZL0.lmin
+let lmax = ZL0.lmax
+let string-of-length = ZL0.string-of-length
+%-------- from ZNum0
+let fnear = ZNum0.fnear
+%-------- from ZLog0 / ZFmt0
+let z-debug = ZLog0.debug
+let z-info = ZLog0.info
+let z-warn = ZLog0.warn
+let z-error = ZLog0.error
+let z-format = ZFmt0.format
+let z-debugf gen = ZLog0.debug (ZFmt0.format gen)
+let z-infof gen = ZLog0.info (ZFmt0.format gen)
+let z-warnf gen = ZLog0.warn (ZFmt0.format gen)
+let z-errorf en gen = ZLog0.error en (ZFmt0.format gen)
+let z-debugl lst = ZLog0.debug (ZFmtIntr0.concat lst)
+let z-infol lst = ZLog0.info (ZFmtIntr0.concat lst)
+let z-warnl lst = ZLog0.warn (ZFmtIntr0.concat lst)
+let z-errorl en lst = ZLog0.error en (ZFmtIntr0.concat lst)
+%-------- others
+%=========================================================== all done
+%% EOF

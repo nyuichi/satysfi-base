@@ -1,0 +1,61 @@
+% zs0.satyh: ZR modules for strings
+%
+% Copyright (c) 2019 Takayuki YATO (aka. "ZR")
+%   GitHub:   https://github.com/zr-tex8r
+%   Twitter:  @zr_tex8r
+% Distributed under the MIT License.
+@require: zexn0
+
+%=========================================================== module ZL0
+module ZS0 : sig
+
+% The empty string.
+val empty : string
+% The string made of a single ASCII space (U+0020).
+val space : string
+% The string made of a single ASCII LF (U+000A).
+val lf : string
+% The string made of a single ASCII HT (U+0009).
+val ht : string
+
+val concat : string list -> string
+val join : string -> string list -> string
+val explode : string -> string list
+val repeat : int -> string -> string
+
+end = struct
+% helpers
+let notyet msg = ZExn0.raise (ZExn0.make `Unimplemented` msg)
+let add-pre sep ss =
+  let-rec iter | [] = []
+               | (s::ss) = (sep ^ s) :: (iter ss) in
+  iter ss
+
+let empty = string-unexplode []
+let space = string-unexplode [32]
+let lf = string-unexplode [10]
+let ht = string-unexplode [9]
+
+let concat ss =
+  let-rec merge | [] = []
+                | (s::[]) = [s]
+                | (s1::s2::ss) = (s1 ^ s2) :: (merge ss) in
+  let-rec iter | (s::[]) = s
+               | ss = iter (merge ss) in
+  match ss with [] -> empty
+              | ss -> iter ss
+
+let-rec join | _ [] = empty
+             | _ (s::[]) = s
+             | sep (s::ss) = concat (s :: (add-pre sep ss))
+
+let explode s =
+  let-rec iter | 0 rs = rs
+               | k rs = iter (k - 1) ((string-sub s (k - 1) 1) :: rs) in
+  iter (string-length s) []
+
+let repeat n s = notyet `repeat`
+
+end
+%=========================================================== all done
+%% EOF

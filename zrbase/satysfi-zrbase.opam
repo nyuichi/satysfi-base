@@ -1,0 +1,26 @@
+opam-version: "2.0"
+name: "satysfi-zrbase"
+version: "0.2.1"
+synopsis: "SATySFi Packages for Ordinary Programming"
+description: """
+ZR's SATySFi Package Collection for Ordinary Programming.
+
+This requires Satyrographos to install. See https://github.com/na4zagin3/satyrographos.
+"""
+maintainer: "Takayuki YATO <zr_tex8r-allez@yahoo.co.jp>"
+authors: "Takayuki YATO <zr_tex8r-allez@yahoo.co.jp>"
+license: "MIT"
+homepage: "https://github.com/zr-tex8r/satysfi-zrbase"
+bug-reports: "https://github.com/zr-tex8r/satysfi-zrbase"
+dev-repo: "git+https://github.com/zr-tex8r/satysfi-zrbase.git"
+depends: [
+  "satysfi" {>= "0.0.3" & < "0.0.4"}
+  "satyrographos" {>= "0.0.1" & < "0.0.2"}
+]
+build: [ ]
+install: [
+  [make "-f" "Makefile" "install" "PREFIX=%{prefix}%"]
+]
+remove: [
+  [make "-f" "Makefile" "uninstall" "PREFIX=%{prefix}%"]
+]

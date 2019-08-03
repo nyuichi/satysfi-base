@@ -24,6 +24,8 @@ We also provide some specific packages for typesetting:
 - `code2`: display program sources with syntax highlight
 - `derive`: display proof trees
 
+All files under `zrbase` are originally written by Takayuki YATO and licensed under MIT.
+
 ## Convention
 
 As of this writing, we have not yet fixed a coding convention to be used throughout the library.
