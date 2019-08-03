@@ -2,7 +2,7 @@
 
 module Float : sig
   val inf : float
-  val neg-inf : float
+  val ninf : float
   val nan : float
 
   val is-zero : float -> bool
@@ -43,13 +43,13 @@ module Float : sig
   val log : float -> float
   val log10 : float -> float
 end = struct
-  let neg f = 0.0 -. f
+  let neg f = (0.0 -. 1.0) *. f % `0.0 -. f` does not work properly when f == 0.0
 
   let nan = 0.0 /. 0.0
   let inf = 1.0 /. 0.0
-  let neg-inf = neg inf
+  let ninf = neg inf
 
-  let to-length f = 1pt *' f % never introduces inexactness
+  let to-length f = 1.0pt *' f % never introduces inexactness
 
   let (<) f g = to-length f <' to-length g
   let (>) f g = g < f
@@ -74,11 +74,18 @@ end = struct
   let min f g = if is-nan f || is-nan g then nan else if f < g then f else g
   let max f g = if is-nan f || is-nan g then nan else if f > g then f else g
 
-  let min-value = neg-inf
+  let min-value = ninf
   let max-value = inf
 
   let of-int = float
   let to-int = round
+
+  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
+
+  let ceil = ZP0.ceil
+  let floor = ZP0.floor
+  let round f = of-int (to-int f)
+%  let truncate = ZP0.truncate
 
   let sin = sin
   let cos = cos
@@ -91,11 +98,4 @@ end = struct
   let exp = ZP0.exp
   let log = ZP0.log
   let log10 = ZP0.log10
-
-  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
-
-  let ceil = ZP0.ceil
-  let floor = ZP0.floor
-  let round f = of-int (to-int f)
-%  let truncate = ZP0.truncate
 end
