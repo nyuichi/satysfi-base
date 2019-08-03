@@ -1,9 +1,35 @@
 @import: zrbase/zp0
 
 module Float : sig
-  val infinity : float
-  val neg-infinity : float
+  val inf : float
+  val neg-inf : float
   val nan : float
+
+  val is-zero : float -> bool
+  val is-inf : float -> bool
+  val is-nan : float -> bool
+
+  val (<) : float -> float -> bool
+  val (>) : float -> float -> bool
+  val (>=) : float -> float -> bool
+  val (<=) : float -> float -> bool
+  val (==) : float -> float -> bool  % ieee754-compliant comparison
+
+  val neg : float -> float
+  val abs : float -> float
+  val min : float -> float -> float
+  val max : float -> float -> float
+  val min-value : float % == neg-inf
+  val max-value : float % == inf
+  val pow : float -> float -> float
+
+  val of-int : int -> float
+  val to-int : float -> int
+
+  val ceil : float -> float
+  val floor : float -> float
+  val round : float -> float
+%  val truncate : float -> float
 
   val sin : float -> float
   val cos : float -> float
@@ -16,34 +42,44 @@ module Float : sig
   val exp : float -> float
   val log : float -> float
   val log10 : float -> float
-%   val is-inf : float -> bool
-%   val is-nan : float -> bool
-
-  val (+) : float -> float -> float
-  val (-) : float -> float -> float
-  val (*) : float -> float -> float
-  val (/) : float -> float -> float
-  val neg : float -> float
-  val abs : float -> float
-  val pow : float -> float -> float
-  val min : float -> float -> float
-  val max : float -> float -> float
-
-  val of-int : int -> float
-  val to-int : float -> int
-
-  val equal : float -> float -> bool
-
-  val ceil : float -> float
-  val floor : float -> float
-  val round : float -> float
-%  val truncate : float -> float
-
-  val max-value : float % == infinity
-  val min-value : float % == neg-infinity
-% val epsilon-float : float
-
 end = struct
+  let neg f = 0.0 -. f
+
+  let nan = 0.0 /. 0.0
+  let inf = 1.0 /. 0.0
+  let neg-inf = neg inf
+
+  let to-length f = 1pt *' f % never introduces inexactness
+
+  let (<) f g = to-length f <' to-length g
+  let (>) f g = g < f
+
+  let abs f = if f < 0.0 then neg f else f
+
+  let is-zero-or-nan f = not (f < neg f || f > neg f)
+  let is-nan f = is-zero-or-nan f && is-zero-or-nan (f +. 1.0)
+  let is-zero f = is-zero-or-nan f && not (is-nan f)
+  let is-inf f = not (is-nan f) && is-nan (f -. f)
+  let (==) f g =
+    if is-nan f || is-nan g then
+      false
+    else if is-inf f || is-inf g then
+      (is-inf f && is-inf g && f *. g > 0.0)
+    else
+      is-zero (f -. g)
+
+  let (<=) f g = f < g || f == g
+  let (>=) f g = g <= f
+
+  let min f g = if is-nan f || is-nan g then nan else if f < g then f else g
+  let max f g = if is-nan f || is-nan g then nan else if f > g then f else g
+
+  let min-value = neg-inf
+  let max-value = inf
+
+  let of-int = float
+  let to-int = round
+
   let sin = sin
   let cos = cos
   let tan = tan
@@ -56,31 +92,10 @@ end = struct
   let log = ZP0.log
   let log10 = ZP0.log10
 
-  let of-int = ZP0.float-of-int
-  let to-int = ZP0.int-of-float
-
-  let neg = ZP0.fneg
-  let abs = ZP0.abs-float
-  let pow x y = ZP0.pow y x  % x^y == (y |> pow x)
-  let min = ZP0.fmin
-  let max = ZP0.fmax
-
-  let infinity = 1.0 /. 0.0
-  let neg-infinity = 0.0 -. infinity
-  let nan = 0.0 /. 0.0
-
-  let max-value = infinity
-  let min-value = neg-infinity
-
-  let equal = ZP0.fequal
+  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
 
   let ceil = ZP0.ceil
   let floor = ZP0.floor
-  let round f = float (round f)
+  let round f = of-int (to-int f)
 %  let truncate = ZP0.truncate
-
-  let (+) f g = f +. g
-  let (-) f g = f -. g
-  let (*) f g = f *. g
-  let (/) f g = f /. g
 end

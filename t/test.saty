@@ -164,4 +164,14 @@ let () = Debug.log `bar` in
 let _ = force p in
 let _ = force p in
 
+let _ =
+  open Float in
+  let l = [inf; neg-inf; nan; 0.0; neg 0.0; 1.0] in
+  l |> List.iter (fun a ->
+    l |> List.iter (fun b ->
+      Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
+    )
+  )
+in
+
 finish
