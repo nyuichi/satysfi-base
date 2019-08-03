@@ -11,17 +11,14 @@ module Ref : sig
   val inc : int t -> unit
   val dec : int t -> unit
 end = struct
-  type 'a t = Ref of (unit -> 'a) * ('a -> unit)
+  type 'a t = 'a ref
 
   let make v =
     let-mutable x <- v in
-    Ref ((fun () -> !x), (fun y -> (x <- y)))
+    x
 
-  let get (Ref (getter, _)) =
-    getter ()
-
-  let set v (Ref (_, setter)) =
-    setter v
+  let get r = !r
+  let set v r = r <- v
 
   let update f r =
     let v = r |> get in
