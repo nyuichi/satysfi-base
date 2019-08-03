@@ -2,12 +2,18 @@
 @import: char
 
 module Int : sig
-  val abs : int -> int
-  val pow : int -> int -> int
-
   val bitsize : int
   val max-int : int
   val min-int : int
+
+  val succ : int -> int
+  val pred : int -> int
+  val abs : int -> int
+  val pow : int -> int -> int
+  val max : int -> int -> int
+  val min : int -> int -> int
+  val sup : int list -> int
+  val inf : int list -> int
 
   % bitwise operations
   val lsl : int -> int -> int
@@ -20,6 +26,8 @@ module Int : sig
 
   val of-string : int ?-> string -> int % may throw an error
 end = struct
+  let succ i = i + 1
+  let pred i = i - 1
   let abs i = if i < 0 then -i else i
   let pow p base = % REQUIRE(p >= 0)
     let-rec aux p pp acc =
@@ -30,10 +38,17 @@ end = struct
       else
         aux (p / 2) (pp * pp) acc
     in aux p base 1
-
   let bitsize = 63 % assume 64-bit machine
-  let max-int = pow bitsize 2 - 1
+  let max-int = (2 |> pow (bitsize - 1)) - 1
   let min-int = max-int + 1
+  let max i j = if i < j then j else i
+  let min i j = if i < j then i else j
+  let-rec sup
+  | [] = min-int
+  | (x :: xs) = max x (sup xs)
+  let-rec inf
+  | [] = max-int
+  | (x :: xs) = min x (inf xs)
 
   let lnot i = (-i) - 1
 

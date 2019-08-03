@@ -140,6 +140,8 @@ let () = p (`-123` |> Int.of-string ?:10) in
 let () = p (`ffff` |> Int.of-string ?:16) in
 let () = p (2 |> Int.pow 3) in
 let () = p (2 |> Int.pow 0) in
+let () = p (Int.sup [1; 3; 2]) in
+let () = p (Int.sup []) in
 
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
