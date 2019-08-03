@@ -1,5 +1,6 @@
 @import: base
 @require: option
+@import: fn
 
 module Option2 : sig
   val is-none : 'a option -> bool
@@ -30,7 +31,7 @@ end = struct
     | (None) = false
     | (Some(_)) = true
   
-  let join m = Option.bind m id
+  let join m = Option.bind m Fn.id
   let (^&&) b-opt1 b-opt2 =
     match (b-opt1, b-opt2) with
     | (Some(b1), Some(b2)) -> Some(b1 && b2)

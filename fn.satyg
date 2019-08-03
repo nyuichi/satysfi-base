@@ -1,0 +1,15 @@
+module Fn : sig
+  val id : 'a -> 'a
+  val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
+  val flip : ('a -> 'b -> 'c) -> ('b -> 'a -> 'c)
+  val const : 'a -> 'b -> 'a
+  val ignore : 'a -> unit
+  val non : ('a -> bool) -> ('a -> bool)
+end = struct
+  let id x = x
+  let compose f g x = f (g x)
+  let flip f y x = f x y
+  let const x _ = x
+  let ignore _ = ()
+  let non f a = not (f a)
+end

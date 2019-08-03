@@ -13,7 +13,9 @@
 @import: ../map
 @import: ../color2
 @import: ../lazy
+@import: ../fn
 
+open Fn in
 open RegExp in
 
 let () = Debug.log `==== Ref ====` in

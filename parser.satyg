@@ -5,6 +5,7 @@
 @import: option2
 @import: string
 @import: char
+@import: fn
 
 type 's 'a parser = 's -> ('a * 's) option
 
@@ -61,7 +62,7 @@ end = struct
       Some (s |> Char.at 0, s |> String.sub 1 (len - 1))
     else      
       None
-  let any-char = satisfy (const true)
+  let any-char = satisfy (Fn.const true)
   let char c = satisfy (Char.equal c)
   let string str s =
     if s |> String.starts-with str then
