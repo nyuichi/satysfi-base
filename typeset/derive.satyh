@@ -44,7 +44,7 @@ end = struct
 
     let assume assumption =
         let lineOpt = Some(DeriveLine.no-line) in
-        make-ast None None assumption [] None
+        make-ast None None assumption [] lineOpt
 
     let by label-text ast =
         match ast with
