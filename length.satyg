@@ -9,8 +9,8 @@ module Length : sig
 
   val add : length -> length -> length
   val sub : length -> length -> length
-  val scale : float -> length -> length  % 2.0 |> scale 2pt == 4pt
-  val ratio : length -> length -> float  % 6pt |> ratio 2pt == 3.0
+  val scale : float -> length -> length  % e.g. 2pt |> scale 2.0 == 4pt
+  val ratio : length -> length -> float  % e.g. 6pt |> ratio 2pt == 3.0
 
   val (<) : length -> length -> bool
   val (>) : length -> length -> bool
