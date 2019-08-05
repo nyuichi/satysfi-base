@@ -49,7 +49,7 @@ end = struct
   let inf = 1.0 /. 0.0
   let ninf = neg inf
 
-  let to-length f = 1.0pt *' f % never introduces inexactness
+  let to-length f = 1pt *' f % never introduces inexactness
 
   let (<) f g = to-length f <' to-length g
   let (>) f g = g < f

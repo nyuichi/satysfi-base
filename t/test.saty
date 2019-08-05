@@ -15,6 +15,7 @@
 @import: ../lazy
 @import: ../fn
 @import: ../float
+@import: ../length
 
 open Fn in
 open RegExp in

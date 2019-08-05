@@ -1,5 +1,6 @@
 @require: list
 @import: char
+@import: zrbase/zl0
 
 module String : sig
   val equal : string -> string -> bool
@@ -11,6 +12,7 @@ module String : sig
   val of-float : float -> string
   val of-codepoints : int list -> string
   val of-char : Char.t -> string
+  val of-length : length -> string
   val append : string -> string -> string
   val concat : string list -> string
   val is-empty : string -> bool
@@ -68,4 +70,6 @@ end = struct
     | [] -> None
     | (x::xs) -> if Char.equal c x then Some(acc) else aux xs (acc + 1) in
     aux cs 0
+  
+  let of-length l = ZL0.string-of-length l
 end
