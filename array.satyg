@@ -21,8 +21,7 @@ module Array : sig
   val of-list : 'a list -> 'a t
   val map : ('a -> 'b) -> 'a t -> 'b t
 end = struct
-  type 'a u = ('a Ref.t) list
-  type 'a t = 'a u
+  type 'a t = ('a ref) list
   let length = List.length
   let get i a = match a |> List.nth i with
   | None -> error `array: index out of range`

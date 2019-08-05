@@ -1,17 +1,15 @@
-@stage: persistent
-
 module Ref : sig
-  type 'a t
-  val make : 'a -> 'a t
-  val get : 'a t -> 'a
-  val set : 'a -> 'a t -> unit   % e.g. ``r |> Ref.set 1``
-  val update : ('a -> 'a) -> 'a t -> unit
-  val swap : 'a t -> 'a t -> unit
-  val set-temporarily : 'a -> (unit -> 'b) -> 'a t -> 'b
-  val inc : int t -> unit
-  val dec : int t -> unit
+%  type 'a t
+  val make : 'a -> 'a ref
+  val get : 'a ref -> 'a
+  val set : 'a -> 'a ref -> unit   % e.g. ``r |> Ref.set 1``
+  val update : ('a -> 'a) -> 'a ref -> unit
+  val swap : 'a ref -> 'a ref -> unit
+  val set-temporarily : 'a -> (unit -> 'b) -> 'a ref -> 'b
+  val inc : int ref -> unit
+  val dec : int ref -> unit
 end = struct
-  type 'a t = 'a ref
+%  type 'a t = 'a ref
 
   let make v =
     let-mutable x <- v in
