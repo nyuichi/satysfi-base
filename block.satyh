@@ -1,0 +1,16 @@
+@require: list
+@import: fn
+
+module Block : sig
+  val read : block-text -> context -> block-boxes
+
+  val nil : block-boxes
+  val append : block-boxes -> block-boxes -> block-boxes
+  val concat : block-boxes list -> block-boxes
+end = struct
+  let read = Fn.flip read-block
+
+  let nil = block-nil
+  let append b1 b2 = b1 +++ b2
+  let concat bbs = List.fold-right append nil bbs
+end

@@ -20,6 +20,8 @@ module Length : sig
 
   val min : length -> length -> length
   val max : length -> length -> length
+  val neg : length -> length
+  val abs : length -> length
 end = struct
   let of-pt f = 1pt *' f % no conversion occurs internally
   let of-cm f = 1cm *' f
@@ -41,4 +43,6 @@ end = struct
   % REQUIRE(!is-nan(f) && !is-nan(g))
   let min f g = if f < g then f else g
   let max f g = if f > g then f else g
+  let neg f = scale (0.0 -. 1.0) f
+  let abs f = if f < 0.0pt then neg f else f
 end

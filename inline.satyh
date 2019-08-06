@@ -1,20 +1,43 @@
 % module for inline-boxes
 @require: list
+@require: pervasives
+@import: fn
 
 module Inline : sig
-  val nil : inline-boxes
-  val append : inline-boxes -> inline-boxes -> inline-boxes
-  val concat : inline-boxes list -> inline-boxes
+  val read : inline-text -> context -> inline-boxes
+  val of-string : string -> context -> inline-boxes
+  val of-math : math -> context -> inline-boxes
+  val of-image : image -> length -> inline-boxes
+  val of-graphics : length -> length -> length -> (point -> graphics list) -> inline-boxes
+  val of-block-breakable : block-boxes -> context -> inline-boxes
+
+  % padding spaces
   val skip : length -> inline-boxes
   val glue : length -> length -> length -> inline-boxes
   val fil : inline-boxes
-  val of-math : math -> context -> inline-boxes
+
+  val nil : inline-boxes
+  val append : inline-boxes -> inline-boxes -> inline-boxes
+  val concat : inline-boxes list -> inline-boxes
+
+  val discretionary : int -> inline-boxes -> inline-boxes -> inline-boxes -> inline-boxes
+  val script-guard : script -> inline-boxes -> inline-boxes
 end = struct
-  let nil = inline-nil
-  let append ib1 ib2 = ib1 ++ ib2
-  let concat ibs = List.fold-right append nil ibs
+  let read = Fn.flip read-inline
+  let of-string s ctx = read (embed-string s) ctx
+  let of-math m ctx = embed-math ctx m
+  let of-image = use-image-by-width
+  let of-graphics = inline-graphics
+  let of-block-breakable = Fn.flip embed-block-breakable
+
   let skip = inline-skip
   let glue = inline-glue
   let fil = inline-fil
-  let of-math m ctx = embed-math ctx m
+
+  let nil = inline-nil
+  let append ib1 ib2 = ib1 ++ ib2
+  let concat ibs = List.fold-right append nil ibs
+
+  let discretionary = discretionary
+  let script-guard = script-guard
 end
