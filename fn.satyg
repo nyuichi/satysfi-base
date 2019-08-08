@@ -5,6 +5,7 @@ module Fn : sig
   val const : 'a -> 'b -> 'a
   val ignore : 'a -> unit
   val non : ('a -> bool) -> ('a -> bool)
+  val tap : ('a -> 'b) -> 'a -> 'a % e.g. v |> tap (fun x -> Debug.log x)
 end = struct
   let id x = x
   let compose f g x = f (g x)
@@ -12,4 +13,5 @@ end = struct
   let const x _ = x
   let ignore _ = ()
   let non f a = not (f a)
+  let tap f x = ignore (f x) before x
 end

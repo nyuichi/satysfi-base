@@ -4,8 +4,6 @@
 let fst (x, _) = x
 let snd (_, y) = y
 
-type 'a thunk = unit -> 'a
-
 type 'ok 'err result =
 | Ok of 'ok
 | Error of 'err
