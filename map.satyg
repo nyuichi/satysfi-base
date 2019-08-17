@@ -1,5 +1,6 @@
 @import: set
 @require: list
+@import: fn
 
 % immutable map
 %
@@ -25,7 +26,7 @@ end = struct
 
   let size m = Set.size m
 
-  let empty ord = Set.empty (fun (k1, _) (k2, _) -> ord k1 k2)
+  let empty ord = Set.empty (ord |> Fn.on fst)
 
   let is-empty m = Set.is-empty m
 
