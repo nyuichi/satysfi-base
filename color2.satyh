@@ -2,7 +2,7 @@
 @require: color
 @import: regexp
 @import: int
-@import: assoc
+@import: list2
 
 module Color2 : sig
   val srgb24 : int -> int -> int -> color
@@ -168,7 +168,7 @@ end = struct
       srgb24 (Int.of-string ?:16 r) (Int.of-string ?:16 g) (Int.of-string ?:16 b)
     | None ->
       css-color-names
-        |> Assoc.get String.equal s
-        |> (fun x -> (match x with None -> error (`Color2.of-css: invalid string: ` ^ s) | Some(v) -> v))
+        |> List2.assoc String.equal s
+        |> (fun x -> (match x with None -> error (`Color2.of-css: invalid string: ` ^ s) | Some(_, v) -> v))
         |> of-css
 end

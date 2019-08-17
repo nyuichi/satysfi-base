@@ -16,6 +16,7 @@
 @import: ../fn
 @import: ../float
 @import: ../length
+@import: ../set
 
 open Fn in
 open RegExp in
@@ -146,15 +147,15 @@ let () = p (Int.sup [1; 3; 2]) in
 let () = p (Int.sup []) in
 
 let () = Debug.log `==== Map ====` in
-let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
+let m = Map.of-list Int.order [(1, `a`); (2, `b`); (3, `c`)] in
 let option-force (Some v) = v in
-let () = m |> Map.get 1 |> option-force |> Debug.log in
-let () = m |> Map.get 2 |> option-force |> Debug.log in
-let () = m |> Map.get 3 |> option-force |> Debug.log in
+let () = m |> Map.of- 1 |> option-force |> Debug.log in
+let () = m |> Map.of- 2 |> option-force |> Debug.log in
+let () = m |> Map.of- 3 |> option-force |> Debug.log in
 let m = m |> Map.bind 2 `d` in
-let () = m |> Map.get 1 |> option-force |> Debug.log in
-let () = m |> Map.get 2 |> option-force |> Debug.log in
-let () = m |> Map.get 3 |> option-force |> Debug.log in
+let () = m |> Map.of- 1 |> option-force |> Debug.log in
+let () = m |> Map.of- 2 |> option-force |> Debug.log in
+let () = m |> Map.of- 3 |> option-force |> Debug.log in
 
 let _ = Color2.of-css `#F5F5DC` in
 let _ = Color2.of-css `beige` in

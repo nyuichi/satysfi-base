@@ -36,6 +36,8 @@ module List2 : sig
   val max : ('a -> 'a -> int) -> 'a list -> 'a option
   val mini : ('a -> 'a -> int) -> 'a list -> 'a option
   val bubblesort : ('a -> 'a -> int) -> 'a list -> 'a list
+  val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+  val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> ('a * 'b) option
 end = struct
 
   open Option2
@@ -330,4 +332,8 @@ end = struct
                 | [] -> x :: []
                 | _  -> x :: (bubblesort f xs)
         )
+
+  let acons k v alist = (k, v) :: alist
+
+  let assoc eq k alist = find (fun (l, _) -> eq k l) alist
 end

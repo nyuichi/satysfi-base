@@ -1,0 +1,55 @@
+@import: base
+@import: list2
+
+% This module implements pre-set-like structure
+
+module Set : sig
+  type 'a t
+  val order : 'a t -> 'a order
+  val empty : 'a order -> 'a t
+  val singleton : 'a order -> 'a -> 'a t
+  val size : 'a t -> int
+  val is-empty : 'a t -> bool
+  val choose : 'a t -> 'a option
+  val mem : 'a -> 'a t -> bool
+  val insert : 'a -> 'a t -> 'a t
+  val remove : 'a -> 'a t -> 'a t
+  val of-list : 'a order -> 'a list -> 'a t
+  val to-list : 'a t -> 'a list
+  val mem-opt : 'a -> 'a t -> 'a option
+end = struct
+  type 'a t = 'a order * 'a list
+
+  let order (c, _) = c
+
+  let empty c = (c, [])
+
+  let singleton c v = (c, [v])
+
+  let size (_, l) = List.length l
+
+  let is-empty (_, l) = List2.null l
+
+  let choose (_, l) = match l with
+  | [] -> None
+  | v :: _ -> Some(v)
+
+  let mem v (c, l) = List2.exists (fun w -> c v w == 0) l
+
+  let insert v (c, l) = (c, v :: l)
+
+  let remove v (c, l) = (c, List.filter (fun w -> c v w <> 0) l)
+
+  let of-list c l = (c, l)
+
+  let to-list (c, l) =
+    let l = List2.bubblesort c l in
+    let-rec dedup l = match l with
+    | [] -> []
+    | [x] -> [x]
+    | (x :: y :: l) when (c x y == 0) -> dedup (x :: l)
+    | x :: l -> x :: dedup l in
+    dedup l
+
+  let mem-opt v (c, l) = List2.find (fun w -> c v w == 0) l
+end

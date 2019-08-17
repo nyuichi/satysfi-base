@@ -26,6 +26,8 @@ module Int : sig
   val lxor : int -> int -> int
 
   val of-string : int ?-> string -> int % may throw an error
+
+  val order : int -> int -> int
 end = struct
   let succ i = i + 1
   let pred i = i - 1
@@ -111,4 +113,6 @@ end = struct
         else
           error (`Int.of-string: invalid string: `# ^ s))) 0 in
       sign * num
+
+  let order i j = i - j
 end
