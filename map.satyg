@@ -1,6 +1,7 @@
 @import: set
 @require: list
 @import: fn
+@import: tuple
 
 % immutable map
 %
@@ -10,7 +11,7 @@
 
 module Map : sig
   type 'k 'v t
-  val empty : 'k order -> 'k 'v t
+  val empty : 'k ord -> 'k 'v t
   val is-empty : 'k 'v t -> bool
   val size : 'k 'v t -> int
   val of- : 'k -> 'k 'v t -> 'v option
@@ -18,7 +19,7 @@ module Map : sig
   val unbind : 'k -> 'k 'v t -> 'k 'v t
   val dom : 'k 'v t -> 'k list
   val ran : 'k 'v t -> 'v list
-  val of-list : 'k order -> ('k * 'v) list -> 'k 'v t
+  val of-list : 'k ord -> ('k * 'v) list -> 'k 'v t
   val to-list : 'k 'v t -> ('k * 'v) list
 end = struct
   type 'k 'v u = ('k * 'v) Set.t
@@ -26,7 +27,7 @@ end = struct
 
   let size m = Set.size m
 
-  let empty ord = Set.empty (ord |> Fn.on fst)
+  let empty ord = Set.empty (ord |> Fn.on Tuple.fst)
 
   let is-empty m = Set.is-empty m
 
@@ -44,9 +45,9 @@ end = struct
   | None -> m
   | Some(_, v) -> Set.remove (k, v) m
 
-  let dom m = m |> Set.to-list |> List.map fst
+  let dom m = m |> Set.to-list |> List.map Tuple.fst
 
-  let ran m = m |> Set.to-list |> List.map snd
+  let ran m = m |> Set.to-list |> List.map Tuple.snd
 
   let of-list ord alist =
     let-rec aux

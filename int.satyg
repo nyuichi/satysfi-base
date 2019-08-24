@@ -1,3 +1,4 @@
+@import: base
 @import: string
 @import: char
 
@@ -27,7 +28,7 @@ module Int : sig
 
   val of-string : int ?-> string -> int % may throw an error
 
-  val order : int -> int -> int
+  val order : int ord
 end = struct
   let succ i = i + 1
   let pred i = i - 1

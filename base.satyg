@@ -1,10 +1,8 @@
 @import: base0
 @require: standalone
 
-type 'a order = 'a -> 'a -> int
-
-let fst (x, _) = x
-let snd (_, y) = y
+% total order on 'a
+type 'a ord = 'a -> 'a -> int
 
 type 'ok 'err result =
 | Ok of 'ok

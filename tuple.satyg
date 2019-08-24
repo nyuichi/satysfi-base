@@ -1,0 +1,9 @@
+module Tuple : sig
+   val fst : ('a * 'b) -> 'a
+   val snd : ('a * 'b) -> 'b
+   val swap : ('a * 'b) -> ('b * 'a)
+end = struct
+  let fst (x, _) = x
+  let snd (_, y) = y
+  let swap (x, y) = (y, x)
+end

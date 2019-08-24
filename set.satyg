@@ -5,22 +5,19 @@
 
 module Set : sig
   type 'a t
-  val order : 'a t -> 'a order
-  val empty : 'a order -> 'a t
-  val singleton : 'a order -> 'a -> 'a t
+  val empty : 'a ord -> 'a t
+  val singleton : 'a ord -> 'a -> 'a t
   val size : 'a t -> int
   val is-empty : 'a t -> bool
   val choose : 'a t -> 'a option
   val mem : 'a -> 'a t -> bool
   val insert : 'a -> 'a t -> 'a t
   val remove : 'a -> 'a t -> 'a t
-  val of-list : 'a order -> 'a list -> 'a t
+  val of-list : 'a ord -> 'a list -> 'a t
   val to-list : 'a t -> 'a list
   val mem-opt : 'a -> 'a t -> 'a option
 end = struct
-  type 'a t = 'a order * 'a list
-
-  let order (c, _) = c
+  type 'a t = 'a ord * 'a list
 
   let empty c = (c, [])
 

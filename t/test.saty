@@ -17,6 +17,7 @@
 @import: ../float
 @import: ../length
 @import: ../set
+@import: ../tuple
 
 open Fn in
 open RegExp in
