@@ -28,7 +28,7 @@ module Int : sig
 
   val of-string : int ?-> string -> int % may throw an error
 
-  val order : int ord
+  val ord : int ord
 end = struct
   let succ i = i + 1
   let pred i = i - 1
@@ -115,5 +115,5 @@ end = struct
           error (`Int.of-string: invalid string: `# ^ s))) 0 in
       sign * num
 
-  let order i j = i - j
+  let ord i j = i - j
 end
