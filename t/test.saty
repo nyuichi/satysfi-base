@@ -18,6 +18,7 @@
 @import: ../length
 @import: ../set
 @import: ../tuple
+@import: ../graphics
 
 open Fn in
 open RegExp in

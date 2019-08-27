@@ -6,20 +6,28 @@
 
 module Block : sig
   val read : block-text -> context -> block-boxes
-  val of-inline : bool -> bool -> inline-boxes -> context -> block-boxes
+  val of-inline : bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
+
+  val skip : length -> block-boxes
 
   val nil : block-boxes
   val append : block-boxes -> block-boxes -> block-boxes
   val concat : block-boxes list -> block-boxes
 
+  val natural-length : block-boxes -> length
+
   val add-frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
 end = struct
   let read = Fn.flip read-block
-  let of-inline b1 b2 ib ctx = line-break b1 b2 ctx ib
+  let of-inline b1 b2 ibf ctx = line-break b1 b2 ctx (ibf ctx)
+
+  let skip = block-skip
 
   let nil = block-nil
   let append b1 b2 = b1 +++ b2
   let concat bbs = List.fold-right append nil bbs
+
+  let natural-length = get-natural-length
 
   let add-frame-breakable pads deco f ctx = block-frame-breakable ctx pads deco f
 end

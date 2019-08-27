@@ -2,6 +2,7 @@
 @require: list
 @require: pervasives
 @import: fn
+@import: base
 
 module Inline : sig
   val read : inline-text -> context -> inline-boxes
@@ -9,35 +10,69 @@ module Inline : sig
   val of-math : math -> context -> inline-boxes
   val of-image : length -> image -> inline-boxes
   val of-graphics : length -> length -> length -> (point -> graphics list) -> inline-boxes
+  val of-block : baseline-spec ?-> length -> (context -> block-boxes) -> context -> inline-boxes
   val of-block-breakable : block-boxes -> context -> inline-boxes
 
   % padding spaces
   val skip : length -> inline-boxes
   val glue : length -> length -> length -> inline-boxes
   val fil : inline-boxes
+  val raise : length -> inline-boxes -> inline-boxes
 
   val nil : inline-boxes
   val append : inline-boxes -> inline-boxes -> inline-boxes
   val concat : inline-boxes list -> inline-boxes
 
-  val discretionary : int -> inline-boxes -> inline-boxes -> inline-boxes -> inline-boxes
-  val script-guard : script -> inline-boxes -> inline-boxes
+  % concatenate inline-boxes in a block-box direction
+  val stack : baseline-spec ?-> inline-boxes list -> inline-boxes
+
+  val natural-metrics : inline-boxes -> length * length * length
+  val natural-length : inline-boxes -> length
+  val natural-height : inline-boxes -> length
+  val natural-depth : inline-boxes -> length
+
+  val to-string : inline-boxes -> string
+
+  % val discretionary : int -> inline-boxes -> inline-boxes -> inline-boxes -> inline-boxes
+  % val script-guard : script -> inline-boxes -> inline-boxes
+  % val script-guard-both : script -> script -> inline-boxes -> inline-boxes
 end = struct
   let read = Fn.flip read-inline
   let of-string s ctx = read (embed-string s) ctx
   let of-math m ctx = embed-math ctx m
   let of-image = Fn.flip use-image-by-width
   let of-graphics = inline-graphics
+
+  let of-block ?:bl-opt len bbf ctx =
+    let f = match bl-opt with
+      | Some(Top) -> embed-block-top
+      | _ -> embed-block-bottom
+    in f ctx len bbf
+
   let of-block-breakable = Fn.flip embed-block-breakable
 
   let skip = inline-skip
   let glue = inline-glue
   let fil = inline-fil
+  let raise = raise-inline
 
   let nil = inline-nil
   let append ib1 ib2 = ib1 ++ ib2
   let concat ibs = List.fold-right append nil ibs
 
-  let discretionary = discretionary
-  let script-guard = script-guard
+  let stack ?:bl-opt ibs =
+    let f = match bl-opt with
+      | Some(Top) -> line-stack-top
+      | _ -> line-stack-bottom
+    in f ibs
+
+  let natural-metrics = get-natural-metrics
+  let natural-length ib = let (l, _, _) = natural-metrics ib in l
+  let natural-height ib = let (_, h, _) = natural-metrics ib in h
+  let natural-depth ib = let (_, _, d) = natural-metrics ib in d
+
+  let to-string = extract-string
+
+  % let discretionary = discretionary
+  % let script-guard = script-guard
 end

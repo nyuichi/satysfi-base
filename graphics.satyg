@@ -1,0 +1,13 @@
+@require: pervasives
+
+module Graphics : sig
+  val shift : point -> graphics -> graphics
+  val bbox : graphics -> (length * length) * (length * length)
+  % dashed-stroke
+  % fill
+  % stroke
+  % draw-text
+end = struct
+  let shift = shift-graphics
+  let bbox = get-graphics-bbox
+end
