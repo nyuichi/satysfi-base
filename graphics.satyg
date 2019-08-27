@@ -6,7 +6,6 @@ module Graphics : sig
   val stroke : length -> color -> path -> graphics
   % dashed-stroke
   % fill
-  % stroke
   % draw-text
 end = struct
   let shift = shift-graphics

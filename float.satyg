@@ -42,6 +42,8 @@ module Float : sig
   val exp : float -> float
   val log : float -> float
   val log10 : float -> float
+
+  val pi : float
 end = struct
   let neg f = (0.0 -. 1.0) *. f % `0.0 -. f` does not work properly when f == 0.0
 
@@ -98,4 +100,6 @@ end = struct
   let exp = ZP0.exp
   let log = ZP0.log
   let log10 = ZP0.log10
+
+  let pi = 3.1415926536
 end

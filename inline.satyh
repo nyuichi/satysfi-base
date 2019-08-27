@@ -27,7 +27,7 @@ module Inline : sig
   val stack : baseline-spec ?-> inline-boxes list -> inline-boxes
 
   val natural-metrics : inline-boxes -> length * length * length
-  val natural-length : inline-boxes -> length
+  val natural-width : inline-boxes -> length
   val natural-height : inline-boxes -> length
   val natural-depth : inline-boxes -> length
 
@@ -36,6 +36,9 @@ module Inline : sig
   % val discretionary : int -> inline-boxes -> inline-boxes -> inline-boxes -> inline-boxes
   % val script-guard : script -> inline-boxes -> inline-boxes
   % val script-guard-both : script -> script -> inline-boxes -> inline-boxes
+
+  val no-break : inline-boxes -> inline-boxes
+  val mandatory-break : context -> inline-boxes
 end = struct
   let read = Fn.flip read-inline
   let of-string s ctx = read (embed-string s) ctx
@@ -67,7 +70,7 @@ end = struct
     in f ibs
 
   let natural-metrics = get-natural-metrics
-  let natural-length ib = let (l, _, _) = natural-metrics ib in l
+  let natural-width ib = let (w, _, _) = natural-metrics ib in w
   let natural-height ib = let (_, h, _) = natural-metrics ib in h
   let natural-depth ib = let (_, _, d) = natural-metrics ib in d
 
@@ -75,4 +78,7 @@ end = struct
 
   % let discretionary = discretionary
   % let script-guard = script-guard
+
+  let no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> []) ib
+  let mandatory-break ctx = discretionary 0 (skip (get-text-width ctx *' 2.)) fil nil
 end
