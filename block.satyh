@@ -3,6 +3,8 @@
 @require: list
 @import: fn
 @require: deco
+@import: length
+@import: inline
 
 module Block : sig
   val read : block-text -> context -> block-boxes
@@ -16,7 +18,9 @@ module Block : sig
 
   val natural-length : block-boxes -> length
 
-  val add-frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
+  val centering : (context -> inline-boxes) -> context -> block-boxes
+
+  val frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
 end = struct
   let read = Fn.flip read-block
   let of-inline b1 b2 ibf ctx = line-break b1 b2 ctx (ibf ctx)
@@ -29,5 +33,16 @@ end = struct
 
   let natural-length = get-natural-length
 
-  let add-frame-breakable pads deco f ctx = block-frame-breakable ctx pads deco f
+  % Centerize only if the length is less than the length of the page
+  let centering ibf ctx =
+    let text-width = ctx |> get-text-width in
+    let ib = ctx |> ibf in
+    let ib-center =
+      if Length.(get-natural-width ib > text-width) then
+        ib ++ Inline.fil
+      else
+        Inline.fil ++ ib ++ Inline.fil
+    in ctx |> of-inline true true (Fn.const ib-center)
+
+  let frame-breakable pads deco f ctx = block-frame-breakable ctx pads deco f
 end

@@ -24,7 +24,7 @@ module Inline : sig
   val concat : inline-boxes list -> inline-boxes
 
   % concatenate inline-boxes in a block-box direction
-  val stack : baseline-spec ?-> inline-boxes list -> inline-boxes
+  % val stack : baseline-spec ?-> inline-boxes list -> inline-boxes
 
   val natural-metrics : inline-boxes -> length * length * length
   val natural-width : inline-boxes -> length

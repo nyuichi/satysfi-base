@@ -101,5 +101,5 @@ end = struct
   let log = ZP0.log
   let log10 = ZP0.log10
 
-  let pi = 3.1415926536
+  let pi = atan2 0.0 (neg 1.0)
 end

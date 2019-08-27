@@ -171,6 +171,7 @@ let _ = force p in
 let () = Debug.log `==== Float ====` in
 let _ =
   open Float in
+  let _ = pi |> String.of-float |> Debug.log in
   let l = [inf; ninf; nan; 0.0; neg 0.0; 1.0] in
   l |> List.iter (fun a ->
     l |> List.iter (fun b ->
