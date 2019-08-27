@@ -3,6 +3,7 @@
 module Graphics : sig
   val shift : point -> graphics -> graphics
   val bbox : graphics -> (length * length) * (length * length)
+  val stroke : length -> color -> path -> graphics
   % dashed-stroke
   % fill
   % stroke
@@ -10,4 +11,5 @@ module Graphics : sig
 end = struct
   let shift = shift-graphics
   let bbox = get-graphics-bbox
+  let stroke = stroke
 end
