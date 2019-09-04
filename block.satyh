@@ -8,7 +8,7 @@
 
 module Block : sig
   val read : block-text -> context -> block-boxes
-  val of-inline : bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
+  val of-inline : bool ?-> bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
 
   val skip : length -> block-boxes
 
@@ -23,7 +23,11 @@ module Block : sig
   val frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
 end = struct
   let read = Fn.flip read-block
-  let of-inline b1 b2 ibf ctx = line-break b1 b2 ctx (ibf ctx)
+  let of-inline ?:fill-tail b1 b2 ibf ctx =
+    let tail = match fill-tail with
+    | Some(true) -> Inline.fil
+    | _ -> Inline.nil
+  in line-break b1 b2 ctx ((ibf ctx) ++ tail)
 
   let skip = block-skip
 
