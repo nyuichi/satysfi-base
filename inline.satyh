@@ -78,6 +78,12 @@ end = struct
 
   % let discretionary = discretionary
   % let script-guard = script-guard
+  % add-footnote : block-boxes -> inline-boxes
+  % get-initial-context : length -> command -> context
+  % set-hyphen-min
+  % ...
+  % inline-frame-hogehoge
+  % inline-graphics-outer
 
   let no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> []) ib
   let mandatory-break ctx = discretionary 0 (skip (get-text-width ctx *' 2.)) fil nil
