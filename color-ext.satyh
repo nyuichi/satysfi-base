@@ -14,7 +14,7 @@ module Color : sig
   val blue   : color
 
   val srgb24 : int -> int -> int -> color
-  val of-css : string -> color % e.g. Color.of-css `#F5F5DC` and Color2.of-css `beige`
+  val of-css : string -> color % e.g. Color.of-css `#F5F5DC` and Color.of-css `beige`
 end = struct
   let gray x = Gray(x)
   let rgb r g b = RGB(r, g, b)
@@ -25,7 +25,7 @@ end = struct
   let orange = rgb 1. 0.5 0.
   let blue   = rgb 0. 0. 1.
   
-  let srgb24 r g b = Color.rgb (float r /. 256.) (float g /. 256.) (float b /. 256.)
+  let srgb24 r g b = rgb (float r /. 256.) (float g /. 256.) (float b /. 256.)
   let css-color-selector-re = RegExp.of-string `#(\h\h)(\h\h)(\h\h)`
   let css-color-names = [
     (`aliceblue`, `#f0f8ff`);

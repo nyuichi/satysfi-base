@@ -82,7 +82,7 @@ end = struct
   let get-color syntax ident =
     let keywords-re kws =
       kws |> List.map RegExp.string |> RegExp.choice |> RegExp.between RegExp.bof RegExp.eof in
-    let g-opt = List2.find (fun g -> (RegExp.test (keywords-re g#keywords) ident)) syntax#groups in
+    let g-opt = List.find (fun g -> (RegExp.test (keywords-re g#keywords) ident)) syntax#groups in
     match g-opt with
     | None -> None
     | Some g -> Some g#color
