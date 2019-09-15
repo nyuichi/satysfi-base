@@ -4,9 +4,8 @@
 @import: string
 @import: array
 @import: debug
-@import: option2
-@require: list
-@import: list2
+@import: option-ext
+@import: list-ext
 @import: char
 @import: parser
 
@@ -180,7 +179,7 @@ end = struct
 
   let oneof s = % TODO: use regexp
     let s = String.to-list s in
-    satisfy (fun c -> (Option2.is-some (List2.find (Char.equal c) s)))
+    satisfy (fun c -> (Option.is-some (List.find (Char.equal c) s)))
   let alpha = P-regexp (regexp-of-string `[a-zA-Z]`)
   let digit = P-regexp (regexp-of-string `[0-9]`)
   let hex-digit = P-regexp (regexp-of-string `[0-9a-fA-F]`)

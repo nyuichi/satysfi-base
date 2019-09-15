@@ -2,7 +2,11 @@
 @require: option
 @import: fn
 
-module Option2 : sig
+module Option : sig
+  val map : ('a -> 'b) -> 'a option -> 'b option
+  val from : 'a -> 'a option -> 'a
+  val bind : 'a option -> ('a -> 'b option) -> 'b option
+
   val is-none : 'a option -> bool
   val is-some : 'a option -> bool
   val join : ('a option) option -> 'a option
@@ -23,6 +27,18 @@ module Option2 : sig
   val (^*') : length option -> float option -> length option
   val (^/') : length option -> length option -> float option
 end = struct
+  let-rec map
+    | f (None)    = None
+    | f (Some(v)) = Some(f v)
+
+  let-rec from
+    | a (None)    = a
+    | _ (Some(a)) = a
+
+  let-rec bind
+    | (None)    f = None
+    | (Some(v)) f = f v
+      
   let-rec is-none
     | (None) = true
     | (Some(_)) = false

@@ -1,8 +1,7 @@
 % PEG-like monadic parser combinator
 
-@require: list
-@require: option
-@import: option2
+@import: list-ext
+@import: option-ext
 @import: string
 @import: char
 @import: fn
@@ -32,7 +31,7 @@ module Parser : sig
   val string : string -> string string parser
 end = struct
   let return x s = Some (x, s)
-  let bind p f s = p s |> Option.map (fun (x,s) -> f x s) |> Option2.join
+  let bind p f s = p s |> Option.map (fun (x,s) -> f x s) |> Option.join
   let (>>=) = bind
   let (>>) = fun p q -> p >>= (fun _ -> q)
   let fail s = None

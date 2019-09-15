@@ -5,13 +5,13 @@
 @import: ../debug
 @import: ../array
 @import: ../regexp
-@import: ../list2
-@import: ../option2
+@import: ../list-ext
+@import: ../option-ext
 @import: ../lexer
 @import: ../parser
 @import: ../int
 @import: ../map
-@import: ../color2
+@import: ../color-ext
 @import: ../lazy
 @import: ../fn
 @import: ../float
@@ -159,8 +159,8 @@ let () = m |> Map.of- 1 |> option-force |> Debug.log in
 let () = m |> Map.of- 2 |> option-force |> Debug.log in
 let () = m |> Map.of- 3 |> option-force |> Debug.log in
 
-let _ = Color2.of-css `#F5F5DC` in
-let _ = Color2.of-css `beige` in
+let _ = Color.of-css `#F5F5DC` in
+let _ = Color.of-css `beige` in
 
 let () = Debug.log `==== Lazy ====` in
 let p = ~(delay &(let () = Debug.log `foo` in 1)) in

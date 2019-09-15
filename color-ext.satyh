@@ -1,13 +1,30 @@
 @import: base
-@require: color
 @import: regexp
 @import: int
-@import: list2
+@import: list-ext
 
-module Color2 : sig
+module Color : sig
+  val gray   : float -> color
+  val rgb    : float -> float -> float -> color
+  val black  : color
+  val white  : color
+  val red    : color
+  val yellow : color
+  val orange : color
+  val blue   : color
+
   val srgb24 : int -> int -> int -> color
-  val of-css : string -> color % e.g. Color2.of-css `#F5F5DC` and Color2.of-css `beige`
+  val of-css : string -> color % e.g. Color.of-css `#F5F5DC` and Color2.of-css `beige`
 end = struct
+  let gray x = Gray(x)
+  let rgb r g b = RGB(r, g, b)
+  let black  = gray 0.
+  let white  = gray 1.
+  let red    = rgb 1. 0. 0.
+  let yellow = rgb 1. 1. 0.
+  let orange = rgb 1. 0.5 0.
+  let blue   = rgb 0. 0. 1.
+  
   let srgb24 r g b = Color.rgb (float r /. 256.) (float g /. 256.) (float b /. 256.)
   let css-color-selector-re = RegExp.of-string `#(\h\h)(\h\h)(\h\h)`
   let css-color-names = [
@@ -168,7 +185,7 @@ end = struct
       srgb24 (Int.of-string ?:16 r) (Int.of-string ?:16 g) (Int.of-string ?:16 b)
     | None ->
       css-color-names
-        |> List2.assoc String.equal s
-        |> (fun x -> (match x with None -> error (`Color2.of-css: invalid string: ` ^ s) | Some(_, v) -> v))
+        |> List.assoc String.equal s
+        |> (fun x -> (match x with None -> error (`Color.of-css: invalid string: ` ^ s) | Some(v) -> v))
         |> of-css
 end

@@ -1,5 +1,5 @@
 @import: base
-@import: list2
+@import: list-ext
 
 % This module implements pre-set-like structure
 
@@ -25,13 +25,13 @@ end = struct
 
   let size (_, l) = List.length l
 
-  let is-empty (_, l) = List2.null l
+  let is-empty (_, l) = List.null l
 
   let choose (_, l) = match l with
   | [] -> None
   | v :: _ -> Some(v)
 
-  let mem v (c, l) = List2.exists (fun w -> c v w == 0) l
+  let mem v (c, l) = List.exists (fun w -> c v w == 0) l
 
   let insert v (c, l) = (c, v :: l)
 
@@ -40,7 +40,7 @@ end = struct
   let of-list c l = (c, l)
 
   let to-list (c, l) =
-    let l = List2.bubblesort c l in
+    let l = List.bubblesort c l in
     let-rec dedup l = match l with
     | [] -> []
     | [x] -> [x]
@@ -48,5 +48,5 @@ end = struct
     | x :: l -> x :: dedup l in
     dedup l
 
-  let mem-opt v (c, l) = List2.find (fun w -> c v w == 0) l
+  let mem-opt v (c, l) = List.find (fun w -> c v w == 0) l
 end
