@@ -577,3 +577,14 @@ end = struct
       FootnoteScheme.main ctx ibf bbf
 
 end
+
+let document = StdJaReportBL.document
+let p = StdJaReportBL.p
+let chapter = StdJaReportBL.chapter
+let section = StdJaReportBL.section
+let subsection = StdJaReportBL.subsection
+let definition = StdJaReportBL.definition
+let theorem = StdJaReportBL.theorem
+let example = StdJaReportBL.example
+let corollary = StdJaReportBL.corollary
+let proof = StdJaReportBL.proof
