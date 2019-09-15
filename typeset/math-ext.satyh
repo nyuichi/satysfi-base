@@ -92,6 +92,8 @@ module Math : sig
   direct \Omega   : [] math-cmd
 
   direct \to : [] math-cmd
+  direct \gets : [] math-cmd
+  direct \iff : [] math-cmd
   direct \pm : [] math-cmd
   direct \mp : [] math-cmd
   direct \times : [] math-cmd
@@ -110,6 +112,7 @@ module Math : sig
   direct \ominus : [] math-cmd
   direct \otimes : [] math-cmd
   direct \oslash : [] math-cmd
+  direct \neg : [] math-cmd
 
   direct \vdash : [] math-cmd
   direct \nvdash : [] math-cmd
@@ -134,6 +137,7 @@ module Math : sig
   direct \propto : [] math-cmd
   direct \coloneq : [] math-cmd
   direct \eqcolon : [] math-cmd
+  direct \Coloneq : [] math-cmd
 
   direct \in : [] math-cmd
   direct \nin : [] math-cmd
@@ -214,6 +218,7 @@ module Math : sig
   direct \bigcap : [] math-cmd
   direct \bigcup : [] math-cmd
 
+  direct \lnot : [] math-cmd
   direct \land : [] math-cmd
   direct \lor : [] math-cmd
 
@@ -228,6 +233,7 @@ module Math : sig
   direct \nLeftrightarrow : [] math-cmd
   direct \leftarrow : [] math-cmd
   direct \rightarrow : [] math-cmd
+  direct \leftrightarrow : [] math-cmd
   direct \uparrow : [] math-cmd
   direct \downarrow : [] math-cmd
   direct \updownarrow : [] math-cmd
@@ -239,6 +245,7 @@ module Math : sig
   direct \nrightarrow : [] math-cmd
   direct \nleftrightarrow : [] math-cmd
   direct \mapsto : [] math-cmd
+  direct \longmapsto : [] math-cmd
   direct \hookleftarrow : [] math-cmd
   direct \hookrightarrow : [] math-cmd
   direct \rightarrowtail : [] math-cmd
@@ -374,6 +381,7 @@ module Math : sig
   direct \angle : [] math-cmd
   direct \measuredangle : [] math-cmd
   direct \sphericalangle : [] math-cmd
+  direct \QED : [] math-cmd
 
   direct \int : [] math-cmd
 
@@ -691,6 +699,8 @@ end = struct
   let vop = vop-scheme math-char
 
   let-math \to    = rel `→`
+  let-math \gets  = rel `←`
+  let-math \iff   = rel `⟺`
   let-math \pm    = bin `±`
   let-math \mp    = bin `∓`
   let-math \times = bin `×`
@@ -709,6 +719,7 @@ end = struct
   let-math \ominus = bin `⊖`
   let-math \otimes = bin `⊗`
   let-math \oslash = bin `⊘`
+  let-math \neg    = op `¬`
 
   let-math \vdash = rel `⊢`
   let-math \nvdash = rel `⊬`
@@ -733,6 +744,7 @@ end = struct
   let-math \propto = rel `∝`
   let-math \coloneq = rel `≔`
   let-math \eqcolon = rel `≕`
+  let-math \Coloneq = rel `⩴`
 
   let-math \in = rel `∈`
   let-math \nin = rel `∉`
@@ -813,6 +825,7 @@ end = struct
   let-math \bigcap = bigop `⋂`
   let-math \bigcup = bigop `⋃`
 
+  let-math \lnot = op `¬`
   let-math \land = rel `∧`
   let-math \lor  = rel `∨`
 
@@ -827,6 +840,7 @@ end = struct
   let-math \nLeftrightarrow = rel `⇎`
   let-math \leftarrow = rel `←`
   let-math \rightarrow = rel `→`
+  let-math \leftrightarrow = rel `↔`
   let-math \uparrow = rel `↑`
   let-math \downarrow = rel `↓`
   let-math \updownarrow = rel `↕`
@@ -838,6 +852,7 @@ end = struct
   let-math \nrightarrow = rel `↛`
   let-math \nleftrightarrow = rel `↮`
   let-math \mapsto = rel `↦`
+  let-math \longmapsto = rel `⟼`
   let-math \hookleftarrow = rel `↩`
   let-math \hookrightarrow = rel `↪`
   let-math \rightarrowtail = rel `↢`
@@ -973,6 +988,7 @@ end = struct
   let-math \angle = ord `∠`
   let-math \measuredangle = ord `∡`
   let-math \sphericalangle = rel `∢`
+  let-math \QED = ord `∎`
 
   let-math \ordd = prefix `d`
   let-math \partial = prefix `∂`

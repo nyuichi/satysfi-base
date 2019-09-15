@@ -19,6 +19,7 @@
 @import: ../set
 @import: ../tuple
 @import: ../graphics
+@import: ../typeset/math-ext
 
 open Fn in
 open RegExp in
