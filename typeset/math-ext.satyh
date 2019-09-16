@@ -121,6 +121,8 @@ module Math : sig
   direct \nvDash : [] math-cmd
   direct \Vdash : [] math-cmd
   direct \nVdash : [] math-cmd
+  direct \models : [] math-cmd
+  direct \nmodels : [] math-cmd
 
   direct \colon-rel : [] math-cmd
 
@@ -217,6 +219,7 @@ module Math : sig
   direct \bigvee : [] math-cmd
   direct \bigcap : [] math-cmd
   direct \bigcup : [] math-cmd
+  direct \bigsqcup : [] math-cmd
 
   direct \lnot : [] math-cmd
   direct \land : [] math-cmd
@@ -374,6 +377,7 @@ module Math : sig
   direct \leftthreetimes : [] math-cmd
   direct \rightthreetimes : [] math-cmd
   direct \wr : [] math-cmd
+  direct \bowtie : [] math-cmd
 
   direct \diamond : [] math-cmd
   direct \star : [] math-cmd
@@ -728,6 +732,8 @@ end = struct
   let-math \nvDash = rel `⊭`
   let-math \Vdash = rel `⊩`
   let-math \nVdash = rel `⊮`
+  let-math \models = rel `⊧`
+  let-math \nmodels = rel `⊭`
 
   let-math \colon-rel = rel `:`
 
@@ -824,6 +830,7 @@ end = struct
   let-math \bigvee = bigop `⋁`
   let-math \bigcap = bigop `⋂`
   let-math \bigcup = bigop `⋃`
+  let-math \bigsqcup = bigop `∐`
 
   let-math \lnot = op `¬`
   let-math \land = rel `∧`
@@ -981,6 +988,7 @@ end = struct
   let-math \leftthreetimes = bin `⋋`
   let-math \rightthreetimes = bin `⋌`
   let-math \wr = bin `≀`
+  let-math \bowtie = bin `⋈`
 
   let-math \diamond = ord `⋄`
   let-math \star = ord `⋆`
