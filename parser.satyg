@@ -29,6 +29,7 @@ module Parser : sig
   val any-char : string Char.t parser
   val char : Char.t -> string Char.t parser
   val string : string -> string string parser
+  val debug : string -> string 'a parser -> string 'a parser
 end = struct
   let return x s = Some (x, s)
   let bind p f s = p s |> Option.map (fun (x,s) -> f x s) |> Option.join
@@ -68,4 +69,30 @@ end = struct
       Some(s |> String.split (String.length str))
     else
       None
+
+  let (display-with-indentation, deepen-indentation, shallow-indentation) =
+    let-mutable indentation <- 0 in
+    ( (fun str ->
+        display-message (String.pow !indentation #`  `# ^ str))
+    , (fun () ->
+        (indentation <- !indentation + 1))
+    , (fun () ->
+        (indentation <- !indentation - 1))
+    )
+
+  let debug =
+    fun msg p s -> (
+      let () = display-with-indentation (msg ^ `: "` ^ s ^ `" {`) in
+      let () = deepen-indentation () in
+      let res = p s in
+      let () = shallow-indentation () in
+      let s2 =
+        match res with
+        | None          -> `} -> fail`
+        | Some(_, rest) -> `} -> success "` ^ rest ^ `"`
+      in
+      let () = display-with-indentation s2 in
+      res
+    )
+
 end
