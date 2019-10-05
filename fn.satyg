@@ -1,3 +1,5 @@
+@stage: persistent
+
 module Fn : sig
   val id : 'a -> 'a
   val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)

@@ -1,5 +1,5 @@
 % PEG-like monadic parser combinator
-
+@stage: persistent
 @import: list-ext
 @import: option-ext
 @import: string
@@ -47,7 +47,7 @@ end = struct
   let-rec sepby1 sep p =
     p >>= (fun x -> (many (sep >> p) <|> return []) >>= (fun xs -> return (x :: xs)))
   let sepby sep p = sepby1 sep p <|> return []
-    
+
   let lookahead f s = if f s then Some ((), s) else None
 
   let between op cl p =
@@ -57,9 +57,9 @@ end = struct
 
   let satisfy f s =
     let len = String.length s in
-    if ~(&(len > 0) &&& &(f (Char.at 0 s))) then
+    if (len > 0) &&& (fun () -> f (Char.at 0 s)) then
       Some (s |> Char.at 0, s |> String.sub 1 (len - 1))
-    else      
+    else
       None
   let any-char = satisfy (Fn.const true)
   let char c = satisfy (Char.equal c)

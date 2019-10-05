@@ -1,5 +1,6 @@
+@stage: persistent
+
 @import: base0
-@require: standalone
 
 % total order on 'a
 type 'a ord = 'a -> 'a -> int
@@ -11,5 +12,3 @@ type 'ok 'err result =
 let error = abort-with-message
 
 type baseline-spec = Top | Bottom
-
-let finish = standalone '<>
