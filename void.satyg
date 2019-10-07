@@ -1,0 +1,5 @@
+module Void : sig
+  type t
+end = struct
+  type t = Void % never be visible from outside
+end

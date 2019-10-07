@@ -21,6 +21,7 @@
 @import: ../graphics
 @import: ../typeset/math-ext
 @import: ../result
+@import: ../void
 
 open Fn in
 open RegExp in
