@@ -20,6 +20,7 @@
 @import: ../tuple
 @import: ../graphics
 @import: ../typeset/math-ext
+@import: ../result
 
 open Fn in
 open RegExp in
