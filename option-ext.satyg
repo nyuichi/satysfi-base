@@ -3,14 +3,17 @@
 @import: fn
 
 module Option : sig
-  val map : ('a -> 'b) -> 'a option -> 'b option
-  val from : 'a -> 'a option -> 'a
-  val bind : 'a option -> ('a -> 'b option) -> 'b option
-
+  val none : 'a option
+  val some : 'a -> 'a option
   val is-none : 'a option -> bool
   val is-some : 'a option -> bool
+  val unwrap : 'a option -> 'a
+  val unwrap-or : 'a -> 'a option -> 'a
+  val expect : string -> 'a option -> 'a
+  val map : ('a -> 'b) -> 'a option -> 'b option
+  val bind : 'a option -> ('a -> 'b option) -> 'b option
   val join : ('a option) option -> 'a option
-  val value : 'a -> 'a option -> 'a
+
   val (^&&) : bool option -> bool option -> bool option
   val (^||) : bool option -> bool option -> bool option
   val (^::) : 'a option -> ('a list) option -> ('a list) option
@@ -26,19 +29,13 @@ module Option : sig
   val (^-') : length option -> length option -> length option
   val (^*') : length option -> float option -> length option
   val (^/') : length option -> length option -> float option
+
+  val from : 'a -> 'a option -> 'a
+  val value : 'a -> 'a option -> 'a
 end = struct
-  let-rec map
-    | f (None)    = None
-    | f (Some(v)) = Some(f v)
+  let none = None
+  let some x = Some x
 
-  let-rec from
-    | a (None)    = a
-    | _ (Some(a)) = a
-
-  let-rec bind
-    | (None)    f = None
-    | (Some(v)) f = f v
-      
   let-rec is-none
     | (None) = true
     | (Some(_)) = false
@@ -46,16 +43,32 @@ end = struct
   let-rec is-some
     | (None) = false
     | (Some(_)) = true
-  
-  let join m = Option.bind m Fn.id
+
+  let expect msg opt = match opt with
+  | None -> error msg
+  | Some x -> x
+
+  let unwrap opt = expect `unwrap error` opt
+
+  let-rec unwrap-or
+    | a (None)    = a
+    | _ (Some(a)) = a
+
+  let-rec map
+    | f (None)    = None
+    | f (Some(v)) = Some(f v)
+
+  let-rec bind
+    | (None)    f = None
+    | (Some(v)) f = f v
+
+  let join m =
+    bind m Fn.id
+
   let (^&&) b-opt1 b-opt2 =
     match (b-opt1, b-opt2) with
     | (Some(b1), Some(b2)) -> Some(b1 && b2)
     | (_, _)               -> None
-
-  let value default-val opt = match opt with
-  | None -> default-val
-  | Some v -> v
 
   let (^||) b-opt1 b-opt2 =
     match (b-opt1, b-opt2) with
@@ -126,4 +139,7 @@ end = struct
     match (l-opt1, l-opt2) with
     | (Some(l1), Some(l2)) -> Some(l1 /' l2)
     | (_, _)               -> None
+
+  let from = unwrap-or
+  let value = unwrap-or
 end
