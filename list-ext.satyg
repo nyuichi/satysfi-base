@@ -2,6 +2,9 @@
 @import: option-ext
 
 module List : sig
+  val null : 'a list -> bool
+  val nil : 'a list
+  val cons : 'a -> 'a list -> 'a list
   val map : ('a -> 'b) -> 'a list -> 'b list
   val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
   val iter : ('a -> unit) -> 'a list -> unit
@@ -23,7 +26,6 @@ module List : sig
   val intersperse : 'a -> 'a list -> 'a list
   val find : ('a -> bool) -> 'a list -> 'a option
   val apply : 'a -> ('a -> 'b) list -> 'b list
-  val null : 'a list -> bool
   val take : int -> 'a list -> 'a list
   val drop : int -> 'a list -> 'a list
   val takewhile : ('a -> bool) -> 'a list -> 'a list
@@ -56,6 +58,9 @@ module List : sig
   val bubblesort : ('a -> 'a -> int) -> 'a list -> 'a list
   val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 end = struct
+
+  let nil = []
+  let cons x xs = x :: xs
 
   let-rec map
     | f []        = []
