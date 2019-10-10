@@ -1,0 +1,11 @@
+@import: base
+
+type 'a equal = 'a -> 'a -> bool
+
+module Equal : sig
+  val eq : ('a equal) implicit -> 'a -> 'a -> bool
+  val neq : ('a equal) implicit -> 'a -> 'a -> bool
+end = struct
+  let eq equal = equal
+  let neq equal a b = not (equal a b)
+end

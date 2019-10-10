@@ -98,13 +98,13 @@ end = struct
       let main pc sp =
         match iseq |> Array.get pc with
         | MATCH -> true
-        | CHAR c -> ~(&(sp < len) &&& &(Char.equal c (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
+        | CHAR c -> ~(&(sp < len) &&& &(Equal.eq Char.equal c (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
         | JMP l -> loop (pc + l) sp
         | SPLIT (l1, l2) -> ~(&(loop (pc + l1) sp) ||| &(loop (pc + l2) sp))
         | ANY -> if sp < len then loop (pc + 1) (sp + 1) else false
         | STRING c ->
           let l = String.length c in
-          ~(&(sp + l <= len) &&& &(String.equal c (s |> String.sub sp l)) &&& &(loop (pc + 1) (sp + l)))
+          ~(&(sp + l <= len) &&& &(Equal.eq String.equal c (s |> String.sub sp l)) &&& &(loop (pc + 1) (sp + l)))
         | SAVE i ->
           let old = trace |> Array.get i in
           let () = trace |> Array.set i (Some sp) in
@@ -124,8 +124,8 @@ end = struct
           ~(&(match a with
               | BOF -> sp == 0
               | EOF -> sp == String.length s
-              | BOL -> ~(&(sp == 0) ||| &(Char.equal (Char.at (sp - 1) s) Char.newline))
-              | EOL -> ~(&(sp == String.length s) ||| &(Char.equal (Char.at sp s) Char.newline))
+              | BOL -> ~(&(sp == 0) ||| &(Equal.eq Char.equal (Char.at (sp - 1) s) Char.newline))
+              | EOL -> ~(&(sp == String.length s) ||| &(Equal.eq Char.equal (Char.at sp s) Char.newline))
               | NOWHERE -> false)
             &&& &(loop (pc + 1) sp))
         | PRED f ->
@@ -179,7 +179,7 @@ end = struct
 
   let oneof s = % TODO: use regexp
     let s = String.to-list s in
-    satisfy (fun c -> (Option.is-some (List.find (Char.equal c) s)))
+    satisfy (fun c -> (Option.is-some (List.find (Equal.eq Char.equal c) s)))
   let alpha = P-regexp (regexp-of-string `[a-zA-Z]`)
   let digit = P-regexp (regexp-of-string `[0-9]`)
   let hex-digit = P-regexp (regexp-of-string `[0-9a-fA-F]`)

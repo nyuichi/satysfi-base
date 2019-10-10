@@ -1,52 +1,51 @@
 @import: base
 @import: list-ext
+@import: equal
 
 % This module implements pre-set-like structure
 
 module Set : sig
   type 'a t
-  val empty : 'a ord -> 'a t
-  val singleton : 'a ord -> 'a -> 'a t
+  val empty : 'a t
+  val singleton : 'a -> 'a t
   val size : 'a t -> int
   val is-empty : 'a t -> bool
   val choose : 'a t -> 'a option
-  val mem : 'a -> 'a t -> bool
+  val mem : ('a equal) implicit -> 'a -> 'a t -> bool
   val insert : 'a -> 'a t -> 'a t
-  val remove : 'a -> 'a t -> 'a t
-  val of-list : 'a ord -> 'a list -> 'a t
-  val to-list : 'a t -> 'a list
-  val mem-opt : 'a -> 'a t -> 'a option
+  val remove : ('a equal) implicit -> 'a -> 'a t -> 'a t
+  val of-list : 'a list -> 'a t
+  val to-list : ('a equal) implicit -> 'a t -> 'a list
+  val mem-opt : ('a equal) implicit -> 'a -> 'a t -> 'a option
 end = struct
-  type 'a t = 'a ord * 'a list
+  type 'a t = 'a list
 
-  let empty c = (c, [])
+  let empty = []
 
-  let singleton c v = (c, [v])
+  let singleton v = [v]
 
-  let size (_, l) = List.length l
+  let size l = List.length l
 
-  let is-empty (_, l) = List.null l
+  let is-empty l = List.null l
 
-  let choose (_, l) = match l with
+  let choose l = match l with
   | [] -> None
   | v :: _ -> Some(v)
 
-  let mem v (c, l) = List.exists (fun w -> c v w == 0) l
+  let mem equal v l = List.exists (equal v) l
 
-  let insert v (c, l) = (c, v :: l)
+  let insert v l = v :: l
 
-  let remove v (c, l) = (c, List.filter (fun w -> c v w <> 0) l)
+  let remove equal v l = List.filter (Equal.neq equal v) l
 
-  let of-list c l = (c, l)
+  let of-list l = l
 
-  let to-list (c, l) =
-    let l = List.bubblesort c l in
-    let-rec dedup l = match l with
-    | [] -> []
-    | [x] -> [x]
-    | (x :: y :: l) when (c x y == 0) -> dedup (x :: l)
-    | x :: l -> x :: dedup l in
-    dedup l
+  let to-list equal l =
+    let-rec dedup l acc = match l with
+    | [] -> List.reverse acc
+    | x :: l when List.exists (equal x) acc -> dedup l acc
+    | x :: l -> dedup l (x :: acc)
+    in dedup [] l
 
-  let mem-opt v (c, l) = List.find (fun w -> c v w == 0) l
+  let mem-opt equal v l = List.find (equal v) l
 end

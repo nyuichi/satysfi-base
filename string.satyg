@@ -1,9 +1,10 @@
 @require: list
+@import: base
 @import: char
 @import: zrbase/zl0
 
 module String : sig
-  val equal : string -> string -> bool
+  val equal : (string equal) implicit
   val length : string -> int
   val sub : int -> int -> string -> string
   val empty : string
@@ -70,7 +71,7 @@ end = struct
     let cs = to-list s in
     let-rec aux cs acc = match cs with
     | [] -> None
-    | (x::xs) -> if Char.equal c x then Some(acc) else aux xs (acc + 1) in
+    | (x::xs) -> if Equal.eq Char.equal c x then Some(acc) else aux xs (acc + 1) in
     aux cs 0
   
   let of-length l = ZL0.string-of-length l

@@ -1,13 +1,24 @@
+@import: base
+@import: equal
+
 % total order on 'a
 type 'a ord = 'a -> 'a -> int
 
 type ordering = Lt | Gt | Eq
 
 module Ord : sig
-  val compare : 'a ord -> 'a -> 'a -> ordering
-  val min : 'a ord -> 'a -> 'a -> 'a
-  val max : 'a ord -> 'a -> 'a -> 'a
+  val to-equal : (('a ord) implicit -> 'a equal) implicit
+  val compare : ('a ord) implicit -> 'a -> 'a -> ordering
+  val min : ('a ord) implicit -> 'a -> 'a -> 'a
+  val max : ('a ord) implicit -> 'a -> 'a -> 'a
+  val eq : ('a ord) implicit -> 'a -> 'a -> bool
+  val lt : ('a ord) implicit -> 'a -> 'a -> bool
+  val le : ('a ord) implicit -> 'a -> 'a -> bool
+  val gt : ('a ord) implicit -> 'a -> 'a -> bool
+  val ge : ('a ord) implicit -> 'a -> 'a -> bool
 end = struct
+  let to-equal ord a b = ord a b == 0
+
   let compare ord a b =
     let o = ord a b in
     if o < 0 then
@@ -28,4 +39,10 @@ end = struct
       a
     else
       b
+
+  let eq ord a b = ord a b == 0
+  let lt ord a b = ord a b < 0
+  let le ord a b = ord a b <= 0
+  let gt ord a b = ord a b > 0
+  let ge ord a b = ord a b >= 0
 end

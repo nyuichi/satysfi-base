@@ -1,8 +1,9 @@
 @import: base
+@import: equal
 
 module Char : sig
   type t
-  val equal : t -> t -> bool
+  val equal : (t equal) implicit
   val of-codepoint : int -> t
   val newline : t
   val tab : t

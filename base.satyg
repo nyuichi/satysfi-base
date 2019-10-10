@@ -1,6 +1,28 @@
 @import: base0
 @require: standalone
 
+%% `implicit` is used in two ways:
+%% 1. The first way is to declare an argument of a function
+%%    should be a ``type class'', whose actual value can be
+%%    inferred only from the type.
+%%
+%%    e.g. `val max : ('a ord) implicit -> 'a -> 'a -> 'a`
+%% 
+%% 2. The second way is to declare a value is used to infer
+%%    implicit arguments declared elsewhere. This corresponds
+%%    to ``instance'' declaration in Haskell.
+%%
+%%    e.g. `val int-ord : (int ord) implicit`
+%%
+%% Also one can combine these two usages in a single declaration
+%% to define dependency of type classes.
+%%
+%%   e.g. `val to-equal : (('a ord) implicit -> 'a equal) implicit`
+%%
+%% Currently `implicit` is only a syntactic marker that tells
+%% human programmers how arguments should be considered.
+type 'a implicit = 'a
+
 let error = abort-with-message
 
 type baseline-spec = Top | Bottom

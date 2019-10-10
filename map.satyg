@@ -11,49 +11,52 @@
 
 module Map : sig
   type 'k 'v t
-  val empty : 'k ord -> 'k 'v t
+  val empty : 'k 'v t
   val is-empty : 'k 'v t -> bool
   val size : 'k 'v t -> int
-  val of- : 'k -> 'k 'v t -> 'v option
+  val of- : 'k equal -> 'k -> 'k 'v t -> 'v option
   val bind : 'k -> 'v -> 'k 'v t -> 'k 'v t
-  val unbind : 'k -> 'k 'v t -> 'k 'v t
-  val dom : 'k 'v t -> 'k list
-  val ran : 'k 'v t -> 'v list
-  val of-list : 'k ord -> ('k * 'v) list -> 'k 'v t
-  val to-list : 'k 'v t -> ('k * 'v) list
+  val unbind : 'k equal -> 'k -> 'k 'v t -> 'k 'v t
+  val dom : 'k equal -> 'k 'v t -> 'k list
+  val ran : 'k equal -> 'k 'v t -> 'v list
+  val of-list : ('k * 'v) list -> 'k 'v t
+  val to-list : 'k equal -> 'k 'v t -> ('k * 'v) list
 end = struct
   type 'k 'v u = ('k * 'v) Set.t
   type 'k 'v t = 'k 'v u
 
   let size m = Set.size m
 
-  let empty ord = Set.empty (ord |> Fn.on Tuple.fst)
+  let empty = Set.empty
 
   let is-empty m = Set.is-empty m
 
-  let of- k m =
+  let eq equal (k1, _) (k2, _) =
+    equal k1 k2
+
+  let of- equal k m =
     match Set.choose m with
     | None -> None
     | Some(_, v) ->
-      (match m |> Set.mem-opt (k, v) with
+      (match m |> Set.mem-opt (eq equal) (k, v) with
       | None -> None
       | Some(_, v) -> Some(v))
 
   let bind k v m = Set.insert (k, v) m
 
-  let unbind k m = match Set.choose m with
+  let unbind equal k m = match Set.choose m with
   | None -> m
-  | Some(_, v) -> Set.remove (k, v) m
+  | Some(_, v) -> Set.remove (eq equal) (k, v) m
 
-  let dom m = m |> Set.to-list |> List.map Tuple.fst
+  let dom equal m = m |> Set.to-list (eq equal) |> List.map Tuple.fst
 
-  let ran m = m |> Set.to-list |> List.map Tuple.snd
+  let ran equal m = m |> Set.to-list (eq equal) |> List.map Tuple.snd
 
-  let of-list ord alist =
+  let of-list alist =
     let-rec aux
-    | [] = empty ord
+    | [] = empty
     | ((k, v) :: alist) = bind k v (aux alist)
-    in aux alist
+    in aux (List.reverse alist)
 
-  let to-list m = Set.to-list m
+  let to-list equal m = Set.to-list (eq equal) m
 end
