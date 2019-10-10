@@ -53,9 +53,9 @@ module List : sig
   val iterate : int -> ('a -> 'a) -> 'a -> 'a list
   val repeat : int -> 'a -> 'a list
   val make-cycle : int -> 'a list -> 'a list
-  val max : ('a -> 'a -> int) -> 'a list -> 'a option
-  val mini : ('a -> 'a -> int) -> 'a list -> 'a option
-  val bubblesort : ('a -> 'a -> int) -> 'a list -> 'a list
+  val max : 'a ord -> 'a list -> 'a option
+  val min : 'a ord -> 'a list -> 'a option
+  val bubblesort : 'a ord -> 'a list -> 'a list
   val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 end = struct
 
@@ -419,15 +419,15 @@ end = struct
     )
 
 
-  let-rec mini f lst =
+  let-rec min f lst =
     match lst with
     | []           -> None
     | x :: []      -> Some(x)
     | x :: y :: zs -> (
       if (f x y) > 0 then
-        mini f (y :: zs)
+        min f (y :: zs)
       else
-        mini f (x :: zs)
+        min f (x :: zs)
     )
 
 

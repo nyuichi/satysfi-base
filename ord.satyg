@@ -1,0 +1,31 @@
+% total order on 'a
+type 'a ord = 'a -> 'a -> int
+
+type ordering = Lt | Gt | Eq
+
+module Ord : sig
+  val compare : 'a ord -> 'a -> 'a -> ordering
+  val min : 'a ord -> 'a -> 'a -> 'a
+  val max : 'a ord -> 'a -> 'a -> 'a
+end = struct
+  let compare ord a b =
+    let o = ord a b in
+    if o < 0 then
+      Lt
+    else if o > 0 then
+      Gt
+    else
+      Eq
+
+  let min ord a b =
+    if ord a b <= 0 then
+      a
+    else
+      b
+
+  let max ord a b =
+    if ord a b >= 0 then
+      a
+    else
+      b
+end

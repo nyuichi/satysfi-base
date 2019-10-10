@@ -3,6 +3,8 @@
 @import: char
 
 module Int : sig
+  val ord : int ord
+
   val bitsize : int
   val max-value : int
   val min-value : int
@@ -27,9 +29,11 @@ module Int : sig
   val lxor : int -> int -> int
 
   val of-string : int ?-> string -> int % may throw an error
-
-  val ord : int ord
 end = struct
+  let ord i j = i - j
+  let max = Ord.max ord
+  let min = Ord.min ord
+
   let succ i = i + 1
   let pred i = i - 1
   let neg i = -i
@@ -46,8 +50,6 @@ end = struct
   let bitsize = 63 % assume 64-bit machine
   let max-value = (2 |> pow (bitsize - 1)) - 1
   let min-value = max-value + 1
-  let max i j = if i < j then j else i
-  let min i j = if i < j then i else j
   let-rec sup
   | [] = min-value
   | (x :: xs) = max x (sup xs)
@@ -114,6 +116,4 @@ end = struct
         else
           error (`Int.of-string: invalid string: `# ^ s))) 0 in
       sign * num
-
-  let ord i j = i - j
 end
