@@ -1,0 +1,298 @@
+% based on megaparsec
+% megaparsec handles some kinds of parsing errors better than parsec
+% since satysfi does not have rank 2-polymorphism, I rewrote the usual cps definition of ParseT using direct syle.
+% stream and token types are fixed to string and Char.t
+% no additional monad parameter, as satysfi is an impure language
+% type 'e 'a parser = 'b.
+% state
+% -> ('a -> state -> hint -> 'b)   % consumed ok
+% -> ('e error -> state -> 'b)     % consumed error
+% -> ('a -> state -> hint -> 'b)   % virgin ok
+% -> ('e error -> state -> 'b)     % virgin error
+% -> 'b
+
+@import: list-ext
+@import: option-ext
+@import: string
+@import: char
+@import: fn
+@import: result
+@import: format
+@import: ord
+@import: int
+
+% currently stream type is fixed to Char.t list
+type token = Char.t
+
+% source position
+type position = (|
+  line : int;
+  column : int;
+|)
+
+% parse error
+type parse-error = (|
+  pos: position;
+  msgs: string list
+|)
+
+module Parsec : sig
+  type 'a t
+
+  val run : 'a t -> string -> 'a parse-error result
+
+  % functor
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val (<&>) : 'a t -> ('a -> 'b) -> 'b t
+
+  % applicative
+  val pure : 'a -> 'a t
+  val ap : 'a t -> ('a -> 'b) t -> 'b t
+  val (<*>) : ('a -> 'b) t -> 'a t -> 'b t
+  val (*>) : 'a t -> 'b t -> 'b t
+  val (<*) : 'a t -> 'b t -> 'a t
+
+  % monad
+  val ret : 'a -> 'a t
+  val bind : ('a -> 'b t) -> 'a t -> 'b t
+  val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
+  val (>>) : 'a t -> 'b t -> 'b t
+  val (<<) : 'a t -> 'b t -> 'a t
+
+  % monad-fail
+  val fail : string -> 'a t
+  val unexpected : string -> 'a t
+  val labels : string list -> 'a t -> 'a t
+  val label : string -> 'a t -> 'a t
+  val (<?>) : 'a t -> string -> 'a t
+
+  % alternative
+  val empty : 'a t
+  val alt : 'a t -> 'a t -> 'a t   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
+  val (<|>) : 'a t -> 'a t -> 'a t
+  val some : 'a t -> ('a list) t  % one or more; greedy
+  val many : 'a t -> ('a list) t  % zero or more; greedy
+  val optional : 'a t -> ('a option) t  % zero or one; greedy
+  val choice : ('a t) list -> 'a t
+
+  % parsec
+  val try : 'a t -> 'a t
+  val lookahead : 'a t -> 'a t
+  val token : (token -> 'a option) -> 'a t
+
+  val any : token t
+  val eof : unit t
+  val between : 'open t -> 'close t -> 'a t -> 'a t
+  val satisfy : (token -> bool) -> token t
+  val some-sep-by : 'sep t -> 'a t -> ('a list) t
+  val many-sep-by : 'sep t -> 'a t -> ('a list) t
+  val not-followed-by : 'a t -> unit t
+  val char : Char.t -> Char.t t
+  val string : string -> string t
+end = struct
+
+  % state of parser
+  type state = (|
+    input : token list;
+    pos : position;
+  |)
+
+  type consumption = Consumed | Virgin
+
+  %% TODO: type 'a t = state -> state * (('a * hint list) error result) consumption
+  type 'a t = state -> (consumption * 'a * state * parse-error) (consumption * parse-error) result
+
+  let run p s =
+    let initial-state = (|
+      input = String.to-list s;
+      pos = (| line = 1; column = 1 |)
+    |) in
+    match p initial-state with
+    | Ok(_, a, _, _) ->
+      Result.ok a
+    | Err(_, e) ->
+      Result.err e
+
+  let map f p s =
+    p s |> Result.map (fun (c, a, s, e) -> (c, f a, s, e))
+
+  let (<&>) p f = map f p
+
+  let make-error pos msgs = (| pos = pos; msgs = msgs |)
+
+  let unknown-error s =
+    make-error s#pos [`unknown error`]
+
+  let ret x s =
+    Result.ok (Virgin, x, s, unknown-error s)
+
+  let position-ord pos1 pos2 =
+    match Ord.compare Int.ord pos1#column pos2#column with
+    | Gt -> 1
+    | Lt -> -1
+    | Eq ->
+      (match Ord.compare Int.ord pos1#line pos2#line with
+      | Gt -> 1
+      | Lt -> -1
+      | Eq -> 0)
+
+  let merge-error e1 e2 =
+    if ~(&(List.null e2#msgs) &&& &(not (List.null e1#msgs))) then
+      e1
+    else if ~(&(List.null e1#msgs) &&& &(not (List.null e2#msgs))) then
+      e2
+    else
+      match Ord.compare position-ord e1#pos e2#pos with
+      | Eq -> make-error e1#pos (List.append e1#msgs e2#msgs)
+      | Gt -> e1
+      | Lt -> e2
+
+  let bind k p s =
+    p s |> Result.bind (fun (c, a, s, e1) -> (
+      match c with
+      | Consumed ->
+        (match (k a) s with
+        | Ok(Virgin, a, s, e2) ->
+          Result.ok (Consumed, a, s, merge-error e1 e2)
+        | Err(Virgin, e2) ->
+          Result.err (Consumed, merge-error e1 e2)
+        | r -> r)
+      | Virgin ->
+        (match (k a) s with
+        | Ok(Virgin, a, s, e2) ->
+          Result.ok (Virgin, a, s, merge-error e1 e2)
+        | Err(Virgin, e2) ->
+          Result.err (Virgin, merge-error e1 e2)
+        | r -> r)
+    ))
+
+  let (>>=) p f = bind f p
+  let (>>) p1 p2 = p1 >>= (fun _ -> p2)
+  let (<<) p1 p2 = p1 >>= (fun x -> (p2 >> ret x))
+
+  let pure = ret
+  let ap p1 p2 = p2 >>= (fun f -> p1 >>= (fun x -> ret (f x)))
+  let (<*>) p1 p2 = ap p2 p1
+  let (*>) = (>>)
+  let (<*) = (<<)
+
+  let fail msg s =
+    Result.err (Virgin, make-error s#pos [msg])
+
+  let unexpected msg =
+    fail (`[unexpected] `# ^ msg)
+
+  let add-expect-messages e msgs =
+    make-error e#pos (List.append (msgs |> List.map (fun msg -> `expected: `# ^ msg)) e#msgs)
+
+  let labels msgs p s =
+    match p s with
+    | Err(Virgin, e) ->
+      let e =
+        if List.null e#msgs then
+          make-error e#pos (`expected empty string` :: e#msgs)
+        else
+          add-expect-messages e msgs
+      in Result.err (Virgin, e)
+    | Ok(Virgin, a, s, e) ->
+      let e =
+        add-expect-messages e msgs
+      in Result.ok (Virgin, a, s, e)
+    | r -> r
+
+  let label msg p = labels [msg] p
+  let (<?>) p msg = label msg p
+
+  let empty s =
+    Result.err (Virgin, unknown-error s)
+
+  let alt p1 p2 s =
+    match p1 s with
+    | Err(Virgin, e1) ->
+      (match p2 s with
+      | Ok(Virgin, a, s, e2) ->
+        Result.ok (Virgin, a, s, merge-error e1 e2)
+      | Err(Virgin, e2) ->
+        Result.err (Virgin, merge-error e1 e2)
+      | r -> r)
+    | r -> r
+
+  let (<|>) = alt
+
+  let-rec
+    many v = some v <|> pure []
+  and
+    some v = (pure List.cons <*> v) <*> many v
+
+  let optional p = (pure Option.some <*> p) <|> pure Option.none
+
+  let choice ps =
+    List.fold-right alt empty ps
+
+  let try p s =
+    match p s with
+    | Err(Consumed, e) ->
+      Result.err (Virgin, e)
+    | r -> r
+
+  let lookahead p s =
+    match p s with
+    | Ok(_, a, _, _) ->
+      Result.ok (Virgin, a, s, make-error s#pos [])
+    | r -> r
+
+  let token test s =
+    match s#input with
+    | [] ->
+      Result.err (Virgin, make-error s#pos [`unexpected end of input`])
+    | (c :: cs) ->
+      (match test c with
+      | None ->
+        Result.err (Virgin, make-error s#pos [`token does not satisfy test`])
+      | Some(x) ->
+        let pos =
+          let line = s#pos#line + (if Equal.eq Char.equal c Char.newline then 1 else 0) in
+          let column = if Equal.eq Char.equal c Char.newline then 1 else s#pos#column + 1 in
+          (| line = line; column = column |) in
+        let new-s =
+          (| input = cs; pos = pos |)
+        in Result.ok (Consumed, x, new-s, unknown-error new-s))
+
+  % derived combinators
+
+  let satisfy f =
+    token (fun t -> (if f t then Some t else None))
+
+  let between op cl p =
+    op >> p >>= (fun x -> cl >> ret x)
+
+  let not-followed-by p =
+    try (choice [
+      try p >> fail `negation failed`;
+      ret ();
+    ])
+
+  let any =
+    satisfy (Fn.const true)
+
+  let eof =
+    (not-followed-by any >> ret ()) <?> `end of input`
+
+  let char c =
+    let test b =
+      if Equal.eq Char.equal c b then
+        Option.some c
+      else
+        Option.none
+    in token test <?> Format.format `expected: char '{}'` [Char.to-string c]
+
+  let-rec some-sep-by sep p =
+    p >>= (fun x -> (many (sep >> p) <|> ret []) >>= (fun xs -> ret (x :: xs)))
+  let many-sep-by sep p = some-sep-by sep p <|> ret []
+
+  let string str =
+    let-rec aux
+    | [] = ret str
+    | (c :: cs) = char c >> aux cs
+    in aux (String.to-list str) <?> Format.format `expected: string "{}"` [str]
+end

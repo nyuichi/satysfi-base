@@ -24,6 +24,7 @@
 @import: ../void
 @import: ../ord
 @import: ../equal
+@import: ../parsec
 
 open Fn in
 open RegExp in
