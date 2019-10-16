@@ -436,18 +436,20 @@ end = struct
   let-rec bubblesort f lst =
     let-rec last lst =
       match lst with
+        | [] -> error `List.bubblesort: empty list`
         | x :: [] -> x
         | _ :: xs -> last xs
     in
     let-rec init lst =
       match lst with
+        | [] -> error `List.bubblesort: empty list`
         | _ :: [] -> []
         | x :: xs -> x :: (init xs)
     in
     let-rec bs-sub lst =
       match lst with
         | (x :: y :: zs) -> (
-            if (f x y) < 0 then
+            if (f x y) <= 0 then
               y :: bs-sub (x :: zs)
             else
               x :: bs-sub (y :: zs)
