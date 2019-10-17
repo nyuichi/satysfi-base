@@ -1,5 +1,6 @@
 @require: list
 @import: ord
+@import: eq
 @import: option-ext
 @import: ord
 
@@ -25,6 +26,7 @@ module List : sig
   val length : 'a list -> int
   val nth : int -> 'a list -> 'a option
 
+  val eq : ('a Eq.t) implicit -> (('a list) Eq.t) implicit
   val intersperse : 'a -> 'a list -> 'a list
   val find : ('a -> bool) -> 'a list -> 'a option
   val apply : 'a -> ('a -> 'b) list -> 'b list
@@ -175,6 +177,13 @@ end = struct
       | head :: tail -> if n == i then Some(head) else aux (i + 1) n tail
     in
       aux 0 lst
+
+  let eq eq =
+    let-rec aux
+    | [] [] = true
+    | (x::xs) (y::ys) = ~(&(Eq.equal eq x y) &&& &(aux xs ys))
+    | _ _ = false
+    in Eq.make aux
 
   let intersperse s xs =
     match xs with

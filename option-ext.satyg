@@ -1,6 +1,7 @@
 @import: base
 @require: option
 @import: fn
+@import: eq
 
 module Option : sig
   val none : 'a option
@@ -13,6 +14,8 @@ module Option : sig
   val map : ('a -> 'b) -> 'a option -> 'b option
   val bind : 'a option -> ('a -> 'b option) -> 'b option
   val join : ('a option) option -> 'a option
+
+  val eq : ('a Eq.t) implicit -> (('a option) Eq.t) implicit
 
   val (^&&) : bool option -> bool option -> bool option
   val (^||) : bool option -> bool option -> bool option
@@ -64,6 +67,14 @@ end = struct
 
   let join m =
     bind m Fn.id
+
+  let eq eq =
+    Eq.make (fun o1 o2 -> (
+      match (o1, o2) with
+      | (None, None) -> true
+      | (Some a, Some b) -> Eq.equal eq a b
+      | _ -> false
+    ))
 
   let (^&&) b-opt1 b-opt2 =
     match (b-opt1, b-opt2) with
