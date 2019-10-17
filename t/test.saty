@@ -23,7 +23,7 @@
 @import: ../result
 @import: ../void
 @import: ../ord
-@import: ../equal
+@import: ../eq
 @import: ../parsec
 
 open Fn in
@@ -157,13 +157,13 @@ let () = p (Int.sup []) in
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
 let option-force (Some v) = v in
-let () = m |> Map.of- Int.equal 1 |> option-force |> Debug.log in
-let () = m |> Map.of- Int.equal 2 |> option-force |> Debug.log in
-let () = m |> Map.of- Int.equal 3 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 1 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 2 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 3 |> option-force |> Debug.log in
 let m = m |> Map.bind 2 `d` in
-let () = m |> Map.of- Int.equal 1 |> option-force |> Debug.log in
-let () = m |> Map.of- Int.equal 2 |> option-force |> Debug.log in
-let () = m |> Map.of- Int.equal 3 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 1 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 2 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 3 |> option-force |> Debug.log in
 
 let _ = Color.of-css `#F5F5DC` in
 let _ = Color.of-css `beige` in

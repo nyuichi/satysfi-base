@@ -1,0 +1,13 @@
+@import: base
+
+module Eq : sig
+  type 'a t
+  val make : ('a -> 'a -> bool) -> 'a t
+  val equal : ('a t) implicit -> 'a -> 'a -> bool
+  val inequal : ('a t) implicit -> 'a -> 'a -> bool
+end = struct
+  type 'a t = 'a -> 'a -> bool
+  let make eq = eq
+  let equal eq = eq
+  let inequal eq a b = not (eq a b)
+end

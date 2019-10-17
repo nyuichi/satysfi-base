@@ -1,9 +1,10 @@
 @import: base
-@import: equal
+@import: eq
 
 module Char : sig
   type t
-  val equal : (t equal) implicit
+  val equal : t -> t -> bool
+  val eq : (t Eq.t) implicit
   val of-codepoint : int -> t
   val newline : t
   val tab : t
@@ -16,6 +17,7 @@ module Char : sig
 end = struct
   type t = string
   let equal = string-same
+  let eq = Eq.make equal
   let of-codepoint c = string-unexplode [c]
   let newline = of-codepoint 10
   let tab = of-codepoint 9

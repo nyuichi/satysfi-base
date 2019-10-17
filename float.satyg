@@ -1,4 +1,6 @@
 @import: zrbase/zp0
+@import: eq
+@import: ord
 
 module Float : sig
   val inf : float
@@ -14,6 +16,10 @@ module Float : sig
   val (>=) : float -> float -> bool
   val (<=) : float -> float -> bool
   val (==) : float -> float -> bool  % ieee754-compliant comparison
+
+  % only defined for non-nan values
+  val ord : (float Ord.t) implicit
+  val eq : (float Eq.t) implicit
 
   val neg : float -> float
   val abs : float -> float
@@ -72,6 +78,9 @@ end = struct
 
   let (<=) f g = f < g || f == g
   let (>=) f g = g <= f
+
+  let ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
+  let eq = Ord.derive-eq ord
 
   let min f g = if is-nan f || is-nan g then nan else if f < g then f else g
   let max f g = if is-nan f || is-nan g then nan else if f > g then f else g

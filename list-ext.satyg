@@ -1,6 +1,7 @@
 @require: list
 @import: ord
 @import: option-ext
+@import: ord
 
 module List : sig
   val null : 'a list -> bool
@@ -54,10 +55,10 @@ module List : sig
   val iterate : int -> ('a -> 'a) -> 'a -> 'a list
   val repeat : int -> 'a -> 'a list
   val make-cycle : int -> 'a list -> 'a list
-  val max : ('a ord) implicit -> 'a list -> 'a option
-  val min : ('a ord) implicit -> 'a list -> 'a option
-  val bubblesort : ('a ord) implicit -> 'a list -> 'a list
-  val insertsort : ('a ord) implicit -> 'a list -> 'a list
+  val max : ('a Ord.t) implicit -> 'a list -> 'a option
+  val min : ('a Ord.t) implicit -> 'a list -> 'a option
+  val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
   val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
 end = struct
 
@@ -409,31 +410,31 @@ end = struct
       List.append lst (make-cycle (n - 1) lst)
 
 
-  let-rec max f lst =
+  let-rec max ord lst =
     match lst with
     | []           -> None
     | x :: []      -> Some(x)
     | x :: y :: zs -> (
-      if (f x y) < 0 then
-        max f (y :: zs)
+      if Ord.lt ord x y then
+        max ord (y :: zs)
       else
-        max f (x :: zs)
+        max ord (x :: zs)
     )
 
 
-  let-rec min f lst =
+  let-rec min ord lst =
     match lst with
     | []           -> None
     | x :: []      -> Some(x)
     | x :: y :: zs -> (
-      if (f x y) > 0 then
-        min f (y :: zs)
+      if Ord.gt ord x y then
+        min ord (y :: zs)
       else
-        min f (x :: zs)
+        min ord (x :: zs)
     )
 
 
-  let-rec bubblesort f lst =
+  let-rec bubblesort ord lst =
     let-rec last lst =
       match lst with
         | [] -> error `List.bubblesort: empty list`
@@ -449,7 +450,7 @@ end = struct
     let-rec bs-sub lst =
       match lst with
         | (x :: y :: zs) -> (
-            if (f x y) <= 0 then
+            if Ord.le ord x y then
               y :: bs-sub (x :: zs)
             else
               x :: bs-sub (y :: zs)
@@ -465,15 +466,15 @@ end = struct
             let xs = init a in
               match xs with
                 | [] -> x :: []
-                | _  -> x :: (bubblesort f xs)
+                | _  -> x :: (bubblesort ord xs)
         )
 
-  let-rec insertsort f lst =
+  let-rec insertsort ord lst =
     let-rec is-sub x lst =
       match lst with
       | [] -> [x]
       | y :: ys -> (
-          if (f x y) <= 0 then
+          if Ord.le ord x y then
             x :: y :: ys
           else
             y :: is-sub x (ys)
@@ -481,7 +482,7 @@ end = struct
     in
       match lst with
       | [] -> []
-      | x :: xs -> is-sub x (insertsort f xs)
+      | x :: xs -> is-sub x (insertsort ord xs)
 
   let acons k v alist = (k, v) :: alist
 end

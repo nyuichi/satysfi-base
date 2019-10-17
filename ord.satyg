@@ -1,48 +1,63 @@
 @import: base
-@import: equal
+@import: eq
 
 % total order on 'a
-type 'a ord = 'a -> 'a -> int
 
 type ordering = Lt | Gt | Eq
 
 module Ord : sig
-  val to-equal : (('a ord) implicit -> 'a equal) implicit
-  val compare : ('a ord) implicit -> 'a -> 'a -> ordering
-  val min : ('a ord) implicit -> 'a -> 'a -> 'a
-  val max : ('a ord) implicit -> 'a -> 'a -> 'a
-  val eq : ('a ord) implicit -> 'a -> 'a -> bool
-  val lt : ('a ord) implicit -> 'a -> 'a -> bool
-  val le : ('a ord) implicit -> 'a -> 'a -> bool
-  val gt : ('a ord) implicit -> 'a -> 'a -> bool
-  val ge : ('a ord) implicit -> 'a -> 'a -> bool
+  type 'a t
+  val make : ('a -> 'a -> ordering) -> 'a t
+  val compare : ('a t) implicit -> 'a -> 'a -> ordering
+  val min : ('a t) implicit -> 'a -> 'a -> 'a
+  val max : ('a t) implicit -> 'a -> 'a -> 'a
+  val eq : ('a t) implicit -> 'a -> 'a -> bool
+  val lt : ('a t) implicit -> 'a -> 'a -> bool
+  val le : ('a t) implicit -> 'a -> 'a -> bool
+  val gt : ('a t) implicit -> 'a -> 'a -> bool
+  val ge : ('a t) implicit -> 'a -> 'a -> bool
+  val derive-eq : ('a t) implicit -> ('a Eq.t) implicit
 end = struct
-  let to-equal ord a b = ord a b == 0
+  type 'a t = 'a -> 'a -> ordering
 
-  let compare ord a b =
-    let o = ord a b in
-    if o < 0 then
-      Lt
-    else if o > 0 then
-      Gt
-    else
-      Eq
+  let make ord = ord
+
+  let compare ord = ord
+
+  let eq ord a b =
+    match compare ord a b with
+    | Eq -> true
+    | _ -> false
+  let lt ord a b =
+    match compare ord a b with
+    | Lt -> true
+    | _ -> false
+  let le ord a b =
+    match compare ord a b with
+    | Lt -> true
+    | Eq -> true
+    | _ -> false
+  let gt ord a b =
+    match compare ord a b with
+    | Gt -> true
+    | _ -> false
+  let ge ord a b =
+    match compare ord a b with
+    | Gt -> true
+    | Eq -> true
+    | _ -> false
 
   let min ord a b =
-    if ord a b <= 0 then
+    if le ord a b then
       a
     else
       b
 
   let max ord a b =
-    if ord a b >= 0 then
+    if ge ord a b then
       a
     else
       b
 
-  let eq ord a b = ord a b == 0
-  let lt ord a b = ord a b < 0
-  let le ord a b = ord a b <= 0
-  let gt ord a b = ord a b > 0
-  let ge ord a b = ord a b >= 0
+  let derive-eq ord = Eq.make (eq ord)
 end

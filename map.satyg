@@ -14,13 +14,13 @@ module Map : sig
   val empty : 'k 'v t
   val is-empty : 'k 'v t -> bool
   val size : 'k 'v t -> int
-  val of- : 'k equal -> 'k -> 'k 'v t -> 'v option
+  val of- : ('k Eq.t) implicit  -> 'k -> 'k 'v t -> 'v option
   val bind : 'k -> 'v -> 'k 'v t -> 'k 'v t
-  val unbind : 'k equal -> 'k -> 'k 'v t -> 'k 'v t
-  val dom : 'k equal -> 'k 'v t -> 'k list
-  val ran : 'k equal -> 'k 'v t -> 'v list
+  val unbind : ('k Eq.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
+  val dom : ('k Eq.t) implicit -> 'k 'v t -> 'k list
+  val ran : ('k Eq.t) implicit -> 'k 'v t -> 'v list
   val of-list : ('k * 'v) list -> 'k 'v t
-  val to-list : 'k equal -> 'k 'v t -> ('k * 'v) list
+  val to-list : ('k Eq.t) implicit -> 'k 'v t -> ('k * 'v) list
 end = struct
   type 'k 'v u = ('k * 'v) Set.t
   type 'k 'v t = 'k 'v u
@@ -31,26 +31,26 @@ end = struct
 
   let is-empty m = Set.is-empty m
 
-  let eq equal (k1, _) (k2, _) =
-    equal k1 k2
+  let key-eq eq =
+    Eq.make (Eq.equal eq |> Fn.on Tuple.fst)
 
-  let of- equal k m =
+  let of- eq k m =
     match Set.choose m with
     | None -> None
     | Some(_, v) ->
-      (match m |> Set.mem-opt (eq equal) (k, v) with
+      (match m |> Set.mem-opt (key-eq eq) (k, v) with
       | None -> None
       | Some(_, v) -> Some(v))
 
   let bind k v m = Set.insert (k, v) m
 
-  let unbind equal k m = match Set.choose m with
+  let unbind eq k m = match Set.choose m with
   | None -> m
-  | Some(_, v) -> Set.remove (eq equal) (k, v) m
+  | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
 
-  let dom equal m = m |> Set.to-list (eq equal) |> List.map Tuple.fst
+  let dom eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.fst
 
-  let ran equal m = m |> Set.to-list (eq equal) |> List.map Tuple.snd
+  let ran eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.snd
 
   let of-list alist =
     let-rec aux
@@ -58,5 +58,5 @@ end = struct
     | ((k, v) :: alist) = bind k v (aux alist)
     in aux (List.reverse alist)
 
-  let to-list equal m = Set.to-list (eq equal) m
+  let to-list eq m = Set.to-list (key-eq eq) m
 end

@@ -1,6 +1,6 @@
 @import: base
 @import: list-ext
-@import: equal
+@import: eq
 
 % This module implements pre-set-like structure
 
@@ -11,12 +11,12 @@ module Set : sig
   val size : 'a t -> int
   val is-empty : 'a t -> bool
   val choose : 'a t -> 'a option
-  val mem : ('a equal) implicit -> 'a -> 'a t -> bool
+  val mem : ('a Eq.t) implicit -> 'a -> 'a t -> bool
   val insert : 'a -> 'a t -> 'a t
-  val remove : ('a equal) implicit -> 'a -> 'a t -> 'a t
+  val remove : ('a Eq.t) implicit -> 'a -> 'a t -> 'a t
   val of-list : 'a list -> 'a t
-  val to-list : ('a equal) implicit -> 'a t -> 'a list
-  val mem-opt : ('a equal) implicit -> 'a -> 'a t -> 'a option
+  val to-list : ('a Eq.t) implicit -> 'a t -> 'a list
+  val mem-opt : ('a Eq.t) implicit -> 'a -> 'a t -> 'a option
 end = struct
   type 'a t = 'a list
 
@@ -32,20 +32,20 @@ end = struct
   | [] -> None
   | v :: _ -> Some(v)
 
-  let mem equal v l = List.exists (equal v) l
+  let mem eq v l = List.exists (Eq.equal eq v) l
 
   let insert v l = v :: l
 
-  let remove equal v l = List.filter (Equal.neq equal v) l
+  let remove eq v l = List.filter (Eq.inequal eq v) l
 
   let of-list l = l
 
-  let to-list equal l =
+  let to-list eq l =
     let-rec dedup l acc = match l with
     | [] -> List.reverse acc
-    | x :: l when List.exists (equal x) acc -> dedup l acc
+    | x :: l when List.exists (Eq.equal eq x) acc -> dedup l acc
     | x :: l -> dedup l (x :: acc)
     in dedup [] l
 
-  let mem-opt equal v l = List.find (equal v) l
+  let mem-opt eq v l = List.find (Eq.equal eq v) l
 end

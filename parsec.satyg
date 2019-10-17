@@ -126,15 +126,11 @@ end = struct
   let ret x s =
     Result.ok (Virgin, x, s, unknown-error s)
 
-  let position-ord pos1 pos2 =
-    match Ord.compare Int.ord pos1#column pos2#column with
-    | Gt -> 1
-    | Lt -> -1
-    | Eq ->
-      (match Ord.compare Int.ord pos1#line pos2#line with
-      | Gt -> 1
-      | Lt -> -1
-      | Eq -> 0)
+  let position-ord =
+    Ord.make (fun pos1 pos2 ->
+    (match Ord.compare Int.ord pos1#column pos2#column with
+    | Eq -> Ord.compare Int.ord pos1#line pos2#line
+    | o -> o))
 
   let merge-error e1 e2 =
     if ~(&(List.null e2#msgs) &&& &(not (List.null e1#msgs))) then
@@ -251,8 +247,8 @@ end = struct
         Result.err (Virgin, make-error s#pos [`token does not satisfy test`])
       | Some(x) ->
         let pos =
-          let line = s#pos#line + (if Equal.eq Char.equal c Char.newline then 1 else 0) in
-          let column = if Equal.eq Char.equal c Char.newline then 1 else s#pos#column + 1 in
+          let line = s#pos#line + (if Char.equal c Char.newline then 1 else 0) in
+          let column = if Char.equal c Char.newline then 1 else s#pos#column + 1 in
           (| line = line; column = column |) in
         let new-s =
           (| input = cs; pos = pos |)
@@ -280,7 +276,7 @@ end = struct
 
   let char c =
     let test b =
-      if Equal.eq Char.equal c b then
+      if Char.equal c b then
         Option.some c
       else
         Option.none

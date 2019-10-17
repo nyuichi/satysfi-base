@@ -3,8 +3,8 @@
 @import: char
 
 module Int : sig
-  val ord : (int ord) implicit
-  val equal : (int equal) implicit
+  val ord : (int Ord.t) implicit
+  val eq : (int Eq.t) implicit
 
   val bitsize : int
   val max-value : int
@@ -31,11 +31,11 @@ module Int : sig
 
   val of-string : int ?-> string -> int % may throw an error
 end = struct
-  let ord i j = i - j
+  let ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
   let max = Ord.max ord
   let min = Ord.min ord
 
-  let equal i j = i == j
+  let eq = Ord.derive-eq ord
 
   let succ i = i + 1
   let pred i = i - 1
@@ -109,7 +109,7 @@ end = struct
     match cs with
     | [] -> error `Int.of-string: invalid string`
     | c :: cs2 ->
-      let (sign, cs) = if Equal.eq Char.equal c (Char.make `-`) then (-1, cs2) else (1, cs) in
+      let (sign, cs) = if Eq.equal Char.eq c (Char.make `-`) then (-1, cs2) else (1, cs) in
       let num = cs |> List.fold-left (fun acc c ->
         (match char-to-int c with
         | None -> error (`Int.of-string: invalid string: `# ^ s)

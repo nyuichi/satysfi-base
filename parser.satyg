@@ -62,7 +62,7 @@ end = struct
     else      
       None
   let any-char = satisfy (Fn.const true)
-  let char c = satisfy (Equal.eq Char.equal c)
+  let char c = satisfy (Eq.equal Char.eq c)
   let string str s =
     if s |> String.starts-with str then
       Some(s |> String.split (String.length str))
