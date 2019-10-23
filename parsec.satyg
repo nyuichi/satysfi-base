@@ -43,10 +43,8 @@ end = struct
     | [] -> Option.none
     | (t :: ts) -> Option.some (t, ts)
   
-  let head s =
-    match uncons s with
-    | None -> Option.none
-    | Some(t, _) -> Option.some t
+  let head =
+    uncons |> Fn.compose (Option.map Tuple.fst)
 end
 
 type parse-error = (|
@@ -114,6 +112,7 @@ end = struct
     input : Stream.t;
   |)
 
+  % indicates whether backtracking is to be performed on failure; see `alt`
   type consumption = Consumed | Virgin
 
   let (<+>) c1 c2 =
@@ -154,7 +153,7 @@ end = struct
       | (None, c2, e2) ->
         (Option.none, c1 <+> c2, List.append e2 e1))
     | (None, c1, e1) ->
-      (None, c1, e1)
+      (Option.none, c1, e1)
 
   let (>>=) p f = bind f p
   let (>>) p1 p2 = p1 >>= (fun _ -> p2)
@@ -167,7 +166,7 @@ end = struct
   let (<*) = (<<)
 
   let empty s =
-    (None, Virgin, [])
+    (Option.none, Virgin, [])
 
   let alt p1 p2 s =
     match p1 s with
@@ -188,17 +187,22 @@ end = struct
   let choice ps =
     List.fold-right alt empty ps
 
+  % private API; impredictive choice a la PEG
+  let (</>) p1 p2 s =
+    match p1 s with
+    | (None, c1, e1) ->
+      let (o, c2, e2) = p2 s in
+      (o, c2 <+> c1, List.append e2 e1)
+    | r -> r
+
   let make-error s desc =
     (| token = Stream.head s#input; desc = desc |)
 
   let report desc s =
     (Option.some (s, ()), Virgin, [make-error s desc])
 
-  let label desc p s =
-    match p s with
-    | (None, c, e) ->
-      (Option.none, c, make-error s desc :: e)
-    | r -> r
+  let label desc p =
+    p </> (report desc >> empty)
 
   let (<?>) p desc = label desc p
 
@@ -258,7 +262,7 @@ end = struct
     | (c :: cs) = char c >> aux cs
     in try (aux (String.to-list str))
 
-  let-rec some-sep-by sep p =
+  let some-sep-by sep p =
     p >>= (fun x -> many (try (sep >> p)) >>= (fun xs -> ret (x :: xs)))
 
   let many-sep-by sep p = try (some-sep-by sep p) <|> ret []
