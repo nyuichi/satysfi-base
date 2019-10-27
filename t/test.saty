@@ -25,6 +25,7 @@
 @import: ../ord
 @import: ../eq
 @import: ../parsec
+@import: ../either
 
 open Fn in
 open RegExp in
