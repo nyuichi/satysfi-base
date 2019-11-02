@@ -1,26 +1,26 @@
 @import: base0
 @require: standalone
 
-%% `implicit` is used in two ways:
+%% [implicit] is used in two ways:
 %% 1. The first way is to declare an argument of a function
-%%    should be a ``type class'', whose actual value can be
+%%    should be a *type class*, whose actual value can be
 %%    inferred only from the type.
 %%
-%%    e.g. `val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a`
+%%    e.g. [val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a]
 %% 
 %% 2. The second way is to declare a value is used to infer
 %%    implicit arguments declared elsewhere. This corresponds
-%%    to ``instance'' declaration in Haskell.
+%%    to *instance* declaration in Haskell.
 %%
-%%    e.g. `val int-ord : (int Ord.t) implicit`
+%%    e.g. [val int-ord : (int Ord.t) implicit]
 %%
 %% Also one can combine these two usages in a single declaration.
 %% For example, automatic derivation of type class instances can be
 %% defined as follows:
 %%
-%%   e.g. `val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit`
+%%   e.g. [val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit]
 %%
-%% Currently `implicit` is only a syntactic marker that tells
+%% Currently [implicit] is only a syntactic marker that tells
 %% human programmers how arguments should be considered.
 type 'a implicit = 'a
 

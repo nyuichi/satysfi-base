@@ -1,5 +1,9 @@
 @import: base
+@import: fn
 
+%% ['a 'b either] contains a value of either ['a] or ['b].
+%% Unlike ['a 'b result], ['a 'b either] should have
+%% no bias between ['a] and ['b].
 type 'a 'b either =
 | Left of 'a
 | Right of 'b
@@ -10,36 +14,73 @@ module Either : sig
   val is-left : 'a 'b either -> bool
   val is-right : 'a 'b either -> bool
   val unwrap-left : 'a 'b either -> 'a
+  val unwrap-left-or : 'a -> 'a 'b either -> 'a
+  val unwrap-left-or-else : ('b -> 'a) -> 'a 'b either -> 'a
   val unwrap-right : 'a 'b either -> 'b
+  val unwrap-right-or : 'b -> 'a 'b either -> 'b
+  val unwrap-right-or-else : ('a -> 'b) -> 'a 'b either -> 'b
   val either : ('a -> 'c) -> ('b -> 'c) -> 'a 'b either -> 'c
   val bimap : ('a -> 'c) -> ('b -> 'd) -> 'a 'b either -> 'c 'd either
   val swap : 'a 'b either -> 'b 'a either
   val value : 'a 'a either -> 'a
 end = struct
   let left x = Left(x)
-  let right x = Right(x)
-  let is-left e = match e with
-  | Left(_) -> true
-  | Right(_) -> false
-  let is-right e = match e with
-  | Left(_) -> false
-  | Right(_) -> true
-  let unwrap-left e = match e with
-  | Left(x) -> x
-  | Right(_) -> error `unwrap-left failed`
-  let unwrap-right e = match e with
-  | Right(x) -> x
-  | Left(_) -> error `unwrap-right failed`
-  let either f g e = match e with
-  | Left(x) -> f x
-  | Right(x) -> g x
-  let bimap f g e = match e with
-  | Left(x) -> left (f x)
-  | Right(x) -> right (g x)
-  let swap e = match e with
-  | Left(x) -> right x
-  | Right(x) -> left x
-  let value e = match e with
-  | Left(x) -> x
-  | Right(x) -> x
+
+  let right y = Right(y)
+
+  let is-left e =
+    match e with
+    | Left(_) -> true
+    | Right(_) -> false
+
+  let is-right e =
+    match e with
+    | Left(_) -> false
+    | Right(_) -> true
+
+  let unwrap-left-or-else f e =
+    match e with
+    | Left(x) -> x
+    | Right(y) -> f y
+
+  let unwrap-left-or x e =
+    e |> unwrap-left-or-else (Fn.const x)
+
+  let unwrap-left e =
+    e |> unwrap-left-or-else (fun _ ->
+      error `unwrap-left failed`
+    )
+
+  let unwrap-right-or-else f e =
+    match e with
+    | Left(x) -> f x
+    | Right(y) -> y
+
+  let unwrap-right-or y e =
+    e |> unwrap-right-or-else (Fn.const y)
+
+  let unwrap-right e =
+    e |> unwrap-right-or-else (fun _ ->
+      error `unwrap-right failed`
+    )
+
+  let either f g e =
+    match e with
+    | Left(x) -> f x
+    | Right(y) -> g y
+
+  let bimap f g e =
+    match e with
+    | Left(x) -> left (f x)
+    | Right(y) -> right (g y)
+
+  let swap e =
+    match e with
+    | Left(x) -> right x
+    | Right(y) -> left y
+
+  let value e =
+    match e with
+    | Left(x) -> x
+    | Right(y) -> y
 end

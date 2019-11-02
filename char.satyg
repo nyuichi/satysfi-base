@@ -2,7 +2,9 @@
 @import: eq
 
 module Char : sig
+  %% Type representing a single unicode codepoint.
   type t
+
   val equal : t -> t -> bool
   val eq : (t Eq.t) implicit
   val of-codepoint : int -> t

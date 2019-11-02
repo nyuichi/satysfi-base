@@ -20,7 +20,7 @@ module Block : sig
 
   val centering : (context -> inline-boxes) -> context -> block-boxes
 
-  val frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
+  % val frame-breakable : (length * length * length * length) -> deco-set -> (context -> block-boxes) -> context -> block-boxes
 end = struct
   let read = Fn.flip read-block
   let of-inline ?:fill-tail b1 b2 ibf ctx =

@@ -2,8 +2,7 @@
 
 %% Short-circuit conjunction operator.
 %%
-%% example:
-%%   if ~(&(i < String.length s) &&& &(Char.equal (Char.at i s) Char.space)) then ...
+%% e.g. [if ~(&(i < String.length s) &&& &(Char.equal (Char.at i s) Char.space)) then `yes` else `no`]
 let ( &&& ) b1 b2 = &(if ~b1 then ~b2 else false)
 
 %% Short-circuit disjunction operator. See also [(&&&)].
