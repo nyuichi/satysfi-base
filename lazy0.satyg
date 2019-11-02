@@ -1,10 +1,11 @@
 @stage: 0
 @import: base0
 
-type 'a promise = Promise of (('a (unit -> 'a promise) either) ref) ref
+type 'a promise-state = Value of 'a | Thunk of unit -> 'a promise
+and 'a promise = Promise of (('a promise-state) ref) ref
 
-%let delay-force e = &(Promise (Ref.make (Ref.make (Right (fun () -> ~e)))))
-let delay-force e = &(Promise (let-mutable r <- (let-mutable r <- (Right (fun () -> ~e)) in r) in r))
+%let delay-force e = &(Promise (Ref.make (Ref.make (Thunk (fun () -> ~e)))))
+let delay-force e = &(Promise (let-mutable r <- (let-mutable r <- (Thunk (fun () -> ~e)) in r) in r))
 
-%let delay e = delay-force &(Promise (Ref.make (Ref.make (Left (~e)))))
-let delay e = delay-force &(Promise (let-mutable r <- (let-mutable r <- (Left (~e)) in r) in r))
+%let delay e = delay-force &(Promise (Ref.make (Ref.make (Value (~e)))))
+let delay e = delay-force &(Promise (let-mutable r <- (let-mutable r <- (Value (~e)) in r) in r))
