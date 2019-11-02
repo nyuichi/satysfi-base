@@ -44,7 +44,7 @@ end = struct
     | (t :: ts) -> Option.some (t, ts)
   
   let head =
-    uncons |> Fn.compose (Option.map Tuple.fst)
+    uncons |> Fn.compose (Option.map Pair.fst)
 end
 
 type parse-error = (|
@@ -230,7 +230,7 @@ end = struct
 
   let catch p s =
     let (o, _, e) = p s in
-    (Option.some (s, (o |> Option.map Tuple.snd, e)), Virgin, [])
+    (Option.some (s, (o |> Option.map Pair.snd, e)), Virgin, [])
 
   let any s =
     match Stream.uncons s#input with
@@ -253,8 +253,8 @@ end = struct
     )))
 
   let char c =
-    let test t = Char.equal (Tuple.fst t) c
-    in satisfy test <&> Tuple.fst
+    let test t = Char.equal (Pair.fst t) c
+    in satisfy test <&> Pair.fst
 
   let string str =
     let-rec aux

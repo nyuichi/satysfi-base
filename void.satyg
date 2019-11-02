@@ -1,4 +1,5 @@
 module Void : sig
+  %% Type representing nothing. No value has type [Void.t].
   type t
 end = struct
   type t = Void % never be visible from outside

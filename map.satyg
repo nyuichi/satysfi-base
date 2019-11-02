@@ -32,7 +32,7 @@ end = struct
   let is-empty m = Set.is-empty m
 
   let key-eq eq =
-    Eq.make (Eq.equal eq |> Fn.on Tuple.fst)
+    Eq.make (Eq.equal eq |> Fn.on Pair.fst)
 
   let of- eq k m =
     match Set.choose m with
@@ -48,9 +48,9 @@ end = struct
   | None -> m
   | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
 
-  let dom eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.fst
+  let dom eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.fst
 
-  let ran eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.snd
+  let ran eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.snd
 
   let of-list alist =
     let-rec aux

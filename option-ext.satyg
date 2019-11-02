@@ -12,6 +12,7 @@ module Option : sig
   val unwrap-or : 'a -> 'a option -> 'a
   val expect : string -> 'a option -> 'a
   val map : ('a -> 'b) -> 'a option -> 'b option
+  val ret : 'a -> 'a option
   val bind : 'a option -> ('a -> 'b option) -> 'b option
   val join : ('a option) option -> 'a option
 
@@ -60,6 +61,8 @@ end = struct
   let-rec map
     | f (None)    = None
     | f (Some(v)) = Some(f v)
+
+  let ret x = Some(x)
 
   let-rec bind
     | (None)    f = None

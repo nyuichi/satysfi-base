@@ -1,4 +1,5 @@
 @import: base
+@import: fn
 
 type 'ok 'err result =
 | Ok of 'ok
@@ -10,44 +11,67 @@ module Result : sig
   val is-ok : 'a 'e result -> bool
   val is-err : 'a 'e result -> bool
   val unwrap : 'a 'e result -> 'a
-  val unwrap-or : 'a -> 'a 'e result -> 'a
   val expect : string -> 'a 'e result -> 'a
+  val unwrap-or : 'a -> 'a 'e result -> 'a
+  val unwrap-or-else : ('e -> 'a) -> 'a 'e result -> 'a
   val map : ('a -> 'b) -> 'a 'e result -> 'b 'e result
   val map-err : ('e -> 'f) -> 'a 'e result -> 'a 'f result
+  val ret : 'a -> 'a 'e result
   val bind : ('a -> 'b 'e result) -> 'a 'e result -> 'b 'e result
   val join : ('a 'e result) 'e result -> 'a 'e result
   val to-option : 'a 'e result -> 'a option
 end = struct
   let ok x = Ok x
   let err e = Err e
-  let is-ok r = match r with
-  | Ok(_) -> true
-  | _ -> false
-  let is-err r = match r with
-  | Ok(_) -> false
-  | _ -> true
-  let unwrap r = match r with
-  | Ok(a) -> a
-  | _ -> error `unwrap error`
-  let unwrap-or x r = match r with
-  | Ok(a) -> a
-  | _ -> x
-  let expect msg r = match r with
-  | Ok(a) -> a
-  | _ -> error msg
-  let map f r = match r with
-  | Ok(a) -> ok (f a)
-  | Err(e) -> err e
-  let map-err f r = match r with
-  | Ok(a) -> ok a
-  | Err(e) -> err (f e)
-  let bind k r = match r with
-  | Ok(a) -> k a
-  | Err(e) -> err e
-  let join r = match r with
-  | Ok(r) -> r
-  | Err(e) -> err e
-  let to-option r = match r with
-  | Ok(a) -> Some(a)
-  | _ -> None
+
+  let is-ok r =
+    match r with
+    | Ok(_) -> true
+    | _ -> false
+
+  let is-err r =
+    match r with
+    | Ok(_) -> false
+    | _ -> true
+
+  let unwrap-or-else f r =
+    match r with
+    | Ok(a) -> a
+    | Err(e) -> f e
+
+  let expect msg r =
+    r |> unwrap-or-else (fun _ -> error msg)
+
+  let unwrap r =
+    r |> expect `unwrap error`
+
+  let unwrap-or x r =
+    r |> unwrap-or-else (Fn.const x)
+
+  let map f r =
+    match r with
+    | Ok(a) -> ok (f a)
+    | Err(e) -> err e
+
+  let map-err f r =
+    match r with
+    | Ok(a) -> ok a
+    | Err(e) -> err (f e)
+
+  let ret x = ok x
+
+  let bind k r =
+    match r with
+    | Ok(a) -> k a
+    | Err(e) -> err e
+
+  let join r =
+    match r with
+    | Ok(r) -> r
+    | Err(e) -> err e
+
+  let to-option r =
+    match r with
+    | Ok(a) -> Some(a)
+    | _ -> None
 end
