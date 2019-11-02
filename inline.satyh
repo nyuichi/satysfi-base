@@ -4,6 +4,8 @@
 @import: fn
 @import: base
 
+type baseline-spec = Top | Bottom
+
 module Inline : sig
   val read : inline-text -> context -> inline-boxes
   val of-string : string -> context -> inline-boxes
