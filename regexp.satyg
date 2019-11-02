@@ -83,7 +83,7 @@ end = struct
 
   let run iseq ngroup s =
     let len = String.length s in
-    let dp = Array.length iseq |> Array.init (fun _ -> Array.make (len + 1) None) in
+    let dp = Array.length iseq |> Array.init (fun _ -> (len + 1 |> Array.make None)) in
     let memoize2 f i j =
       let dpi = dp |> Array.get i in
       match dpi |> Array.get j with
@@ -93,7 +93,7 @@ end = struct
         let r = f i j in
         let () = dpi |> Array.set j (Some r) in
         r in
-    let trace = Array.make (2 * ngroup) None in
+    let trace = 2 * ngroup |> Array.make None in
     let-rec loop pc sp =
       let main pc sp =
         match iseq |> Array.get pc with
