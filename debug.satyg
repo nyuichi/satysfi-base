@@ -1,8 +1,12 @@
 @import: string
 
 module Debug : sig
-  val print : string -> unit % plain output
-  val log : string -> unit % colored output
+  %% [Debug.print msg] simply prints [msg] to the console.
+  %% No modification nor formatting is performed beforehaand.
+  val print : string -> unit
+
+  %% [Debug.log msg] prints [msg] to the console in a structured format.
+  val log : string -> unit
 end = struct
   let print = display-message
 

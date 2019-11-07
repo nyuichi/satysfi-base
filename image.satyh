@@ -1,9 +1,14 @@
 module Image : sig
-%   type t
+  %% [Image.of-jpeg filename] loads a JPEG image from
+  %% file specified by [filename].
   val of-jpeg : string -> image
+
+  %% [Image.of-pdf filename index] loads a PDF file specified
+  %% by [filename] and creates an image object from the page
+  %% at index [index]. [index] is one-origin.
   val of-pdf : string -> int -> image
 end = struct
-%   type t = image
   let of-jpeg = load-image
+
   let of-pdf = load-pdf-image
 end

@@ -37,12 +37,12 @@ type header-footer = (|
 |)
 
 module Pager : sig
-  val break : page -> mergin pager-hook -> header-footer pager-hook -> block-boxes -> document
+  val make-document : page -> mergin pager-hook -> header-footer pager-hook -> block-boxes -> document
   val clear : block-boxes  % hard page break
   val make-footnote : block-boxes -> inline-boxes
   val make-hook : (point -> unit) pager-hook -> inline-boxes
 end = struct
-  let break = page-break
+  let make-document = page-break
   let make-hook = hook-page-break
   let clear = clear-page
   let make-footnote = add-footnote

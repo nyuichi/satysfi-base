@@ -1,9 +1,13 @@
 @import: base
 @import: regexp
 
-% Format.format `hoge{}fuga{}piyo` [`aaa`;`bbb`] => `hogeaaafugabbbpiyo`
-
 module Format : sig
+  %% [Format.format template strs] returns a new string with the same
+  %% contents as [template] except each occurence of substring [`{}`]
+  %% is replaced with each string in list [strs]. The number of occurences
+  %% of [`{}`] in [template] and the length of [strs] must be equal.
+  %%
+  %% e.g. [Format.format `foo{}bar{}baz` [`AA`;`BB`]] => [`fooAAbarBBbaz`]
   val format : string -> string list -> string
 end = struct
   let split ss =
