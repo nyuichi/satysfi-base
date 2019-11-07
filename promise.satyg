@@ -1,0 +1,38 @@
+@import: base
+@import: ref
+
+module Promise : sig
+  type 'a t
+  val make : 'a -> 'a t
+  val delay : 'a thunk -> 'a t
+  val delay-force : ('a t) thunk -> 'a t
+  val force : 'a t -> 'a
+end = struct
+
+  type 'a state =
+  | Value of 'a
+  | Thunk of ('a t) thunk
+  and 'a t = (('a state) ref) ref
+
+  let make v =
+    Ref.make (Ref.make (Value v))
+
+  let delay-force e =
+    Ref.make (Ref.make (Thunk e))
+
+  let delay e =
+    delay-force ~(lazy &(make (e ())))
+
+  let-rec force p =
+    match p |> Ref.get |> Ref.get with
+    | Value v -> v
+    | Thunk f ->
+      let q = f () in
+      match p |> Ref.get |> Ref.get with % p may be updated during evaluation of q
+      | Value v -> v
+      | _ ->
+        let () = Ref.get p |> Ref.set (Ref.get (Ref.get q)) in
+        let () = q |> Ref.set (Ref.get p) in
+        force p
+
+end

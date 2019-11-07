@@ -31,3 +31,7 @@ let error = abort-with-message
 %% [finish] returns an empty document. It is useful when writing a prograam
 %% involving no typesetting logic.
 let finish = standalone '<>
+
+%% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
+%% through the 0-stage function [lazy].
+type 'a thunk = unit -> 'a
