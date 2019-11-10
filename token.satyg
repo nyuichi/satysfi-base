@@ -1,0 +1,31 @@
+@import: stream
+
+type token-position = (|
+  line : int;  % one origin
+  column : int;  % zero origin
+|)
+
+module Token : sig
+  type 'd t
+
+  %% [make d pos] returns a new token with data [d] and
+  %% position [pos].
+  val make : 'd -> token-position -> 'd t
+
+  val data : 'd t -> 'd
+
+  val position : 'd t -> token-position
+
+  val initial-position : token-position
+end = struct
+  type 'd token = 'd * token-position
+  type 'd t = 'd token
+
+  let make d pos = (d, pos)
+
+  let data (d, _) = d
+
+  let position (_, pos) = pos
+
+  let initial-position = (| line = 1; column = 0 |)
+end

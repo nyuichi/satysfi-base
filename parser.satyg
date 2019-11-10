@@ -4,9 +4,9 @@
 @import: char
 @import: fn
 @import: result
-@import: format
 @import: ord
 @import: int
+@import: token
 @import: lexer
 
 type 'd parse-error = (|
@@ -14,7 +14,7 @@ type 'd parse-error = (|
   desc: string
 |)
 
-module Parsec : sig
+module Parser : sig
   type 'a 'd t
 
   val run : 'a 'd t -> ('d Token.t) Stream.t -> 'a (('d parse-error) list) result
@@ -52,7 +52,7 @@ module Parsec : sig
   val (<?>) : 'a 'd t -> string -> 'a 'd t
   val fail : string -> 'a 'd t
 
-  % parsec
+  % parser
   val try : 'a 'd t -> 'a 'd t  % mark savepoints to perform backtracking
   val lookahead : 'a 'd t -> 'a 'd t
   val not-followed-by : 'a 'd t -> unit 'd t  % flip success and failure; never consumes input
@@ -65,9 +65,6 @@ module Parsec : sig
   val some-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
   val many-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
   val between : 'open 'd t -> 'close 'd t -> 'a 'd t -> 'a 'd t
-
-  val char : Char.t -> Char.t Char.t t
-  val string : string -> string Char.t t
 end = struct
 
   % state of parser
@@ -215,6 +212,23 @@ end = struct
         empty
     )))
 
+  let some-sep-by sep p =
+    p >>= (fun x -> many (try (sep >> p)) >>= (fun xs -> ret (x :: xs)))
+
+  let many-sep-by sep p = try (some-sep-by sep p) <|> ret []
+
+  let between op cl p =
+    op >> p >>= (fun x -> cl >> ret x)
+end
+
+module StringParser : sig
+  val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
+  val char : Char.t -> Char.t Char.t Parser.t
+  val string : string -> string Char.t Parser.t
+end = struct
+
+  open Parser
+
   let char c =
     let test t = Char.equal (t |> Token.data) c
     in satisfy test <&> Token.data
@@ -225,11 +239,20 @@ end = struct
     | (c :: cs) = char c >> aux cs
     in try (aux (String.to-list str))
 
-  let some-sep-by sep p =
-    p >>= (fun x -> many (try (sep >> p)) >>= (fun xs -> ret (x :: xs)))
+  let lex-string input =
+    Stream.unfold (fun (cs, pos) -> (
+      match List.uncons cs with
+      | None -> Option.none
+      | Some(c, new-cs) ->
+        let token = Token.make c pos in
+        let new-pos =
+          let line = pos#line + (if Char.equal c Char.newline then 1 else 0) in
+          let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
+          (| line = line; column = column |)
+        in Option.some (token, (new-cs, new-pos))
+    )) (String.to-list input, Token.initial-position)
 
-  let many-sep-by sep p = try (some-sep-by sep p) <|> ret []
+  let run p input =
+    input |> lex-string |> Parser.run p
 
-  let between op cl p =
-    op >> p >>= (fun x -> cl >> ret x)
 end
