@@ -7,90 +7,72 @@
 @import: format
 @import: ord
 @import: int
+@import: lexer
 
-type stream-position = (|
-  line : int;  % one origin
-  column : int;  % zero origin
-|)
-
-type token = Char.t * stream-position  % currently token's component is fixed to Char.t
-
-let lex-string input =
-  Stream.unfold (fun (cs, pos) -> (
-    match List.uncons cs with
-    | None -> Option.none
-    | Some(c, new-cs) ->
-      let token = (c, pos) in
-      let new-pos =
-        let line = pos#line + (if Char.equal c Char.newline then 1 else 0) in
-        let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
-        (| line = line; column = column |)
-      in Option.some (token, (new-cs, new-pos))
-  )) (String.to-list input, (| line = 1; column = 0 |))
-
-type parse-error = (|
-  token: token option;  % None for EOF
+type 'd parse-error = (|
+  token: ('d Token.t) option;  % None for EOF
   desc: string
 |)
 
 module Parsec : sig
-  type 'a t
+  type 'a 'd t
 
-  val run : 'a t -> token Stream.t -> 'a (parse-error list) result
+  val run : 'a 'd t -> ('d Token.t) Stream.t -> 'a (('d parse-error) list) result
 
   % functor
-  val map : ('a -> 'b) -> 'a t -> 'b t
-  val (<&>) : 'a t -> ('a -> 'b) -> 'b t
+  val map : ('a -> 'b) -> 'a 'd t -> 'b 'd t
+  val (<&>) : 'a 'd t -> ('a -> 'b) -> 'b 'd t
 
   % applicative
-  val pure : 'a -> 'a t
-  val ap : 'a t -> ('a -> 'b) t -> 'b t
-  val (<*>) : ('a -> 'b) t -> 'a t -> 'b t
-  val (*>) : 'a t -> 'b t -> 'b t
-  val (<*) : 'a t -> 'b t -> 'a t
+  val pure : 'a -> 'a 'd t
+  val ap : 'a 'd t -> ('a -> 'b) 'd t -> 'b 'd t
+  val (<*>) : ('a -> 'b) 'd t -> 'a 'd t -> 'b 'd t
+  val (*>) : 'a 'd t -> 'b 'd t -> 'b 'd t
+  val (<*) : 'a 'd t -> 'b 'd t -> 'a 'd t
 
   % monad
-  val ret : 'a -> 'a t
-  val bind : ('a -> 'b t) -> 'a t -> 'b t
-  val (>>=) : 'a t -> ('a -> 'b t) -> 'b t
-  val (>>) : 'a t -> 'b t -> 'b t
-  val (<<) : 'a t -> 'b t -> 'a t
+  val ret : 'a -> 'a 'd t
+  val bind : ('a -> 'b 'd t) -> 'a 'd t -> 'b 'd t
+  val (>>=) : 'a 'd t -> ('a -> 'b 'd t) -> 'b 'd t
+  val (>>) : 'a 'd t -> 'b 'd t -> 'b 'd t
+  val (<<) : 'a 'd t -> 'b 'd t -> 'a 'd t
 
   % alternative
-  val empty : 'a t
-  val alt : 'a t -> 'a t -> 'a t   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
-  val (<|>) : 'a t -> 'a t -> 'a t
-  val some : 'a t -> ('a list) t  % one or more; possessive by default, use `try` if necessary
-  val many : 'a t -> ('a list) t  % zero or more; possessive by default, use `try` if necessary
-  val optional : 'a t -> ('a option) t  % zero or one; possessive by default, use `try` if necessary
-  val choice : ('a t) list -> 'a t  % possessive by default, use `try` if necessary
+  val empty : 'a 'd t
+  val alt : 'a 'd t -> 'a 'd t -> 'a 'd t   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
+  val (<|>) : 'a 'd t -> 'a 'd t -> 'a 'd t
+  val some : 'a 'd t -> ('a list) 'd t  % one or more; possessive by default, use `try` if necessary
+  val many : 'a 'd t -> ('a list) 'd t  % zero or more; possessive by default, use `try` if necessary
+  val optional : 'a 'd t -> ('a option) 'd t  % zero or one; possessive by default, use `try` if necessary
+  val choice : ('a 'd t) list -> 'a 'd t  % possessive by default, use `try` if necessary
 
   % error handling
-  val report : string -> unit t  % reports new error messege; always succeeds and never consumes input
-  val label : string -> 'a t -> 'a t  % reports new error message on failure of the given parser regardless of consumption of input
-  val (<?>) : 'a t -> string -> 'a t
-  val fail : string -> 'a t
+  val report : string -> unit 'd t  % reports new error messege; always succeeds and never consumes input
+  val label : string -> 'a 'd t -> 'a 'd t  % reports new error message on failure of the given parser regardless of consumption of input
+  val (<?>) : 'a 'd t -> string -> 'a 'd t
+  val fail : string -> 'a 'd t
 
   % parsec
-  val try : 'a t -> 'a t  % mark savepoints to perform backtracking
-  val lookahead : 'a t -> 'a t
-  val not-followed-by : 'a t -> unit t  % flip success and failure; never consumes input
-  val catch : 'a t -> ('a option * parse-error list) t  % 
-  val any : token t
+  val try : 'a 'd t -> 'a 'd t  % mark savepoints to perform backtracking
+  val lookahead : 'a 'd t -> 'a 'd t
+  val not-followed-by : 'a 'd t -> unit 'd t  % flip success and failure; never consumes input
+  val catch : 'a 'd t -> ('a option * ('d parse-error) list) 'd t
+  val any : ('d Token.t) 'd t
 
   % derived combinators
-  val eof : unit t
-  val satisfy : (token -> bool) -> token t
-  val char : Char.t -> Char.t t
-  val string : string -> string t
-  val some-sep-by : 'sep t -> 'a t -> ('a list) t
-  val many-sep-by : 'sep t -> 'a t -> ('a list) t
-  val between : 'open t -> 'close t -> 'a t -> 'a t
+  val eof : unit 'd t
+  val satisfy : ('d Token.t -> bool) -> ('d Token.t) 'd t
+  val some-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
+  val many-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
+  val between : 'open 'd t -> 'close 'd t -> 'a 'd t -> 'a 'd t
+
+  val char : Char.t -> Char.t Char.t t
+  val string : string -> string Char.t t
 end = struct
 
   % state of parser
-  type state = (|
-    input : token Stream.t;
+  type 'd state = (|
+    input : ('d Token.t) Stream.t;
   |)
 
   % indicates whether backtracking is to be performed on failure; see `alt`
@@ -103,7 +85,7 @@ end = struct
 
   % (Some a, _, []) -> parsing success with result a
   % (Some a, _, es) -> parsing continued while some errors were found and recovered (e.g. parsing continues after missing `}`)
-  type 'a t = state -> (state * 'a) option * consumption * parse-error list
+  type 'a 'd t = 'd state -> ('d state * 'a) option * consumption * ('d parse-error) list
 
   let run p s =
     let initial-state = (| input = s |) in
@@ -222,8 +204,8 @@ end = struct
 
   % derived combinators
 
-  let eof =
-    not-followed-by any
+  let eof state =
+    (not-followed-by any) state
 
   let satisfy pred =
     try (any >>= (fun t -> (
@@ -234,8 +216,8 @@ end = struct
     )))
 
   let char c =
-    let test t = Char.equal (Pair.fst t) c
-    in satisfy test <&> Pair.fst
+    let test t = Char.equal (t |> Token.data) c
+    in satisfy test <&> Token.data
 
   let string str =
     let-rec aux
