@@ -13,6 +13,10 @@ module Int : sig
   val succ : int -> int
   val pred : int -> int
   val neg : int -> int
+  val add : int -> int -> int
+  val sub : int -> int -> int
+  val mul : int -> int -> int
+  val div : int -> int -> int
   val abs : int -> int
   val pow : int -> int -> int
   val max : int -> int -> int
@@ -36,6 +40,11 @@ end = struct
   let min = Ord.min ord
 
   let eq = Ord.derive-eq ord
+
+  let add i j = i + j
+  let sub i j = i - j
+  let mul i j = i * j
+  let div i j = i / j
 
   let succ i = i + 1
   let pred i = i - 1

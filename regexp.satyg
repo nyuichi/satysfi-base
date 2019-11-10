@@ -180,10 +180,10 @@ end = struct
   let oneof s = % TODO: use regexp
     let s = String.to-list s in
     satisfy (fun c -> (Option.is-some (List.find (Eq.equal Char.eq c) s)))
-  let alpha = P-regexp (regexp-of-string `[a-zA-Z]`)
-  let digit = P-regexp (regexp-of-string `[0-9]`)
-  let hex-digit = P-regexp (regexp-of-string `[0-9a-fA-F]`)
-  let space = P-regexp (regexp-of-string (`[` ^ String.of-codepoints [9;10;11;12;13;32] ^ `]`))  % see https://stackoverflow.com/questions/39813584/how-to-split-on-whitespaces-in-ocaml
+  let alpha = P-satisfy Char.is-alpha
+  let digit = P-satisfy Char.is-digit
+  let hex-digit = P-satisfy Char.is-hex-digit
+  let space = P-satisfy Char.is-space
   let spaces = many1 space
 
   let between op cl p = seq op (seq p cl)
@@ -296,43 +296,45 @@ end = struct
 
   let of-string s =
     let is-meta-char = Char.mem `$^[](){}*+?\|` in
+    let re-choice = choice in
+    let re-any = any in
+    let re-space = space in
+    let re-digit = digit in
+    let re-hex-digit = hex-digit in
     open Parser in
+    open StringParser in
     let meta = satisfy is-meta-char in
-    let non-meta = satisfy (fun c -> not (is-meta-char c)) in
-    let-mutable expr-main <- fail in % avoid value restriction
-    let expr s = !expr-main s in
-    let primary =
-          ((expr |> between (string `(`) (string `)`)) >>= (fun x -> return (group x)))
-      <|> (string `.` >> return any)  % . matches with newline
-      <|> (string `\` >>
-            ((string `n` >> return (P-char Char.newline))
-         <|> (string `r` >> return (P-char Char.return))
-         <|> (string `t` >> return (P-char Char.tab))
-         <|> (string `s` >> return space)
-         <|> (string `d` >> return digit)
-         <|> (string `h` >> return hex-digit)
-         <|> (meta >>= (fun c -> return (P-char c)))))
-      <|> (string `^` >> return bol) <|> (string `$` >> return eol)  % $ and ^ detect boundaries of lines
-      <|> (string `[` >> (fun s -> error `RegExp.of-string: character class specification using [...] is unimplemented`))
-      <|> (non-meta >>= (fun c -> return (P-char c))) in
-    let quant = primary >>= (fun x ->
-          (string `*?` >> return (many-ng x))
-      <|> (string `+?` >> return (many1-ng x))
-      <|> (string `??` >> return (opt-ng x))
-      <|> (string `*` >> return (P-many x))
-      <|> (string `+` >> return (P-many1 x))
-      <|> (string `?` >> return (opt x))
-      <|> (return x)) in
-    let seq = (quant |> many1) >>= (fun xs -> return (sequence xs)) in
-    let () = expr-main <- (seq |> sepby1 (string `|`)) >>= (fun xs -> return (choice xs))
-    in
-      match expr |> Parser.run s with
-      | None -> error (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
-      | Some(x, t) ->
-        if String.length t == 0 then
-          x
-        else
-          error (`RegExp.of-string: invalid string: "` ^ s ^`"`)
+    let non-meta = satisfy (Fn.non is-meta-char) in
+    let expr = fix (fun expr -> (
+      let primary =
+            ((expr |> between (string `(`) (string `)`)) >>= (fun x -> ret (group x)))
+        <|> (string `.` >> ret re-any)  % . matches with newline
+        <|> (string `\` >>
+              ((string `n` >> ret (P-char Char.newline))
+          <|> (string `r` >> ret (P-char Char.return))
+          <|> (string `t` >> ret (P-char Char.tab))
+          <|> (string `s` >> ret re-space)
+          <|> (string `d` >> ret re-digit)
+          <|> (string `h` >> ret re-hex-digit)
+          <|> (meta >>= (fun c -> ret (P-char c)))))
+        <|> (string `^` >> ret bol) <|> (string `$` >> ret eol)  % $ and ^ detect boundaries of lines
+        <|> (string `[` >>= (fun _ -> error `RegExp.of-string: character class specification using [...] is unimplemented`))
+        <|> (non-meta >>= (fun c -> ret (P-char c))) in
+      let quant = primary >>= (fun x ->
+            (string `*?` >> ret (many-ng x))
+        <|> (string `+?` >> ret (many1-ng x))
+        <|> (string `??` >> ret (opt-ng x))
+        <|> (string `*` >> ret (P-many x))
+        <|> (string `+` >> ret (P-many1 x))
+        <|> (string `?` >> ret (opt x))
+        <|> (ret x)) in
+      let seq = (quant |> some) >>= (fun xs -> ret (sequence xs)) in
+      let expr = (seq |> some-sep-by (string `|`)) >>= (fun xs -> ret (re-choice xs)) in
+      expr
+    ))
+    in s |> run (expr << eof) |> Result.unwrap-or-else (fun _ ->
+      error (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
+    )
 
   let print-iseq iseq =
     let-rec loop i xs =

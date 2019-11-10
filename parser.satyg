@@ -7,7 +7,7 @@
 @import: ord
 @import: int
 @import: token
-@import: lexer
+@import: promise
 
 type 'd parse-error = (|
   token: ('d Token.t) option;  % None for EOF
@@ -59,12 +59,18 @@ module Parser : sig
   val catch : 'a 'd t -> ('a option * ('d parse-error) list) 'd t
   val any : ('d Token.t) 'd t
 
+  % recursively defined grammars
+  val delay : ('a 'd t) Promise.t -> 'a 'd t
+  val fix : ('a 'd t -> 'a 'd t) -> 'a 'd t
+
   % derived combinators
   val eof : unit 'd t
   val satisfy : ('d Token.t -> bool) -> ('d Token.t) 'd t
   val some-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
   val many-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
   val between : 'open 'd t -> 'close 'd t -> 'a 'd t -> 'a 'd t
+  val pair : 'a 'd t -> 'b 'd t -> ('a * 'b) 'd t
+  val some-chain-left : ('a -> 'a -> 'a) 'd t -> 'a 'd t -> 'a 'd t
 end = struct
 
   % state of parser
@@ -91,6 +97,9 @@ end = struct
       Result.ok a
     | (_, _, es) ->
       Result.err es
+
+  let delay t =
+    fun state -> (Promise.force t) state
 
   let map f p s =
     match p s with
@@ -138,9 +147,9 @@ end = struct
   let (<|>) = alt
 
   let-rec
-    many v = some v <|> pure []
+    many p = some p <|> pure []
   and
-    some v = (pure List.cons <*> v) <*> many v
+    some p = p >>= (fun x -> many p >>= (fun xs -> ret (x :: xs)))
 
   let optional p = (pure Option.some <*> p) <|> pure Option.none
 
@@ -219,12 +228,35 @@ end = struct
 
   let between op cl p =
     op >> p >>= (fun x -> cl >> ret x)
+
+  let pair p1 p2 =
+    (pure Pair.make <*> p1) <*> p2
+
+  let chain-left op a p =
+    many (pair op p) |> map (List.fold-left (fun a (op, b) -> op a b) a)
+
+  let some-chain-left op p =
+    p >>= (fun x -> p |> chain-left op x)
+
+  let fix f =
+    let stash = Ref.make empty in
+    let main = delay (Promise.delay ~(lazy &(!stash))) in
+    let () = stash |> Ref.set (f main) in
+    main
+
 end
 
 module StringParser : sig
   val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
   val char : Char.t -> Char.t Char.t Parser.t
   val string : string -> string Char.t Parser.t
+  val satisfy : (Char.t -> bool) -> Char.t Char.t Parser.t
+  val digit : Char.t Char.t Parser.t
+  val hex-digit : Char.t Char.t Parser.t
+  val alpha : Char.t Char.t Parser.t
+  val alnum : Char.t Char.t Parser.t
+  val space : Char.t Char.t Parser.t
+  val spaces : string Char.t Parser.t
 end = struct
 
   open Parser
@@ -255,4 +287,13 @@ end = struct
   let run p input =
     input |> lex-string |> Parser.run p
 
+  let satisfy f =
+    Parser.satisfy (fun t -> f (Token.data t)) <&> Token.data
+
+  let digit = satisfy Char.is-digit
+  let hex-digit = satisfy Char.is-hex-digit
+  let alpha = satisfy Char.is-alpha
+  let alnum = satisfy Char.is-alnum
+  let space = satisfy Char.is-space
+  let spaces = many space |> map String.of-list
 end

@@ -16,6 +16,7 @@ module String : sig
   val of-codepoints : int list -> string
   val of-char : Char.t -> string
   val of-length : length -> string
+  val of-list : Char.t list -> string
   val append : string -> string -> string
   val concat : string list -> string
   val is-empty : string -> bool
@@ -78,6 +79,9 @@ end = struct
     aux cs 0
   
   let of-length l = ZL0.string-of-length l
+
+  let of-list ls =
+    ls |> List.map of-char |> concat
 
   % let byte-length = string-byte-length
   % let sub-bytes i j s = string-sub-bytes s i j
