@@ -6,8 +6,30 @@
 @import: result
 @import: ord
 @import: int
-@import: token
 @import: promise
+@import: stream
+
+type token-position = (|
+  line : int;  % one origin
+  column : int;  % zero origin
+|)
+
+module Token : sig
+  type 'd t
+  %% [make d pos] returns a new token with data [d] and
+  %% position [pos].
+  val make : 'd -> token-position -> 'd t
+  val data : 'd t -> 'd
+  val position : 'd t -> token-position
+  val initial-position : token-position
+end = struct
+  type 'd token = 'd * token-position
+  type 'd t = 'd token
+  let make d pos = (d, pos)
+  let data (d, _) = d
+  let position (_, pos) = pos
+  let initial-position = (| line = 1; column = 0 |)
+end
 
 type 'd parse-error = (|
   token: ('d Token.t) option;  % None for EOF
@@ -41,10 +63,10 @@ module Parser : sig
   val empty : 'a 'd t
   val alt : 'a 'd t -> 'a 'd t -> 'a 'd t   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
   val (<|>) : 'a 'd t -> 'a 'd t -> 'a 'd t
-  val some : 'a 'd t -> ('a list) 'd t  % one or more; possessive by default, use `try` if necessary
-  val many : 'a 'd t -> ('a list) 'd t  % zero or more; possessive by default, use `try` if necessary
-  val optional : 'a 'd t -> ('a option) 'd t  % zero or one; possessive by default, use `try` if necessary
-  val choice : ('a 'd t) list -> 'a 'd t  % possessive by default, use `try` if necessary
+  val some : 'a 'd t -> ('a list) 'd t  % one or more; use `try` if necessary
+  val many : 'a 'd t -> ('a list) 'd t  % zero or more; use `try` if necessary
+  val optional : 'a 'd t -> ('a option) 'd t  % zero or one; use `try` if necessary
+  val choice : ('a 'd t) list -> 'a 'd t  % use `try` if necessary
 
   % error handling
   val report : string -> unit 'd t  % reports new error messege; always succeeds and never consumes input
