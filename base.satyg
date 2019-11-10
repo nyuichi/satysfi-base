@@ -35,3 +35,6 @@ let finish = standalone '<>
 %% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
 %% through the 0-stage function [lazy].
 type 'a thunk = unit -> 'a
+
+%% [force t] evaluates thunk [t] and returns the result.
+let force t = t ()

@@ -62,6 +62,7 @@ module List : sig
   val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
   val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
   val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+  val uncons : 'a list -> ('a * 'a list) option
 end = struct
 
   let nil = []
@@ -494,4 +495,9 @@ end = struct
       | x :: xs -> is-sub x (insertsort ord xs)
 
   let acons k v alist = (k, v) :: alist
+
+  let uncons xs =
+    match xs with
+    | [] -> None
+    | x :: xs -> Some(x, xs)
 end

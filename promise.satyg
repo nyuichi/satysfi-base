@@ -21,7 +21,7 @@ end = struct
     Ref.make (Ref.make (Thunk e))
 
   let delay e =
-    delay-force ~(lazy &(make (e ())))
+    delay-force ~(lazy &(make (force e)))
 
   let-rec force p =
     match p |> Ref.get |> Ref.get with

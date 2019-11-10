@@ -1,0 +1,162 @@
+@import: promise
+@import: base
+@import: option-ext
+@import: list-ext
+@import: tuple
+
+@import: string
+@import: debug
+
+module Stream : sig
+  type 'a t
+  val cons : 'a thunk -> ('a t) thunk -> 'a t
+  val nil : unit -> 'a t
+  val uncons : 'a t -> ('a * 'a t) option
+  val head : 'a t -> 'a option
+  val tail : 'a t -> ('a t) option
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val filter : ('a -> bool) -> 'a t -> 'a t
+  val of-list : 'a list -> 'a t
+  val to-list : 'a t -> 'a list
+  val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t
+  val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
+  val take : int -> 'a t -> 'a t
+  val drop : int -> 'a t -> 'a t
+  val zip : 'a t -> 'b t -> ('a * 'b) t
+  val unzip : ('a * 'b) t -> ('a t * 'b t)
+  val fib : int t
+  val nat : int t
+  val const : 'a -> 'a t
+end = struct
+
+  type 'a state =
+  | Nil
+  | Cons of 'a * 'a u
+  and 'a u = ('a state) Promise.t
+
+  type 'a t = 'a u
+
+  let nil () =
+    Promise.make Nil
+
+  let cons x xs =
+    Promise.delay ~(lazy &(Cons (force x, force xs)))
+
+  let uncons s =
+    match Promise.force s with
+    | Nil -> Option.none
+    | Cons(x, s) -> Option.some (x, s)
+
+  let head s =
+    uncons s |> Option.map Pair.fst
+
+  let tail s =
+    uncons s |> Option.map Pair.snd
+
+  let-rec map f s =
+    Promise.delay-force
+      ~(lazy
+        &(match uncons s with
+          | None -> nil ()
+          | Some(x, s) ->
+            cons
+              ~(lazy &(f x))
+              ~(lazy &(map f s))))
+
+  let-rec filter f s =
+    Promise.delay-force
+      ~(lazy
+        &(match uncons s with
+          | None -> nil ()
+          | Some(x, s) ->
+            if f x then
+              cons
+                ~(lazy &x)
+                ~(lazy &(filter f s))
+            else
+              filter f s))
+
+  let-rec zip s1 s2 =
+    Promise.delay-force
+      ~(lazy
+        &(match (uncons s1, uncons s2) with
+          | (None, _) -> nil ()
+          | (_, None) -> nil ()
+          | (Some(x1, s1), Some(x2, s2)) ->
+            cons
+              ~(lazy &(x1, x2))
+              ~(lazy &(zip s1 s2))))
+
+  let-rec unzip s =
+    (map Pair.fst s, map Pair.snd s)
+
+  let-rec take n s =
+    Promise.delay-force
+      ~(lazy
+        &(if n == 0 then
+            nil ()
+          else
+            match uncons s with
+            | None -> nil ()
+            | Some(x, xs) ->
+              cons
+                ~(lazy &x)
+                ~(lazy &(take (n - 1) xs))))
+
+  let-rec drop n s =
+    Promise.delay-force
+      ~(lazy
+        &(if n == 0 then
+            s
+          else
+            match uncons s with
+            | None -> nil ()
+            | Some(x, xs) -> drop (n - 1) xs))
+
+  let-rec to-list s =
+    match uncons s with
+    | None -> []
+    | Some(x, xs) ->
+      x :: to-list xs
+
+  let-rec unfold f x =
+    Promise.delay-force
+      ~(lazy
+        &(match f x with
+          | None -> nil ()
+          | Some(a, x) ->
+            cons
+              ~(lazy &a)
+              ~(lazy &(unfold f x))))
+
+  let of-list xs =
+    xs |> unfold List.uncons
+
+  let fold f x s =
+    let-rec aux x s =
+      match uncons s with
+      | None -> x
+      | Some(a, s) ->
+        aux (f x a) s
+    in aux x s
+
+  let fib =
+    let-rec fib n m =
+      cons
+        ~(lazy &n)
+        ~(lazy &(fib m (n + m)))
+    in fib 1 1
+
+  let nat =
+    let-rec nat n =
+      cons
+        ~(lazy &n)
+        ~(lazy &(nat (n + 1)))
+    in nat 0
+
+  let-rec const x =
+    cons
+      ~(lazy &x)
+      ~(lazy &(const x))
+
+end

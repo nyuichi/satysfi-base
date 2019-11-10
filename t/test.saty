@@ -26,6 +26,7 @@
 @import: ../eq
 @import: ../parsec
 @import: ../either
+@import: ../stream
 
 open Fn in
 open RegExp in
@@ -169,7 +170,7 @@ let () = m |> Map.of- Int.eq 3 |> option-force |> Debug.log in
 let _ = Color.of-css `#F5F5DC` in
 let _ = Color.of-css `beige` in
 
-let () = Debug.log `==== Lazy ====` in
+let () = Debug.log `==== Promise ====` in
 let p = Promise.delay ~(lazy &(let () = Debug.log `foo` in 1)) in
 let () = Debug.log `bar` in
 let _ = Promise.force p in
@@ -191,6 +192,11 @@ let _ =
   ) in
   let () = Debug.log (String.of-float (1.0 /. 0.0)) in
   let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
+in
+
+let () = Debug.log `==== Stream ====` in
+let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
+let () = Stream.nat |> Stream.take 5 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x)
 in
 
 finish

@@ -15,37 +15,18 @@ type stream-position = (|
 
 type token = Char.t * stream-position  % currently token's component is fixed to Char.t
 
-module Stream : sig
-  type t
-  val of-string : string -> t
-  val of-tokens : token list -> t
-  val uncons : t -> (token * t) option
-  val head : t -> token option
-end = struct
-  type t = token list
-
-  let of-tokens ts = ts
-
-  let of-string input =
-    let-rec aux
-    | [] _ acc = List.reverse acc
-    | (c :: cs) pos acc =
+let lex-string input =
+  Stream.unfold (fun (cs, pos) -> (
+    match List.uncons cs with
+    | None -> Option.none
+    | Some(c, new-cs) ->
       let token = (c, pos) in
       let new-pos =
         let line = pos#line + (if Char.equal c Char.newline then 1 else 0) in
         let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
         (| line = line; column = column |)
-      in aux cs new-pos ((c, new-pos) :: acc)
-    in aux (String.to-list input) (| line = 1; column = 0 |) []
-
-  let uncons s =
-    match s with
-    | [] -> Option.none
-    | (t :: ts) -> Option.some (t, ts)
-  
-  let head =
-    uncons |> Fn.compose (Option.map Pair.fst)
-end
+      in Option.some (token, (new-cs, new-pos))
+  )) (String.to-list input, (| line = 1; column = 0 |))
 
 type parse-error = (|
   token: token option;  % None for EOF
@@ -55,7 +36,7 @@ type parse-error = (|
 module Parsec : sig
   type 'a t
 
-  val run : 'a t -> Stream.t -> 'a (parse-error list) result
+  val run : 'a t -> token Stream.t -> 'a (parse-error list) result
 
   % functor
   val map : ('a -> 'b) -> 'a t -> 'b t
@@ -109,7 +90,7 @@ end = struct
 
   % state of parser
   type state = (|
-    input : Stream.t;
+    input : token Stream.t;
   |)
 
   % indicates whether backtracking is to be performed on failure; see `alt`
