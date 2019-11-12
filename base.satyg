@@ -24,9 +24,9 @@
 %% human programmers how arguments should be considered.
 type 'a implicit = 'a
 
-%% [error msg] exits the execution of program with message [msg].
+%% [panic msg] exits the execution of program with message [msg].
 %% It should be used when the program encounters an unrecoverable situation.
-let error = abort-with-message
+let panic = abort-with-message
 
 %% [finish] returns an empty document. It is useful when writing a prograam
 %% involving no typesetting logic.

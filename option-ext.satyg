@@ -49,7 +49,7 @@ end = struct
     | (Some(_)) = true
 
   let expect msg opt = match opt with
-  | None -> error msg
+  | None -> panic msg
   | Some x -> x
 
   let unwrap opt = expect `unwrap error` opt

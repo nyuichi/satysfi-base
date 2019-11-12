@@ -40,7 +40,7 @@ end = struct
     | Err(e) -> f e
 
   let expect msg r =
-    r |> unwrap-or-else (fun _ -> error msg)
+    r |> unwrap-or-else (fun _ -> panic msg)
 
   let unwrap r =
     r |> expect `unwrap error`

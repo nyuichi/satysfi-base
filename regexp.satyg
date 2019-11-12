@@ -115,7 +115,7 @@ end = struct
         % % I leave this for future refactoring.
         % | REF i ->
         %   (match trace |> Array.get (2 * i + 1) with
-        %   | None -> Error.error `unbound backreference`
+        %   | None -> panic `unbound backreference`
         %   | Some(j) -> let (Some st) = trace |> Array.get (2 * i) in
         %     let c = s |> String.sub st (j - st) in
         %     let l = String.length c in
@@ -318,7 +318,7 @@ end = struct
           <|> (string `h` >> ret re-hex-digit)
           <|> (meta >>= (fun c -> ret (P-char c)))))
         <|> (string `^` >> ret bol) <|> (string `$` >> ret eol)  % $ and ^ detect boundaries of lines
-        <|> (string `[` >>= (fun _ -> error `RegExp.of-string: character class specification using [...] is unimplemented`))
+        <|> (string `[` >>= (fun _ -> panic `RegExp.of-string: character class specification using [...] is unimplemented`))
         <|> (non-meta >>= (fun c -> ret (P-char c))) in
       let quant = primary >>= (fun x ->
             (string `*?` >> ret (many-ng x))
@@ -333,7 +333,7 @@ end = struct
       expr
     ))
     in s |> run (expr << eof) |> Result.unwrap-or-else (fun _ ->
-      error (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
+      panic (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
     )
 
   let print-iseq iseq =

@@ -60,12 +60,12 @@ end = struct
 
   let get i a =
     match a |> List.nth i with
-    | None -> error `array: index out of range`
+    | None -> panic `array: index out of range`
     | Some r -> Ref.get r
 
   let set i v a =
     match a |> List.nth i with
-    | None -> error `array: index out of range`
+    | None -> panic `array: index out of range`
     | Some r -> r |> Ref.set v
 
   let make v n =

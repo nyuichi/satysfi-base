@@ -14,12 +14,12 @@ end = struct
     match RegExp.exec (RegExp.of-string `(.*?)(\{\})(.*)`) ss with
     | (None) :: _ -> None
     | _::(Some(_,s1))::_::(Some(_,s2))::_ -> Some(s1,s2)
-    | _ -> error `logic flaw`
+    | _ -> panic `logic flaw`
   let format s ss =
     let-rec aux s ss =
       match (split s, ss) with
       | (None, []) -> s
       | (Some(s1,s2), (s :: ss)) -> s1 ^ s ^ aux s2 ss
-      | _ -> error `Format.format: wrong number of format specifiers`
+      | _ -> panic `Format.format: wrong number of format specifiers`
     in aux s ss
 end

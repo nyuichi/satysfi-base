@@ -116,16 +116,16 @@ end = struct
     | Some(radix) -> radix in
     let cs = String.to-list s in
     match cs with
-    | [] -> error `Int.of-string: invalid string`
+    | [] -> panic `Int.of-string: invalid string`
     | c :: cs2 ->
       let (sign, cs) = if Eq.equal Char.eq c (Char.make `-`) then (-1, cs2) else (1, cs) in
       let num = cs |> List.fold-left (fun acc c ->
         (match char-to-int c with
-        | None -> error (`Int.of-string: invalid string: `# ^ s)
+        | None -> panic (`Int.of-string: invalid string: `# ^ s)
         | Some(i) ->
         if i < radix then
           acc * radix + i
         else
-          error (`Int.of-string: invalid string: `# ^ s))) 0 in
+          panic (`Int.of-string: invalid string: `# ^ s))) 0 in
       sign * num
 end

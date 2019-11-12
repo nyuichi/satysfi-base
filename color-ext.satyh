@@ -186,6 +186,6 @@ end = struct
     | None ->
       css-color-names
         |> List.assoc String.equal s
-        |> (fun x -> (match x with None -> error (`Color.of-css: invalid string: ` ^ s) | Some(v) -> v))
+        |> (fun x -> (match x with None -> panic (`Color.of-css: invalid string: ` ^ s) | Some(v) -> v))
         |> of-css
 end

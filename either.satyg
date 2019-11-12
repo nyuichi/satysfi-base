@@ -48,7 +48,7 @@ end = struct
 
   let unwrap-left e =
     e |> unwrap-left-or-else (fun _ ->
-      error `unwrap-left failed`
+      panic `unwrap-left failed`
     )
 
   let unwrap-right-or-else f e =
@@ -61,7 +61,7 @@ end = struct
 
   let unwrap-right e =
     e |> unwrap-right-or-else (fun _ ->
-      error `unwrap-right failed`
+      panic `unwrap-right failed`
     )
 
   let either f g e =

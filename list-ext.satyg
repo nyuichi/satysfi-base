@@ -447,13 +447,13 @@ end = struct
   let-rec bubblesort ord lst =
     let-rec last lst =
       match lst with
-        | [] -> error `List.bubblesort: empty list`
+        | [] -> panic `List.bubblesort: empty list`
         | x :: [] -> x
         | _ :: xs -> last xs
     in
     let-rec init lst =
       match lst with
-        | [] -> error `List.bubblesort: empty list`
+        | [] -> panic `List.bubblesort: empty list`
         | _ :: [] -> []
         | x :: xs -> x :: (init xs)
     in
