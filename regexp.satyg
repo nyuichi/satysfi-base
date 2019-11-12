@@ -53,7 +53,7 @@ module RegExp : sig
   val spaces : t
   val between : t -> t -> t -> t
 
-  % perl-like representation of regexp (only a subset is implemented)
+  % perl-like representation of regexp
   val of-string : string -> t
 
   val test : t -> string -> bool
@@ -294,42 +294,78 @@ end = struct
         Some (st, s |> String.sub st (e - st)) :: subs (i + 1) in
     subs 0
 
+% char-class
+%  = char-component+
+%  | `]` char-component*
+%  | char-component* `-`
+
+% class-compoonent
+%  = `a-z`
+%  | `A-Z`
+%  | `a-f`
+%  | `A-F`
+%  | `0-9`
+%  | `0-7`
+%  | [^]-]
+
   let of-string s =
     let is-meta-char = Char.mem `$^[](){}*+?\|` in
+    let re-sequence = sequence in
     let re-choice = choice in
     let re-any = any in
     let re-space = space in
     let re-digit = digit in
     let re-hex-digit = hex-digit in
+    let re-char = char in
+    let re-satisfy = satisfy in
     open Parser in
     open StringParser in
     let meta = satisfy is-meta-char in
     let non-meta = satisfy (Fn.non is-meta-char) in
+    let char-class =
+      sequence [
+        optional (string `]` >> ret (Char.mem `]`)) |> map Option.to-list;
+        many <| choice [
+          string `a-z` >> ret (Char.mem `abcdefghijklmnopqrstuvwzyz`);
+          string `A-Z` >> ret (Char.mem `ABCDEFGHIJKLMNOPQRSTUVWXYZ`);
+          string `0-9` >> ret (Char.mem `0123456789`);
+          string `a-f` >> ret (Char.mem `abcdef`);
+          string `A-F` >> ret (Char.mem `ABCDEF`);
+          string `0-7` >> ret (Char.mem `01234567`);
+          satisfy (Fn.non (Char.mem `]-`)) |> map Char.equal;
+        ];
+        optional (string `-` >> ret (Char.mem `-`)) |> map Option.to-list;
+      ] |> map List.concat |> map (Fn.flip (fun c -> List.exists (Fn.flip Fn.apply c))) in
     let expr = fix (fun expr -> (
       let primary =
-            ((expr |> between (string `(`) (string `)`)) >>= (fun x -> ret (group x)))
-        <|> (string `.` >> ret re-any)  % . matches with newline
-        <|> (string `\` >>
-              ((string `n` >> ret (P-char Char.newline))
-          <|> (string `r` >> ret (P-char Char.return))
-          <|> (string `t` >> ret (P-char Char.tab))
-          <|> (string `s` >> ret re-space)
-          <|> (string `d` >> ret re-digit)
-          <|> (string `h` >> ret re-hex-digit)
-          <|> (meta >>= (fun c -> ret (P-char c)))))
-        <|> (string `^` >> ret bol) <|> (string `$` >> ret eol)  % $ and ^ detect boundaries of lines
-        <|> (string `[` >>= (fun _ -> panic `RegExp.of-string: character class specification using [...] is unimplemented`))
-        <|> (non-meta >>= (fun c -> ret (P-char c))) in
-      let quant = primary >>= (fun x ->
-            (string `*?` >> ret (many-ng x))
-        <|> (string `+?` >> ret (many1-ng x))
-        <|> (string `??` >> ret (opt-ng x))
-        <|> (string `*` >> ret (P-many x))
-        <|> (string `+` >> ret (P-many1 x))
-        <|> (string `?` >> ret (opt x))
-        <|> (ret x)) in
-      let seq = (quant |> some) >>= (fun xs -> ret (sequence xs)) in
-      let expr = (seq |> some-sep-by (string `|`)) >>= (fun xs -> ret (re-choice xs)) in
+        choice [
+          between (string `(`) (string `)`) expr |> map group;
+          string `.` >> ret re-any;  % . matches with newline
+          string `\` >> choice [
+            string `n` >> ret (re-char Char.newline);
+            string `r` >> ret (re-char Char.return);
+            string `t` >> ret (re-char Char.tab);
+            string `s` >> ret re-space;
+            string `d` >> ret re-digit;
+            string `h` >> ret re-hex-digit;
+            meta |> map re-char;
+          ];
+          (string `^` >> ret bol) <|> (string `$` >> ret eol);  % $ and ^ detect boundaries of lines
+          between (string `[^`) (string `]`) char-class |> map (Fn.compose re-satisfy Fn.non);
+          between (string `[`) (string `]`) char-class |> map re-satisfy;
+          non-meta |> map re-char;
+        ] in
+      let quant = primary >>= (fun x -> choice [
+        string `*?` >> ret (many-ng x);
+        string `+?` >> ret (many1-ng x);
+        string `??` >> ret (opt-ng x);
+        string `*` >> ret (P-many x);
+        string `+` >> ret (P-many1 x);
+        string `?` >> ret (opt x);
+        ret x;
+      ]) in
+      let seq = quant |> some |> map re-sequence in
+      let expr = seq |> some-sep-by (string `|`) |> map re-choice in
       expr
     ))
     in s |> run (expr << eof) |> Result.unwrap-or-else (fun _ ->

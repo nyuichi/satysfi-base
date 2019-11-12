@@ -65,7 +65,7 @@ let a = Array.append a1 a2 in
 let () = Debug.log (String.of-int (Array.get 0 a)) in
 let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
 
-let () = Debug.log `==== ReExp ====` in
+let () = Debug.log `==== RegExp ====` in
 %let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
 let print-result r =
   r |> List.iter (fun s -> (
@@ -116,8 +116,16 @@ let () = RegExp.of-string `(a+|(c))(b+)` |> RegExp.print |> Debug.log in
 let () = `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`) |> String.of-bool |> Debug.log in
 let () = RegExp.of-string `\n\r\t\$\(\)\*\?` |> RegExp.print |> Debug.log in
 let _ = RegExp.of-string `^\s\d$` in
-%let _ = RegExp.of-string `[a-z]` in
+% let _ = RegExp.of-string `[]` in
+let _ = RegExp.of-string `[a-z]` in
+let _ = `0X` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log in
+let _ = `0x1f2e3d` |> test (RegExp.of-string `0[xX][A-Fa-f0-9]+`) |> String.of-bool |> Debug.log in
+let _ = `0a` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log in
+let _ = `0xaZb` |> test (RegExp.of-string `^0[xX][A-Fa-f0-9]+$`) |> String.of-bool |> Debug.log in
+let _ = `][][` |> test (RegExp.of-string `[][]+`) |> String.of-bool |> Debug.log in
+let _ = `][]-[` |> test (RegExp.of-string `[][-]+`) |> String.of-bool |> Debug.log in
 
+let () = Debug.log `==== Parser ====` in
 let () =
   open Parser in
   `aaa` |> StringParser.run (many (StringParser.char (Char.make `a`)) >>= (fun cs -> (Debug.log (String.of-list cs) before ret cs))) |> Fn.ignore in

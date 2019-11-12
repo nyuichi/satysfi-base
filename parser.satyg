@@ -51,6 +51,8 @@ module Parser : sig
   val (<*>) : ('a -> 'b) 'd t -> 'a 'd t -> 'b 'd t
   val (*>) : 'a 'd t -> 'b 'd t -> 'b 'd t
   val (<*) : 'a 'd t -> 'b 'd t -> 'a 'd t
+  val traverse : ('a -> 'b 'd t) -> 'a list -> ('b list) 'd t
+  val sequence : ('a 'd t) list -> ('a list) 'd t
 
   % monad
   val ret : 'a -> 'a 'd t
@@ -92,6 +94,7 @@ module Parser : sig
   val many-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
   val between : 'open 'd t -> 'close 'd t -> 'a 'd t -> 'a 'd t
   val pair : 'a 'd t -> 'b 'd t -> ('a * 'b) 'd t
+  val triple : 'a 'd t -> 'b 'd t -> 'c 'd t -> ('a * 'b * 'c) 'd t
   val some-chain-left : ('a -> 'a -> 'a) 'd t -> 'a 'd t -> 'a 'd t
 end = struct
 
@@ -155,6 +158,16 @@ end = struct
   let (<*>) p1 p2 = ap p2 p1
   let (*>) = (>>)
   let (<*) = (<<)
+
+  let traverse f xs =
+    let-rec aux xs =
+      match xs with
+      | [] -> pure []
+      | x :: xs -> (pure List.cons <*> f x) <*> aux xs
+    in aux xs
+
+  let sequence xs =
+    traverse Fn.id xs
 
   let empty s =
     (Option.none, Virgin, [])
@@ -254,6 +267,9 @@ end = struct
   let pair p1 p2 =
     (pure Pair.make <*> p1) <*> p2
 
+  let triple p1 p2 p3 =
+    p1 >>= (fun x -> p2 >>= (fun y -> p3 >>= (fun z -> ret (x, y, z))))
+
   let chain-left op a p =
     many (pair op p) |> map (List.fold-left (fun a (op, b) -> op a b) a)
 
@@ -271,7 +287,7 @@ end
 module StringParser : sig
   val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
   val char : Char.t -> Char.t Char.t Parser.t
-  val string : string -> string Char.t Parser.t
+  val string : string -> string Char.t Parser.t  % wrapped with `try`
   val satisfy : (Char.t -> bool) -> Char.t Char.t Parser.t
   val digit : Char.t Char.t Parser.t
   val hex-digit : Char.t Char.t Parser.t

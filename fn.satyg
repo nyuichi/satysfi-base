@@ -9,6 +9,9 @@ module Fn : sig
   %% Function composition. [compose f g x] is equivalent to [f (g x)].
   val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
 
+  %% [apply f x] is equivalent to [f x].
+  val apply : ('a -> 'b) -> 'a -> 'b
+
   %% [flip f x y] is equivalent to [f y x].
   val flip : ('a -> 'b -> 'c) -> ('b -> 'a -> 'c)
 
@@ -39,6 +42,7 @@ module Fn : sig
 end = struct
   let id x = x
   let compose f g x = f (g x)
+  let apply f x = f x
   let flip f y x = f x y
   let const x _ = x
   let ignore _ = ()

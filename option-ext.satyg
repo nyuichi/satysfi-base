@@ -15,6 +15,7 @@ module Option : sig
   val ret : 'a -> 'a option
   val bind : 'a option -> ('a -> 'b option) -> 'b option
   val join : ('a option) option -> 'a option
+  val to-list : 'a option -> 'a list
 
   val eq : ('a Eq.t) implicit -> (('a option) Eq.t) implicit
 
@@ -70,6 +71,11 @@ end = struct
 
   let join m =
     bind m Fn.id
+
+  let to-list opt =
+    match opt with
+    | None -> []
+    | Some(x) -> [x]
 
   let eq eq =
     Eq.make (fun o1 o2 -> (
