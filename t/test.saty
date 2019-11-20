@@ -7,7 +7,7 @@
 @import: ../regexp
 @import: ../list-ext
 @import: ../option-ext
-@import: ../lexer
+@import: ../typeset/code2
 @import: ../parser
 @import: ../int
 @import: ../map
