@@ -33,8 +33,8 @@ let panic = abort-with-message
 let finish = standalone '<>
 
 %% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
-%% through the 0-stage function [lazy].
+%% through the 0-stage function [make-thunk] or the unary operator [!!].
 type 'a thunk = unit -> 'a
 
-%% [force t] evaluates thunk [t] and returns the result.
-let force t = t ()
+%% [run-thunk t] evaluates thunk [t] and returns the result.
+let run-thunk t = t ()

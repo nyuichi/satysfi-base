@@ -10,6 +10,10 @@ let ( ||| ) b1 b2 = &(if ~b1 then true else ~b2)
 
 
 %% Construct for lazy evaluation.
-%% [lazy e] returns a thunk containing expression [e].
-let lazy e =
+%% [make-thunk e] returns a thunk containing expression [e].
+let make-thunk e =
   &(fun () -> ~e)
+
+%% Alias of [make-thunk].
+%% It is usually combined with [~] and [&], like [~(!!(&(e)))].
+let ( !! ) e = make-thunk e

@@ -201,11 +201,11 @@ let _ = Color.of-css `#F5F5DC` in
 let _ = Color.of-css `beige` in
 
 let () = Debug.log `==== Promise ====` in
-let p = Promise.delay ~(lazy &(let () = Debug.log `foo` in 1)) in
+let p = Promise.delay ~(!!(&(let () = Debug.log `foo` in 1))) in
 let () = Debug.log `bar` in
 let _ = Promise.force p in
 let _ = Promise.force p in
-let p = Promise.delay ~(lazy &(let () = Debug.log `foobar` in 3.14)) in
+let p = Promise.delay ~(!!(&(let () = Debug.log `foobar` in 3.14))) in
 let () = Debug.log `barbaz` in
 let _ = Promise.force p in
 let _ = Promise.force p in

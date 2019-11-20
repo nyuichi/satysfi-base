@@ -414,4 +414,5 @@ end = struct
   | P-opt-ng re -> `(` ^ print re ^ `)??`
   | P-group re -> `\(` ^ print re ^ `\)`
   | P-anchor (NOWHERE) -> ` `
+  | _ -> `□`
 end

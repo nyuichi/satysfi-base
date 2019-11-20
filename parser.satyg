@@ -278,7 +278,7 @@ end = struct
 
   let fix f =
     let stash = Ref.make empty in
-    let main = delay (Promise.delay ~(lazy &(!stash))) in
+    let main = delay (Promise.delay ~(!!(&(!stash)))) in
     let () = stash |> Ref.set (f main) in
     main
 

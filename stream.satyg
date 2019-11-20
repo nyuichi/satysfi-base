@@ -40,7 +40,7 @@ end = struct
     Promise.make Nil
 
   let cons x xs =
-    Promise.delay ~(lazy &(Cons (force x, force xs)))
+    Promise.delay ~(!!(&(Cons (run-thunk x, run-thunk xs))))
 
   let uncons s =
     match Promise.force s with
@@ -55,63 +55,58 @@ end = struct
 
   let-rec map f s =
     Promise.delay-force
-      ~(lazy
-        &(match uncons s with
-          | None -> nil ()
-          | Some(x, s) ->
-            cons
-              ~(lazy &(f x))
-              ~(lazy &(map f s))))
+      ~(!!(&(match uncons s with
+            | None -> nil ()
+            | Some(x, s) ->
+              cons
+                ~(!!(&(f x)))
+                ~(!!(&(map f s))))))
 
   let-rec filter f s =
     Promise.delay-force
-      ~(lazy
-        &(match uncons s with
-          | None -> nil ()
-          | Some(x, s) ->
-            if f x then
-              cons
-                ~(lazy &x)
-                ~(lazy &(filter f s))
-            else
-              filter f s))
+      ~(!!(&(match uncons s with
+            | None -> nil ()
+            | Some(x, s) ->
+              if f x then
+                cons
+                  ~(!!(&x))
+                  ~(!!(&(filter f s)))
+              else
+                filter f s)))
 
   let-rec zip s1 s2 =
     Promise.delay-force
-      ~(lazy
-        &(match (uncons s1, uncons s2) with
-          | (None, _) -> nil ()
-          | (_, None) -> nil ()
-          | (Some(x1, s1), Some(x2, s2)) ->
-            cons
-              ~(lazy &(x1, x2))
-              ~(lazy &(zip s1 s2))))
+      ~(!!(&(match (uncons s1, uncons s2) with
+            | (None, _) -> nil ()
+            | (_, None) -> nil ()
+            | (Some(x1, s1), Some(x2, s2)) ->
+              cons
+                ~(!!(&(x1, x2)))
+                ~(!!(&(zip s1 s2))))))
 
   let-rec unzip s =
     (map Pair.fst s, map Pair.snd s)
 
   let-rec take n s =
     Promise.delay-force
-      ~(lazy
-        &(if n == 0 then
-            nil ()
-          else
-            match uncons s with
-            | None -> nil ()
-            | Some(x, xs) ->
-              cons
-                ~(lazy &x)
-                ~(lazy &(take (n - 1) xs))))
+      ~(!!(&(if n == 0 then
+               nil ()
+             else
+               match uncons s with
+               | None -> nil ()
+               | Some(x, xs) ->
+                 cons
+                   ~(!!(&x))
+                   ~(!!(&(take (n - 1) xs))))))
 
   let-rec drop n s =
     Promise.delay-force
-      ~(lazy
-        &(if n == 0 then
-            s
-          else
-            match uncons s with
-            | None -> nil ()
-            | Some(x, xs) -> drop (n - 1) xs))
+      ~(!!(&(if n == 0 then
+               s
+             else
+               match uncons s with
+               | None -> nil ()
+               | Some(x, xs) -> drop (n - 1) xs)))
 
   let-rec to-list s =
     match uncons s with
@@ -121,13 +116,12 @@ end = struct
 
   let-rec unfold f x =
     Promise.delay-force
-      ~(lazy
-        &(match f x with
-          | None -> nil ()
-          | Some(a, x) ->
-            cons
-              ~(lazy &a)
-              ~(lazy &(unfold f x))))
+      ~(!!(&(match f x with
+            | None -> nil ()
+            | Some(a, x) ->
+              cons
+                ~(!!(&a))
+                ~(!!(&(unfold f x))))))
 
   let of-list xs =
     xs |> unfold List.uncons
@@ -143,20 +137,20 @@ end = struct
   let fib =
     let-rec fib n m =
       cons
-        ~(lazy &n)
-        ~(lazy &(fib m (n + m)))
+        ~(!!(&n))
+        ~(!!(&(fib m (n + m))))
     in fib 1 1
 
   let nat =
     let-rec nat n =
       cons
-        ~(lazy &n)
-        ~(lazy &(nat (n + 1)))
+        ~(!!(&n))
+        ~(!!(&(nat (n + 1))))
     in nat 0
 
   let-rec const x =
     cons
-      ~(lazy &x)
-      ~(lazy &(const x))
+      ~(!!(&x))
+      ~(!!(&(const x)))
 
 end

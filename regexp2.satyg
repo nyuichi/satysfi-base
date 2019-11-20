@@ -1,0 +1,89 @@
+@import: base
+@import: string
+@import: array
+@import: debug
+@import: option-ext
+@import: list-ext
+@import: char
+@import: parser
+@import: void
+
+type 'a 'r cont = ('a -> 'r) -> 'r
+
+module Cont : sig
+  val run : ('a -> 'r) -> 'a 'r cont -> 'r
+  val make : (('a -> 'r) -> 'r) -> 'a 'r cont
+  val ret : 'a -> 'a 'r cont
+  val bind : ('a -> 'b 'r cont) -> 'a 'r cont -> 'b 'r cont
+  val map : ('a -> 'b) -> 'a 'r cont -> 'b 'r cont
+end = struct
+  let run f c = c f
+  let make f = f
+  let ret x k = k x
+  let bind f m k = m (fun x -> f x k)
+  let map f m k = m (fun x -> ret (f x))
+end
+
+module RegExp2 : sig
+  type 'a t
+  val empty : 'a t
+  val alt : 'a t -> 'a t -> 'a t
+  val (<|>) : 'a t -> 'a t -> 'a t
+  val pure : 'a -> 'a t
+  val ap : ('a -> 'b) t -> 'a t -> 'b t
+  val (<*>) : ('a -> 'b) t -> 'a t -> 'b t
+  val many : 'a t -> ('a list) t
+
+  val any : Char.t t
+  val char : Char.t -> Char.t t
+  val satisfy : (Char.t -> bool) -> Char.t t
+  val anchor : (string -> int -> bool) -> unit t
+
+  val matches : 'a t -> string -> 'a option
+end = struct
+  type 'a t = string -> int -> (int * 'a) option
+
+  let empty input sp =
+    None
+  let alt r1 r2 input sp =
+    match r1 input sp with
+    | None -> r2 input sp
+    | Some(x) -> Option.some x
+  let pure x input sp =
+    Option.ret (sp, x)
+  let ap rf rx input sp =
+    rf input sp |> Option.bind (fun (sp, f) ->
+    rx input sp |> Option.bind (fun (sp, x) ->
+    Cont.ret (sp, f x)))
+  let-rec many rx =
+    alt (ap (ap List.cons rx) (fun i -> many rx i)) (pure [])
+
+  let satisfy f input sp =
+    if sp >= String.length input then
+      Option.none
+    else
+      let c = Char.at input sp in
+      if f c then
+        Option.some (sp + 1, c)
+      else
+        Option.none
+
+  let string s input sp =
+    let len = String.length s in
+    if sp + len > String.length input then
+      Option.none
+    else if String.equal s (input |> String.sub sp len) then
+      Option.some (sp + len, s)
+    else
+      Option.none
+
+  let anchor f input sp =
+    if f input sp then
+      Option.some (sp, ())
+    else
+      Option.none
+
+  let char c = satisfy (Char.equal c)
+  let any = satisfy (Fn.const true)
+
+end

@@ -1,0 +1,6 @@
+@import: ../base
+@import: bug0
+
+let-rec bar = ~(foo)
+
+in finish
