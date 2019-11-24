@@ -1,9 +1,9 @@
-name: test
+name: CI
 
-on: [push, pull_request]
+on: push
 
 jobs:
-  test:
+  ci:
     runs-on: macos-latest
     container:
       image: amutake/satysfi:nightly
