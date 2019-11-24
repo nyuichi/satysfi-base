@@ -4,7 +4,7 @@ on: push
 
 jobs:
   ci:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     container:
       image: amutake/satysfi:nightly
       volumes:
