@@ -1,0 +1,17 @@
+name: test
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    container:
+      image: amutake/satysfi:nightly
+      volumes:
+        - .:/satysfi
+    steps:
+      - uses: actions/checkout@v1
+      - name: Run test
+        runs: |
+          satysfi t/test.saty | tee t/got
+          diff t/expected t/got
+      
