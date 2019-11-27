@@ -1,0 +1,19 @@
+module Path :sig
+
+  val ellipse : length -> length -> path
+
+end = struct
+
+let sqrt2 = 1.4142135623
+
+let ellipse x-len y-len =
+  let n = ((sqrt2 -. 1.0) *. 4.0) /. 3.0 in
+  let minus len = len *' (float (-1)) in
+  let zero = 0pt in
+    start-path (zero, y-len)
+    |> bezier-to (x-len *' n, y-len) (x-len, y-len *' n) (x-len, zero)
+    |> bezier-to (x-len,  minus (y-len *' n)) (x-len *' n,  minus y-len) (zero,  minus y-len)
+    |> bezier-to (minus (x-len *' n), minus y-len) (minus x-len,  minus (y-len *' n)) (minus x-len, zero)
+    |> close-with-bezier (minus x-len, y-len *' n) (minus (x-len *' n), y-len)
+
+end
