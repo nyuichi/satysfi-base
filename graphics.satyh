@@ -1,43 +1,5 @@
 @require: pervasives
 
-module Path : sig
-  val start : point -> pre-path
-  val line-to : point -> pre-path -> pre-path
-  val bezier-to : point -> point -> point -> pre-path -> pre-path
-  val terminate : pre-path -> path
-  val close-with-line : pre-path -> path
-  val close-with-bezier : point -> point -> pre-path -> path
-  val bbox : path -> point * point
-  val unite : path -> path -> path
-  val shift : point -> path -> path
-  val ellipse : length -> length -> path
-end = struct
-  let start = start-path
-  let line-to = line-to
-  let bezier-to = bezier-to
-  let terminate = terminate-path
-  let close-with-line = close-with-line
-  let close-with-bezier = close-with-bezier
-  let bbox = get-path-bbox
-  let unite = unite-path
-  let shift = shift-path
-
-
-  let ellipse center x-len y-len =
-    let n = ((sqrt2 -. 1.0) *. 4.0) /. 3.0 in
-    let minus len = len *' (float (-1)) in
-    let zero = 0pt in
-    let main =
-      start-path (zero, y-len)
-      |> bezier-to (x-len *' n, y-len) (x-len, y-len *' n) (x-len, zero)
-      |> bezier-to (x-len,  minus (y-len *' n)) (x-len *' n,  minus y-len) (zero,  minus y-len)
-      |> bezier-to (minus (x-len *' n), minus y-len) (minus x-len,  minus (y-len *' n)) (minus x-len, zero)
-      |> close-with-bezier (minus x-len, y-len *' n) (minus (x-len *' n), y-len)
-    in
-      shift center main
-
-end
-
 module Graphics : sig
   val of-inline : point -> inline-boxes -> graphics
   val stroke : length -> color -> path -> graphics
