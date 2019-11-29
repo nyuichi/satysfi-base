@@ -19,6 +19,7 @@
 @import: ../set
 @import: ../tuple
 @import: ../graphics
+@import: ../path
 @import: ../typeset/math-ext
 @import: ../result
 @import: ../void
