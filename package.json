@@ -1,0 +1,10 @@
+{
+  "devDependencies": {
+    "jest": "^24.9.0",
+    "jest-image-snapshot": "^2.11.1",
+    "shelljs": "^0.8.3"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
