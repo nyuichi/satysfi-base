@@ -18,6 +18,8 @@ module Length : sig
   val (<=) : length -> length -> bool
   val (==) : length -> length -> bool
 
+  val equal : length -> length -> bool
+
   val min : length -> length -> length
   val max : length -> length -> length
   val neg : length -> length
@@ -39,6 +41,8 @@ end = struct
   let (<=) l m = Float.(to-float l <= to-float m)
   let (>=) l m = Float.(to-float l >= to-float m)
   let (==) l m = Float.(to-float l == to-float m)
+
+  let equal l m = l == m
 
   % REQUIRE(!is-nan(f) && !is-nan(g))
   let min f g = if f < g then f else g

@@ -21,6 +21,8 @@ module Float : sig
   val ord : (float Ord.t) implicit
   val eq : (float Eq.t) implicit
 
+  val equal : float -> float -> bool
+
   val neg : float -> float
   val abs : float -> float
   val min : float -> float -> float
@@ -81,6 +83,8 @@ end = struct
 
   let ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
   let eq = Ord.derive-eq ord
+
+  let equal = Eq.equal eq
 
   let min f g = if is-nan f || is-nan g then nan else if f < g then f else g
   let max f g = if is-nan f || is-nan g then nan else if f > g then f else g
