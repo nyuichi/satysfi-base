@@ -6,6 +6,8 @@ module Int : sig
   val ord : (int Ord.t) implicit
   val eq : (int Eq.t) implicit
 
+  val equal : int -> int -> bool
+
   val bitsize : int
   val max-value : int
   val min-value : int
@@ -40,6 +42,7 @@ end = struct
   let min = Ord.min ord
 
   let eq = Ord.derive-eq ord
+  let equal = Eq.equal eq
 
   let add i j = i + j
   let sub i j = i - j
