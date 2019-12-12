@@ -13,7 +13,7 @@ authors: [
   "puripuri2100 <puripuri2100@gmail.com>"
   "Yuito Murase <yuito.murase@gmail.com>"
 ]
-license: "UNLICENSED"
+license: "MIT"
 homepage: "https://github.com/nyuichi/satysfi-lib"
 bug-reports: "https://github.com/nyuichi/satysfi-lib/issues"
 dev-repo: "git+https://github.com/nyuichi/satysfi-lib.git"
