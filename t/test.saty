@@ -230,4 +230,13 @@ let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> D
 let () = Stream.nat |> Stream.take 5 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x)
 in
 
+let () = Debug.log (Color.(RGB(0.5, 0.5, 0.5) < RGB(0.6, 0.4, 0.4)) |> String.of-bool)
+in
+let () = Debug.log (Color.(RGB(0.5, 0.5, 0.5) < RGB(0.4, 0.6, 0.4)) |> String.of-bool)
+in
+let () = Debug.log (Color.(RGB(0.5, 0.5, 0.5) < RGB(0.4, 0.4, 0.6)) |> String.of-bool)
+in
+let () = Debug.log (Color.(RGB(0.5, 0.5, 0.5) < RGB(0.5, 0.5, 0.5)) |> String.of-bool)
+in
+
 finish
