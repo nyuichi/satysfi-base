@@ -1,4 +1,4 @@
-# satysfi-lib
+# satysfi-base
 
 ## TL;DR
 
@@ -16,7 +16,7 @@ ctx |> Inline.read {
 }
 ```
 
-## What is satysfi-lib
+## What is satysfi-base
 
 This repository contains a collection of utility functions and modules for SATySFi.
 Because the library bundled with the default installation configuration of SATySFi is currently not rich enough, this project aims to provide a complementary library sufficient for most situations in typesetting.
