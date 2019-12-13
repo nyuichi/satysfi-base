@@ -1,4 +1,4 @@
-# satysfi-lib
+# satysfi-base
 
     =========================== CAUTION ===========================
     All contents in this repository are still under development.

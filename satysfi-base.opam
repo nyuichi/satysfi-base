@@ -1,5 +1,5 @@
 opam-version: "2.0"
-name: "satysfi-lib"
+name: "satysfi-base"
 version: "0.0.1"
 synopsis: "A collection of utility functions and modules for SATySFi"
 description: """
@@ -14,9 +14,9 @@ authors: [
   "Yuito Murase <yuito.murase@gmail.com>"
 ]
 license: "MIT"
-homepage: "https://github.com/nyuichi/satysfi-lib"
-bug-reports: "https://github.com/nyuichi/satysfi-lib/issues"
-dev-repo: "git+https://github.com/nyuichi/satysfi-lib.git"
+homepage: "https://github.com/nyuichi/satysfi-base"
+bug-reports: "https://github.com/nyuichi/satysfi-base/issues"
+dev-repo: "git+https://github.com/nyuichi/satysfi-base.git"
 depends: [
   "satysfi" {>= "0.0.3" & < "0.0.4"}
   "satyrographos" {>= "0.0.2" & < "0.0.3"}
@@ -24,7 +24,7 @@ depends: [
 build: [ ]
 install: [
   ["satyrographos" "opam" "install"
-   "-name" "lib"
+   "-name" "base"
    "-prefix" "%{prefix}%"
    "-script" "%{build}%/Satyristes"]
 ]

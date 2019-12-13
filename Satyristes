@@ -1,6 +1,6 @@
 (version "0.0.2")
 (library
-  (name "lib")
+  (name "base")
   (version "0.0.1")
   (sources
     ((package "array.satyg" "array.satyg")
@@ -63,4 +63,4 @@
      (package "typeset/derive/line.satyh" "typeset/derive/line.satyh")
      (package "typeset/derive/render.satyh" "typeset/derive/render.satyh")
 	))
-  (opam "satysfi-lib.opam"))
+  (opam "satysfi-base.opam"))
