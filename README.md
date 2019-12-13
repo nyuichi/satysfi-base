@@ -24,7 +24,10 @@ We also provide some specific packages for typesetting:
 - `code2`: display program sources with syntax highlight
 - `derive`: display proof trees
 
-All files under `zrbase` are originally written by Takayuki YATO and licensed under MIT.
+## LICENSE
+
+All files in this repository are licensed under MIT.
+Files under `zrbase` are originally written by Takayuki YATO.
 
 ## Convention
 
