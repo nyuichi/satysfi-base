@@ -1,5 +1,5 @@
 @require: stdja
-@import: ../typeset/derive
+@import: ../../../typeset/derive
 
 open Derive in
 StdJa.document (|
@@ -11,7 +11,9 @@ StdJa.document (|
   +math (${
     \proven!(
       open DeriveDSL in
-      derive ${A \vdash A}
+      derive ${ A \vdash A }
+      |> by {Refl}
+      |> byOp {(1)}
     )
   });
 >

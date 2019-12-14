@@ -1,0 +1,18 @@
+@require: stdja
+@import: ../../../typeset/derive
+
+open Derive in
+StdJa.document (|
+  title = {はじめての\SATySFi;};
+  author = {オレオレ};
+  show-title = true;
+  show-toc = false;
+|) '<
+  +math (${
+    \proven!(
+      open DeriveDSL in
+      derive ${A \vdash A}
+      |> by {Refl}
+    )
+  });
+>
