@@ -1,0 +1,11 @@
+@require: stdja
+StdJa.document (|
+  title = {はじめての\SATySFi;};
+  author = {オレオレ};
+  show-title = true;
+  show-toc = false;
+|) '<
+  +p {
+    私と一緒にサティスファイ！
+  }
+>
