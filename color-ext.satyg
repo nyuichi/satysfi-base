@@ -18,13 +18,7 @@ module Color : sig
   val srgb24 : int -> int -> int -> color
   val of-css : string -> color % e.g. Color.of-css `#F5F5DC` and Color.of-css `beige`
 
-%  val (<) : color -> color -> bool
-%  val (>) : color -> color -> bool
-%  val (>=) : color -> color -> bool
-%  val (<=) : color -> color -> bool
   val (==) : color -> color -> bool
-%  val ord : (color Ord.t) implicit
-%  val eq : (color Eq.t) implicit
 end = struct
   let gray x = Gray(x)
   let rgb r g b = RGB(r, g, b)
@@ -205,25 +199,5 @@ end = struct
     | (RGB(r1, g1, b1), RGB(r2, g2, b2)) -> Float.(r1 == r2) && Float.(g1 == g2) && Float.(b1 == b2)
     | (CMYK(c1, m1, y1, k1), CMYK(c2, m2, y2, k2)) -> Float.(c1 == c2) && Float.(m1 == m2) && Float.(y1 == y2) && Float.(k1 == k2)
     | _ -> false
-
-% CMYK < RGB < Gray
-%  let (<) c d =
-%    match (c, d) with
-%    | (Gray(g1), Gray(g2)) -> Float.(g1 < g2)
-%    | (RGB(r1, g1, b1), RGB(r2, g2, b2)) -> if Float.(r1 < r2) then true else if Float.(g1 < g2) then true else Float.(b1 < b2)
-%    | (CMYK(c1, m1, y1, k1), CMYK(c2, m2, y2, k2)) -> if Float.(c1 < c2) then true else if Float.(m1 < m2) then true else if Float.(y1 < y2) then true else Float.(k1 < k2)
-%    | (Gray(_), RGB(_)) -> false
-%    | (Gray(_), CMYK(_)) -> false
-%    | (RGB(_), Gray(_)) -> true
-%    | (RGB(_), CMYK(_)) -> false
-%    | (CMYK(_), RGB(_)) -> true
-%    | (CMYK(_), Gray(_)) -> true
-%  let (>) c d = d < c
-%
-%  let (<=) c d = c < d || c == d
-%  let (>=) c d = d <= c
-%
-%  let ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
-%  let eq = Ord.derive-eq ord
 
 end
