@@ -1,0 +1,76 @@
+@import: inline
+
+type font = string * float * float
+
+module Context : sig
+  val make : length -> context
+
+  val set-math-variant-char : math-char-class -> int -> int -> context -> context
+  val set-math-command : [math] inline-cmd -> context -> context
+  val get-initial-context : length -> [math] inline-cmd -> context
+  val set-hyphen-min : int -> int -> context -> context
+  val set-min-gap-of-lines : length -> context -> context
+  val set-space-ratio : float -> float -> float -> context -> context
+  val set-space-ratio-between-scripts : float -> float -> float -> script -> script -> context -> context
+  val get-space-ratio-between-scripts : context -> script -> script -> (float * float * float) option
+  val set-paragraph-margin : length -> length -> context -> context
+  val set-min-paragraph-ascender-and-descender : length -> length -> context -> context
+  val set-font-size : length -> context -> context
+  val get-font-size : context -> length
+  val set-font : script -> font -> context -> context
+  val get-font : script -> context -> font
+  val set-math-font : string -> context -> context
+  val set-dominant-wide-script : script -> context -> context
+  val get-dominant-wide-script : context -> script
+  val set-dominant-narrow-script : script -> context -> context
+  val get-dominant-narrow-script : context -> script
+  val set-language : script -> language -> context -> context
+  val get-language : script -> context -> language
+  val set-text-color : color -> context -> context
+  val get-text-color : context -> color
+  val set-leading : length -> context -> context
+  val get-text-width : context -> length
+  val set-manual-rising : length -> context -> context
+  val set-hyphen-penalty : int -> context -> context
+  val get-axis-height : context -> length
+  val set-word-break-penalty : int -> context -> context
+  val set-every-word-break : inline-boxes -> inline-boxes -> context -> context
+  val get-every-word-break : context -> inline-boxes * inline-boxes
+end = struct
+  let set-math-variant-char = set-math-variant-char
+  let set-math-command = set-math-command
+  let get-initial-context = get-initial-context
+  let set-hyphen-min = set-hyphen-min
+  let set-min-gap-of-lines = set-min-gap-of-lines
+  let set-space-ratio = set-space-ratio
+  let set-space-ratio-between-scripts = set-space-ratio-between-scripts
+  let get-space-ratio-between-scripts = get-space-ratio-between-scripts
+  let set-paragraph-margin = set-paragraph-margin
+  let set-min-paragraph-ascender-and-descender = set-min-paragraph-ascender-and-descender
+  let set-font-size = set-font-size
+  let get-font-size = get-font-size
+  let set-font = set-font
+  let get-font = get-font
+  let set-math-font = set-math-font
+  let set-dominant-wide-script = set-dominant-wide-script
+  let get-dominant-wide-script = get-dominant-wide-script
+  let set-dominant-narrow-script = set-dominant-narrow-script
+  let get-dominant-narrow-script = get-dominant-narrow-script
+  let set-language = set-language
+  let get-language = get-language
+  let set-text-color = set-text-color
+  let get-text-color = get-text-color
+  let set-leading = set-leading
+  let get-text-width = get-text-width
+  let set-manual-rising = set-manual-rising
+  let set-hyphen-penalty = set-hyphen-penalty
+  let get-axis-height = get-axis-height
+  let set-word-break-penalty = set-word-break-penalty
+  let set-every-word-break = set-every-word-break
+  let get-every-word-break = get-every-word-break
+
+  let-inline ctx \math m =
+    Inline.of-math m ctx
+
+  let make text-width = get-initial-context text-width (command \math)
+end
