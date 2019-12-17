@@ -22,22 +22,22 @@ end = struct
   let custom l1 l2 = UserDefinedPaper(l1,l2)
 end
 
-type 'a pager-hook = (| pager-number : int |) -> 'a
+type 'a pager-hook = (| page-number : int |) -> 'a
 
-type mergin = (|
+type margin = (|
   text-height : length;
-  text-origin : point
+  text-origin : point;
 |)
 
 type header-footer = (|
   header-content : block-boxes;
   header-origin : point;
   footer-content : block-boxes;
-  footer-origin : point
+  footer-origin : point;
 |)
 
 module Pager : sig
-  val make-document : page -> mergin pager-hook -> header-footer pager-hook -> block-boxes -> document
+  val make-document : page -> margin pager-hook -> header-footer pager-hook -> block-boxes -> document
   val clear : block-boxes  % hard page break
   val make-footnote : block-boxes -> inline-boxes
   val make-hook : (point -> unit) pager-hook -> inline-boxes
