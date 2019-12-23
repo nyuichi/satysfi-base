@@ -1,6 +1,5 @@
+@import: font
 @import: inline
-
-type font = string * float * float
 
 module Context : sig
   val make : length -> context
