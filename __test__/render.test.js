@@ -33,10 +33,10 @@ test('Confirm that satysfi is installed', () => {
 })
 
 describe('Derive', () => {
-  test('renders derive', compareRenderOutputWithSnapshot('src/derive/derive'));
-  test('renders assume', compareRenderOutputWithSnapshot('src/derive/assume'));
-  test('renders by', compareRenderOutputWithSnapshot('src/derive/by'));
-  test('renders by and byOp', compareRenderOutputWithSnapshot('src/derive/by-and-byop'));
-  test('renders from', compareRenderOutputWithSnapshot('src/derive/from'));
-  test('renders dotted line', compareRenderOutputWithSnapshot('src/derive/dotted-line'));
+  test('renders derive', compareRenderOutputWithSnapshot('satysrc/derive/01-derive'));
+  test('renders assume', compareRenderOutputWithSnapshot('satysrc/derive/02-assume'));
+  test('renders by', compareRenderOutputWithSnapshot('satysrc/derive/03-by'));
+  test('renders by and byOp', compareRenderOutputWithSnapshot('satysrc/derive/04-by-and-byop'));
+  test('renders from', compareRenderOutputWithSnapshot('satysrc/derive/05-from'));
+  test('renders dotted line', compareRenderOutputWithSnapshot('satysrc/derive/06-dotted-line'));
 })
