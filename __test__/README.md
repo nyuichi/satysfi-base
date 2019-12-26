@@ -3,7 +3,6 @@
 You need to install [SATySFi](https://github.com/gfngfn/SATySFi), [Yarn](https://yarnpkg.com/lang/en/docs/install), and [GraphicsMagick](http://www.graphicsmagick.org).
 
 ```shell
-$ cd __test__
 $ yarn install  # install dependencies
 $ yarn test     # run test
 ```
