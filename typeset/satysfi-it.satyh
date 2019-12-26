@@ -6,15 +6,23 @@
 @import: ../context
 @import: ../option-ext
 
-let satysfi-it ?:text-width math =
+%% Usage:
+%%
+%%  $ cat test.saty
+%%  @require: base/typeset/satysfi-it
+%%  
+%%  satysfi-it ${1 + 2 = 3}
+%%  $ satysfi test.saty
+%%  $ open test.pdf
+
+let satysfi-it ?:text-width ?:margin math =
   let text-width = text-width |> Option.unwrap-or 440pt in
+  let (top, right, bottom, left) = margin |> Option.unwrap-or (3pt, 3pt, 3pt, 3pt) in
   let default-ctx = Context.make text-width in
   let ib = default-ctx |> Inline.of-math math in
-  let (w, h) = (Inline.natural-width ib, Inline.natural-height ib) in
+  let (w, h) = (Inline.natural-width ib +' left +' right, Inline.natural-height ib +' top +' bottom) in
   Pager.make-document
     (Page.custom w h)
-    (Fn.const (| text-height = 0pt; text-origin = (0pt, 0pt) |))
+    (Fn.const (| text-height = 0pt; text-origin = (left, top) |))
     (Fn.const (| header-content = Block.nil; header-origin = (0pt, 0pt); footer-content = Block.nil; footer-origin = (0pt, 0pt) |))
     (default-ctx |> Block.of-inline false false (Fn.const ib))
-
-in satysfi-it ${1 + 2 = 3}
