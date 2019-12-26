@@ -26,10 +26,10 @@ jobs:
       - uses: actions/checkout@v1
       - name: Install Apt dependencies
         run: |
-          apt update && apt install -y curl gnupg
+          apt-get update && apt install -y curl gnupg
           curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
           echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
-          apt update && apt install -y yarn graphicsmagick
+          apt-get update && apt-get install -y yarn graphicsmagick
       - name: Install Yarn dependencies
         run: |
           yarn install
