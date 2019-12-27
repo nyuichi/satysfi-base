@@ -20,6 +20,6 @@ jobs:
       - name: Install Yarn dependencies
         run: |
           yarn install
-      - name: Run visual regression test
+      - name: Run regression tests
         run: |
           yarn test
