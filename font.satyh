@@ -1,0 +1,13 @@
+type font = string * float * float
+
+module Font : sig
+  val make : string -> float -> float -> font
+  val font-name : font -> string
+  val ratio : font -> float
+  val baseline : font -> float
+end = struct
+  let make fn rt bl = (fn, rt, bl)
+  let font-name (fn, _, _) = fn
+  let ratio (_, rt, _) = rt
+  let baseline (_, _, bl) = bl
+end

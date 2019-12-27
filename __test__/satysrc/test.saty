@@ -27,6 +27,7 @@
 @import: ../../eq
 @import: ../../either
 @import: ../../stream
+@import: ../../pager
 
 open Fn in
 open RegExp in
