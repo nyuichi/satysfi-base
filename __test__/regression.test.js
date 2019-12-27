@@ -20,7 +20,6 @@ const compileSatyToImg = (filename) => {
 }
 
 afterAll(() => {
-  console.log(shell.pwd().toString());
   shell.rm('**/*.pdf', '**/*.satysfi-aux');
 })
 
