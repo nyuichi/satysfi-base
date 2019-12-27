@@ -28,6 +28,13 @@ test('Confirm that satysfi is installed', () => {
   expect(shell.exec('satysfi -v').code).toBe(0);
 })
 
+test('Check compiler outputs', () => {
+  const compilerOutput = shell.exec('satysfi satysrc/test.saty', {silent: true})
+  .exec('awk \'/evaluating texts .../{flag=1;next}/evaluation done/{flag=0}flag\'', {silent: true})
+  .stdout;
+  expect(compilerOutput).toMatchSnapshot();
+})
+
 describe('Derive', () => {
   const filenames = [
     '01-derive', 

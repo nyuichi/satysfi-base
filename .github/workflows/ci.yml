@@ -3,20 +3,7 @@ name: CI
 on: push
 
 jobs:
-  ci:
-    runs-on: ubuntu-latest
-    container:
-      image: amutake/satysfi:nightly
-      volumes:
-        - .:/satysfi
-    steps:
-      - uses: actions/checkout@v1
-      - name: Run test
-        run: |
-          satysfi t/test.saty | awk '/evaluating texts .../{flag=1;next}/evaluation done/{flag=0}flag' | tee t/got
-          diff t/expected t/got
-
-  visual-regression-test:
+  regression-test:
     runs-on: ubuntu-latest
     container:
       image: amutake/satysfi:nightly
