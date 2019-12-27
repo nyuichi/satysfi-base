@@ -3,7 +3,7 @@ name: CI
 on: push
 
 jobs:
-  ci:
+  regression-test:
     runs-on: ubuntu-latest
     container:
       image: amutake/satysfi:nightly
@@ -11,7 +11,15 @@ jobs:
         - .:/satysfi
     steps:
       - uses: actions/checkout@v1
-      - name: Run test
+      - name: Install Apt dependencies
         run: |
-          satysfi t/test.saty | awk '/evaluating texts .../{flag=1;next}/evaluation done/{flag=0}flag' | tee t/got
-          diff t/expected t/got
+          apt-get update && apt install -y curl gnupg
+          curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
+          echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
+          apt-get update && apt-get install -y yarn graphicsmagick
+      - name: Install Yarn dependencies
+        run: |
+          yarn install
+      - name: Run regression tests
+        run: |
+          yarn test

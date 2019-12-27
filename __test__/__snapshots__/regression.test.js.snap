@@ -1,4 +1,7 @@
-[32m[debug.log] ==== Ref ====[0m
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check compiler outputs 1`] = `
+"[32m[debug.log] ==== Ref ====[0m
 [32m[debug.log] 1[0m
 [32m[debug.log] 2[0m
 [32m[debug.log] 2:1[0m
@@ -76,10 +79,10 @@
 [32m[debug.log] 11: SPLIT -1 1[0m
 [32m[debug.log] 12: SAVE 5[0m
 [32m[debug.log] 13: MATCH[0m
-[32m[debug.log] Some(0, "aabbb")[0m
-[32m[debug.log] Some(0, "aa")[0m
+[32m[debug.log] Some(0, \\"aabbb\\")[0m
+[32m[debug.log] Some(0, \\"aa\\")[0m
 [32m[debug.log] None[0m
-[32m[debug.log] Some(2, "bbb")[0m
+[32m[debug.log] Some(2, \\"bbb\\")[0m
 [32m[debug.log] 0: SPLIT 3 1[0m
 [32m[debug.log] 1: ANY[0m
 [32m[debug.log] 2: JMP -2[0m
@@ -92,19 +95,20 @@
 [32m[debug.log] 9: SAVE 1[0m
 [32m[debug.log] 10: MATCH[0m
 [32m[debug.log] true[0m
-[32m[debug.log] Some(7, "le")[0m
-[32m[debug.log] Some(7, "le")[0m
-[32m[debug.log] Some(10, "apple")[0m
-[32m[debug.log] Some(0, "  ")[0m
+[32m[debug.log] Some(7, \\"le\\")[0m
+[32m[debug.log] Some(7, \\"le\\")[0m
+[32m[debug.log] Some(10, \\"apple\\")[0m
+[32m[debug.log] Some(0, \\"  \\")[0m
 [32m[debug.log] ()|((a)())[0m
 [32m[debug.log] ()|((.)())[0m
-[32m[debug.log] ()|((\(()|((\(()|((a)())\))())\))())[0m
-[32m[debug.log] ()|((\(()|(((a)*?)())\))())[0m
-[32m[debug.log] ()|((\(()|((a)((\(()|((c)())\))()))\))((\(()|((b)())\))()))[0m
-[32m[debug.log] ()|((\((()|(((a)+)()))|((\(()|((c)())\))())\))((\(()|(((b)+)())\))()))[0m
+[32m[debug.log] ()|((\\\\(()|((\\\\(()|((a)())\\\\))())\\\\))())[0m
+[32m[debug.log] ()|((\\\\(()|(((a)*?)())\\\\))())[0m
+[32m[debug.log] ()|((\\\\(()|((a)((\\\\(()|((c)())\\\\))()))\\\\))((\\\\(()|((b)())\\\\))()))[0m
+[32m[debug.log] ()|((\\\\((()|(((a)+)()))|((\\\\(()|((c)())\\\\))())\\\\))((\\\\(()|(((b)+)())\\\\))()))[0m
 [32m[debug.log] true[0m
 [32m[debug.log] ()|((
-)(()((	)(($)((()(())((*)((?)()))))))))[0m
+)((
+)((	)(($)((()(())((*)((?)()))))))))[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
 [32m[debug.log] false[0m
@@ -116,13 +120,13 @@
 [32m[debug.log] 3[0m
 [32m[debug.log] 10[0m
 [32m[debug.log] ==== Lexer ====[0m
-[32m[debug.log] (| kind = identifier, data = "abc" |)[0m
-[32m[debug.log] (| kind = whitespace, data = " " |)[0m
-[32m[debug.log] (| kind = identifier, data = "defg" |)[0m
-[32m[debug.log] (| kind = whitespace, data = "   " |)[0m
-[32m[debug.log] (| kind = identifier, data = "hijklMNL" |)[0m
-[32m[debug.log] (| kind = whitespace, data = " " |)[0m
-[32m[debug.log] (| kind = identifier, data = "op123" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"abc\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"defg\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\"   \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"hijklMNL\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"op123\\" |)[0m
 [32m[debug.log] ==== Int ====[0m
 [32m[debug.log] 52[0m
 [32m[debug.log] 13[0m
@@ -238,3 +242,5 @@
 [32m[debug.log] 2[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 4[0m
+"
+`;
