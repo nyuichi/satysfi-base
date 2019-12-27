@@ -5,22 +5,18 @@ expect.extend({ toMatchImageSnapshot });
 
 shell.cd('__test__');
 
-const compareRenderOutputWithSnapshot = (filename) => {
-  return (done) => {
-    render(filename, (err, image) => {
-      expect(err).toBeFalsy();
-      expect(image).toMatchImageSnapshot();
-      done();
-    });
-  }
-}
-
-const render = (filename, callback) => {
+const compileSatyToImg = (filename) => {
   expect(shell.exec(`satysfi ${filename}.saty`, {silent: true}).code).toBe(0);
 
-  gm(`${filename}.pdf`)
+  return new Promise((resolve, reject) => {
+    gm(`${filename}.pdf`)
     .selectFrame(0)
-    .toBuffer(`${filename}.png`, callback);
+    .toBuffer(`${filename}.png`, (err, buf) => {
+      if (err) reject(err);
+
+      resolve(buf);
+    })
+  })
 }
 
 afterAll(() => {
@@ -33,10 +29,20 @@ test('Confirm that satysfi is installed', () => {
 })
 
 describe('Derive', () => {
-  test('renders derive', compareRenderOutputWithSnapshot('satysrc/derive/01-derive'));
-  test('renders assume', compareRenderOutputWithSnapshot('satysrc/derive/02-assume'));
-  test('renders by', compareRenderOutputWithSnapshot('satysrc/derive/03-by'));
-  test('renders by and byOp', compareRenderOutputWithSnapshot('satysrc/derive/04-by-and-byop'));
-  test('renders from', compareRenderOutputWithSnapshot('satysrc/derive/05-from'));
-  test('renders dotted line', compareRenderOutputWithSnapshot('satysrc/derive/06-dotted-line'));
+  const filenames = [
+    '01-derive', 
+    '02-assume',
+    '03-by',
+    '04-by-and-byop',
+    '05-from', 
+    '06-dotted-line'
+  ];
+
+  for (const filename of filenames) {
+    test(`renders ${filename}`, async (done) => {
+      const image = await compileSatyToImg(`satysrc/derive/${filename}`);
+      expect(image).toMatchImageSnapshot();
+      done();
+    });
+  }
 })
