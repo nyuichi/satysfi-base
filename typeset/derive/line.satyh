@@ -1,14 +1,20 @@
 @require: gr
 
-type derivation-line = context -> point -> length -> length -> graphics list
-
 module DeriveLine : sig
 
-    val standard-line : derivation-line
-    val no-line       : derivation-line
-    val dotted-line   : length -> length -> derivation-line
+    type t
+    val write : t -> context -> point -> length -> length -> graphics list
+
+    val standard-line : t
+    val no-line       : t
+    val dotted-line   : length -> length -> t
 
 end = struct
+
+    type t = context -> point -> length -> length -> graphics list
+
+    let write line ctx pt width thickness = line ctx pt width thickness
+
     let standard-line = fun ctx pt width thickness -> (
         let color = get-text-color ctx in
         match pt with

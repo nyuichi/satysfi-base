@@ -59,7 +59,7 @@ end = struct
                         Gr.text-rightward (x, y -' (get-axis-height ctx)) llabel;
                         Gr.text-rightward (rlabelx , y -' (get-axis-height ctx)) rlabel
                     ]
-                    (line ctx (barx, y) bar-width config#bar-thickness)
+                    (DeriveLine.write line ctx (barx, y) bar-width config#bar-thickness)
                 )) in 
 
         let llabel = match config#default-label-position with 
