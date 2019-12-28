@@ -28,7 +28,7 @@ test('Confirm that satysfi is installed', () => {
 })
 
 test('Check compiler outputs', () => {
-  const compilerOutput = shell.exec('satysfi satysrc/test.saty', {silent: true})
+  const compilerOutput = shell.exec('satysfi satysrc/generic.saty', {silent: true})
   .exec('awk \'/evaluating texts .../{flag=1;next}/evaluation done/{flag=0}flag\'', {silent: true})
   .stdout;
   expect(compilerOutput).toMatchSnapshot();
