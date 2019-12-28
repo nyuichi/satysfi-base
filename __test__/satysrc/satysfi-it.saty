@@ -1,0 +1,3 @@
+@import: ../../typeset/satysfi-it
+
+satysfi-it ${1 + 2 = 3}

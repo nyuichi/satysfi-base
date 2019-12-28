@@ -34,6 +34,12 @@ test('Check compiler outputs', () => {
   expect(compilerOutput).toMatchSnapshot();
 })
 
+test('SATySFi-iT', async (done) => {
+  const image = await compileSatyToImg(`satysrc/satysfi-it`);
+  expect(image).toMatchImageSnapshot();
+  done();
+})
+
 describe('Derive', () => {
   const filenames = [
     '01-derive', 
