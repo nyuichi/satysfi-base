@@ -1,22 +1,16 @@
-@require: stdja
+@require: math
+@import: ../util
 @import: ../../../typeset/derive
 
 open Derive in
-StdJa.document (|
-  title = {はじめての\SATySFi;};
-  author = {オレオレ};
-  show-title = true;
-  show-toc = false;
-|) '<
-  +math (${
-    \proven!(
-      open DeriveDSL in
-      derive ${ \vdash A \wedge B }
-      |> by {${\wedge} I}
-      |> from [
-          assume ${\vdash A};
-          assume ${\vdash B}
-      ]
-    )
-  });
->
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${ \vdash A \wedge B }
+    |> by {${\wedge} I}
+    |> from [
+        assume ${\vdash A};
+        assume ${\vdash B}
+    ]
+  )
+}

@@ -1,19 +1,13 @@
-@require: stdja
+@require: math
+@import: ../util
 @import: ../../../typeset/derive
 
 open Derive in
-StdJa.document (|
-  title = {はじめての\SATySFi;};
-  author = {オレオレ};
-  show-title = true;
-  show-toc = false;
-|) '<
-  +math (${
-    \proven!(
-      open DeriveDSL in
-      derive ${ A \vdash A }
-      |> by {Refl}
-      |> byOp {(1)}
-    )
-  });
->
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${ A \vdash A }
+    |> by {Refl}
+    |> byOp {(1)}
+  )
+}
