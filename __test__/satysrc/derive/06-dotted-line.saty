@@ -1,23 +1,17 @@
-@require: stdja
+@require: math
+@import: ../util
 @import: ../../../typeset/derive
 
 open Derive in
-StdJa.document (|
-  title = {はじめての\SATySFi;};
-  author = {オレオレ};
-  show-title = true;
-  show-toc = false;
-|) '<
-  +math (${
-    \proven!(
-      open DeriveDSL in
-      derive ${ \Gamma \vdash \Delta }
-      |> by {Cut}
-      |> withLine (dotted-line 2pt 1pt)
-      |> from [
-        assume ${\Gamma \vdash \Delta, A};
-        assume ${\Gamma, A \vdash \Delta}
-      ]
-    )
-  });
->
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${ \Gamma \vdash \Delta }
+    |> by {Cut}
+    |> withLine (dotted-line 2pt 1pt)
+    |> from [
+      assume ${\Gamma \vdash \Delta, A};
+      assume ${\Gamma, A \vdash \Delta}
+    ]
+  )
+}
