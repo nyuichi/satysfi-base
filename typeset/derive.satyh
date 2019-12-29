@@ -6,13 +6,13 @@
 
 module Derive : sig
 
-    val \proven : [derive-config?; DeriveAst.t] math-cmd
+    val \proven : [derive-config-t?; DeriveAst.t] math-cmd
 
 end = struct
 
     open DeriveRender
 
-    let-math \proven ?:config ast = render-math (config |> Option.from default-config) ast
+    let-math \proven ?:config ast = render-math (config |> Option.unwrap-or DeriveConfig.default) ast
 
 end
 

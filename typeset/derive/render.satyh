@@ -6,20 +6,10 @@
 
 module DeriveRender : sig
 
-    val default-config : derive-config
-    val render-math   : derive-config -> DeriveAst.t -> math
-    val render-inline : context -> derive-config -> DeriveAst.t -> inline-boxes
+    val render-math   : derive-config-t -> DeriveAst.t -> math
+    val render-inline : context -> derive-config-t -> DeriveAst.t -> inline-boxes
 
 end = struct
-
-    let default-config = (|
-        default-label-position = LabelLeft;
-        default-line = DeriveLine.standard-line;
-        bar-top-bottom-margin = 2pt;
-        label-left-right-margin = 3pt;
-        bar-thickness = 0.5pt;
-        content-left-right-padding = 3pt;
-    |)
 
     type layout = (|
         left-width: length;

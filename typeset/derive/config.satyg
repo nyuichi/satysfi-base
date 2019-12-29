@@ -1,14 +1,104 @@
 @import: line
 
-type label-position =
-    | LabelLeft
-    | LabelRight
+type label-pos-t =
+| LabelLeft
+| LabelRight
 
-type derive-config = (|
-    default-label-position : label-position;
+type derive-config-t = (|
+    default-label-position : label-pos-t;
     default-line : DeriveLine.u;
     bar-top-bottom-margin : length;
     label-left-right-margin : length;
     bar-thickness : length;
     content-left-right-padding : length;
 |)
+
+module DeriveConfig : sig
+
+    val default : derive-config-t
+
+    val with-default-label-position : label-pos-t -> derive-config-t -> derive-config-t
+    val with-default-line : DeriveLine.u -> derive-config-t -> derive-config-t
+    val with-bar-top-bottom-margin : length -> derive-config-t -> derive-config-t
+    val with-label-left-right-margin : length -> derive-config-t -> derive-config-t
+    val with-bar-thickness : length -> derive-config-t -> derive-config-t
+    val with-content-left-right-padding : length -> derive-config-t -> derive-config-t
+
+end = struct
+
+    type t = (|
+        default-label-position : label-pos-t;
+        default-line : DeriveLine.u;
+        bar-top-bottom-margin : length;
+        label-left-right-margin : length;
+        bar-thickness : length;
+        content-left-right-padding : length;
+    |)
+
+
+    let default = (|
+        default-label-position = LabelLeft;
+        default-line = DeriveLine.standard-line;
+        bar-top-bottom-margin = 2pt;
+        label-left-right-margin = 3pt;
+        bar-thickness = 0.5pt;
+        content-left-right-padding = 3pt;
+    |)
+
+    let make config = config
+
+    let with-default-label-position value ast = (|
+        default-label-position = value;
+        default-line = ast#default-line;
+        bar-top-bottom-margin = ast#bar-top-bottom-margin;
+        label-left-right-margin = ast#label-left-right-margin;
+        bar-thickness = ast#bar-thickness;
+        content-left-right-padding = ast#content-left-right-padding;
+    |)
+
+    let with-default-line value ast = (|
+        default-label-position = ast#default-label-position;
+        default-line = value;
+        bar-top-bottom-margin = ast#bar-top-bottom-margin;
+        label-left-right-margin = ast#label-left-right-margin;
+        bar-thickness = ast#bar-thickness;
+        content-left-right-padding = ast#content-left-right-padding;
+    |)
+
+    let with-bar-top-bottom-margin value ast = (|
+        default-label-position = ast#default-label-position;
+        default-line = ast#default-line;
+        bar-top-bottom-margin = value;
+        label-left-right-margin = ast#label-left-right-margin;
+        bar-thickness = ast#bar-thickness;
+        content-left-right-padding = ast#content-left-right-padding;
+    |)
+
+    let with-label-left-right-margin value ast = (|
+        default-label-position = ast#default-label-position;
+        default-line = ast#default-line;
+        bar-top-bottom-margin = ast#bar-top-bottom-margin;
+        label-left-right-margin = value;
+        bar-thickness = ast#bar-thickness;
+        content-left-right-padding = ast#content-left-right-padding;
+    |)
+
+    let with-bar-thickness value ast = (|
+        default-label-position = ast#default-label-position;
+        default-line = ast#default-line;
+        bar-top-bottom-margin = ast#bar-top-bottom-margin;
+        label-left-right-margin = ast#label-left-right-margin;
+        bar-thickness = value;
+        content-left-right-padding = ast#content-left-right-padding;
+    |)
+
+    let with-content-left-right-padding value ast = (|
+        default-label-position = ast#default-label-position;
+        default-line = ast#default-line;
+        bar-top-bottom-margin = ast#bar-top-bottom-margin;
+        label-left-right-margin = ast#label-left-right-margin;
+        bar-thickness = ast#bar-thickness;
+        content-left-right-padding = value;
+    |)
+
+end
