@@ -1,5 +1,5 @@
 @require: gr
-@require: option
+@import: ../../option-ext
 @import: ast
 @import: config
 @import: line
@@ -7,8 +7,8 @@
 module DeriveRender : sig
 
     val default-config : derive-config
-    val render-math   : derive-config -> derivation-ast -> math
-    val render-inline : context -> derive-config -> derivation-ast -> inline-boxes
+    val render-math   : derive-config -> DeriveAst.t -> math
+    val render-inline : context -> derive-config -> DeriveAst.t -> inline-boxes
 
 end = struct
 
@@ -63,12 +63,12 @@ end = struct
                 )) in 
 
         let llabel = match config#default-label-position with 
-        | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
-        | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+        | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         in
         let rlabel = match config#default-label-position with
-        | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
-        | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.from inline-nil
+        | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+        | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         in
         let bar = make-bar ctx config line llabel rlabel bar-width in
         (|
@@ -152,15 +152,12 @@ end = struct
         |> List.fold-left-adjacent join-render-intermediate-result empty-med-result
 
     and render ctx config ast =
-        match ast with
-        | Ast(llabel, rlabel, conclusion, assumptions, lineOpt) ->
-            let med-assumptions = render-assumptions ctx config assumptions in
-            let med-conclusion = render-conclusion ctx config conclusion in
-            let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
-            let line = lineOpt |> Option.from config#default-line in
-            let med-bar = render-bar-with-label ctx config line llabel rlabel bar-width in
-
-            align-and-stack med-assumptions med-bar med-conclusion
+        let med-assumptions = render-assumptions ctx config (DeriveAst.assumptions ast) in
+        let med-conclusion = render-conclusion ctx config (DeriveAst.conclusion ast) in
+        let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
+        let line = (DeriveAst.line ast) |> Option.unwrap-or config#default-line in
+        let med-bar = render-bar-with-label ctx config line (DeriveAst.main-label ast) (DeriveAst.sub-label ast) bar-width in
+        align-and-stack med-assumptions med-bar med-conclusion
 
     let render-inline ctx config ast = (render ctx config ast)#rendered
 

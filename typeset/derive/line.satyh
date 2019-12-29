@@ -2,16 +2,18 @@
 
 module DeriveLine : sig
 
-    type t
-    val write : t -> context -> point -> length -> length -> graphics list
+    % TODO: rename to t after the name resolution issue is resolved
+    % https://github.com/gfngfn/SATySFi/issues/185
+    type u
+    val write : u -> context -> point -> length -> length -> graphics list
 
-    val standard-line : t
-    val no-line       : t
-    val dotted-line   : length -> length -> t
+    val standard-line : u
+    val no-line       : u
+    val dotted-line   : length -> length -> u
 
 end = struct
 
-    type t = context -> point -> length -> length -> graphics list
+    type u = context -> point -> length -> length -> graphics list
 
     let write line ctx pt width thickness = line ctx pt width thickness
 
