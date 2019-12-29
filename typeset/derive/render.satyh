@@ -49,7 +49,7 @@ end = struct
                         Gr.text-rightward (x, y -' (get-axis-height ctx)) llabel;
                         Gr.text-rightward (rlabelx , y -' (get-axis-height ctx)) rlabel
                     ]
-                    (DeriveLine.write line ctx (barx, y) bar-width config#bar-thickness)
+                    (DeriveLine.render line ctx (barx, y) bar-width config#bar-thickness)
                 )) in 
 
         let llabel = match config#default-label-position with 
@@ -142,11 +142,12 @@ end = struct
         |> List.fold-left-adjacent join-render-intermediate-result empty-med-result
 
     and render ctx config ast =
-        let med-assumptions = render-assumptions ctx config (DeriveAst.assumptions ast) in
-        let med-conclusion = render-conclusion ctx config (DeriveAst.conclusion ast) in
+        open DeriveAst in
+        let med-assumptions = render-assumptions ctx config (ast |> assumptions) in
+        let med-conclusion = render-conclusion ctx config (ast |> conclusion) in
         let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
-        let line = (DeriveAst.line ast) |> Option.unwrap-or config#default-line in
-        let med-bar = render-bar-with-label ctx config line (DeriveAst.main-label ast) (DeriveAst.sub-label ast) bar-width in
+        let line = ast |> line |> Option.unwrap-or config#default-line in
+        let med-bar = render-bar-with-label ctx config line (ast |> main-label) (ast |> sub-label) bar-width in
         align-and-stack med-assumptions med-bar med-conclusion
 
     let render-inline ctx config ast = (render ctx config ast)#rendered

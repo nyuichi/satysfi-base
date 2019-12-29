@@ -5,7 +5,8 @@ module DeriveLine : sig
     % TODO: rename to t after the name resolution issue is resolved
     % https://github.com/gfngfn/SATySFi/issues/185
     type u
-    val write : u -> context -> point -> length -> length -> graphics list
+    val make : (context -> point -> length -> length -> graphics list) -> u
+    val render : u -> context -> point -> length -> length -> graphics list
 
     val standard-line : u
     val no-line       : u
@@ -15,7 +16,9 @@ end = struct
 
     type u = context -> point -> length -> length -> graphics list
 
-    let write line ctx pt width thickness = line ctx pt width thickness
+    let render line ctx pt width thickness = line ctx pt width thickness
+
+    let make line = line
 
     let standard-line = fun ctx pt width thickness -> (
         let color = get-text-color ctx in
