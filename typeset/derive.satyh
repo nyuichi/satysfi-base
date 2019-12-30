@@ -23,14 +23,14 @@ module DeriveDSL : sig
     val by: inline-text -> DeriveAst.t -> DeriveAst.t
     val byOp: inline-text -> DeriveAst.t -> DeriveAst.t
     val from: DeriveAst.t list -> DeriveAst.t -> DeriveAst.t
-    val withLine: DeriveLine.u -> DeriveAst.t -> DeriveAst.t
+    val withLine: DeriveLine.t -> DeriveAst.t -> DeriveAst.t
 
     val assume: math -> DeriveAst.t
 
     % Lines
-    val standard-line : DeriveLine.u
-    val no-line       : DeriveLine.u
-    val dotted-line   : length -> length -> DeriveLine.u
+    val standard-line : DeriveLine.t
+    val no-line       : DeriveLine.t
+    val dotted-line   : length -> length -> DeriveLine.t
 
 end = struct
 

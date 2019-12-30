@@ -6,7 +6,7 @@ type label-pos-t =
 
 type derive-config-t = (|
     default-label-position : label-pos-t;
-    default-line : DeriveLine.u;
+    default-line : DeriveLine.t;
     bar-top-bottom-margin : length;
     label-left-right-margin : length;
     bar-thickness : length;

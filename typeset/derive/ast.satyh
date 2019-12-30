@@ -4,27 +4,29 @@ module DeriveAst : sig
 
     type t
     
-    val make : inline-text option -> inline-text option -> math -> t list -> DeriveLine.u option -> t
+    val make : inline-text option -> inline-text option -> math -> t list -> DeriveLine.t option -> t
 
     val main-label : t -> inline-text option
     val sub-label : t -> inline-text option
     val conclusion : t ->  math
     val assumptions : t -> t list
-    val line : t -> DeriveLine.u option
+    val line : t -> DeriveLine.t option
 
     val with-main-label : inline-text -> t -> t
     val with-sub-label : inline-text -> t -> t
     val with-assumptions : t list -> t -> t
-    val with-line : DeriveLine.u -> t -> t
+    val with-line : DeriveLine.t -> t -> t
 
 end = struct
 
-    type t =
+    % cf. https://github.com/nyuichi/satysfi-base/pull/19#discussion_r361930019
+    type u =
     | Ast of inline-text option
         * inline-text option
         * math
-        * t list
-        * DeriveLine.u option
+        * u list
+        * DeriveLine.t option
+    type t = u
 
     let make mlabel slabel conclusion assumptions line =
         Ast(mlabel, slabel, conclusion, assumptions, line)
