@@ -47,7 +47,8 @@ describe('Derive', () => {
     '03-by',
     '04-by-and-byop',
     '05-from', 
-    '06-dotted-line'
+    '06-dotted-line',
+    '07-customized-config'
   ];
 
   for (const filename of filenames) {
