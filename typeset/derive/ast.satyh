@@ -6,16 +6,16 @@ module DeriveAst : sig
     
     val make : inline-text option -> inline-text option -> math -> t list -> DeriveLine.t option -> t
 
-    val main-label : t -> inline-text option
-    val sub-label : t -> inline-text option
-    val conclusion : t ->  math
-    val assumptions : t -> t list
-    val line : t -> DeriveLine.t option
+    val get-main-label : t -> inline-text option
+    val get-sub-label : t -> inline-text option
+    val get-conclusion : t ->  math
+    val get-assumptions : t -> t list
+    val get-line : t -> DeriveLine.t option
 
-    val with-main-label : inline-text -> t -> t
-    val with-sub-label : inline-text -> t -> t
-    val with-assumptions : t list -> t -> t
-    val with-line : DeriveLine.t -> t -> t
+    val set-main-label : inline-text -> t -> t
+    val set-sub-label : inline-text -> t -> t
+    val set-assumptions : t list -> t -> t
+    val set-line : DeriveLine.t -> t -> t
 
 end = struct
 
@@ -32,35 +32,35 @@ end = struct
         Ast(mlabel, slabel, conclusion, assumptions, line)
 
 
-    let main-label ast = match ast with
+    let get-main-label ast = match ast with
     | Ast(mlabel, _, _, _, _) -> mlabel
 
-    let sub-label ast = match ast with
+    let get-sub-label ast = match ast with
     | Ast(_, slabel, _, _, _) -> slabel
 
-    let conclusion ast = match ast with
+    let get-conclusion ast = match ast with
     | Ast(_, _, conclusion, _, _) -> conclusion
 
-    let assumptions ast = match ast with
+    let get-assumptions ast = match ast with
     | Ast(_, _, _, assumptions, _) -> assumptions
 
-    let line ast = match ast with
+    let get-line ast = match ast with
     | Ast(_, _, _, _, line) -> line
 
 
-    let with-main-label mlabel ast = match ast with
+    let set-main-label mlabel ast = match ast with
     | Ast(_, slabel, conclusion, assumptions, line) ->
         Ast(Option.some(mlabel), slabel, conclusion, assumptions, line)
 
-    let with-sub-label slabel ast = match ast with
+    let set-sub-label slabel ast = match ast with
     | Ast(mlabel, _, conclusion, assumptions, line) ->
         Ast(mlabel, Option.some(slabel), conclusion, assumptions, line)
 
-    let with-assumptions assumptions ast = match ast with
+    let set-assumptions assumptions ast = match ast with
     | Ast(mlabel, slabel, conclusion, _, line) ->
         Ast(mlabel, slabel, conclusion, assumptions, line)
 
-    let with-line line ast = match ast with
+    let set-line line ast = match ast with
     | Ast(mlabel, slabel, conclusion, assumptions, _) ->
         Ast(mlabel, slabel, conclusion, assumptions, Option.some(line))
 

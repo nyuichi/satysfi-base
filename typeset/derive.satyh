@@ -6,7 +6,7 @@
 
 module Derive : sig
 
-    val \proven : [derive-config-t?; DeriveAst.t] math-cmd
+    val \proven : [DeriveConfig.t?; DeriveAst.t] math-cmd
 
 end = struct
 
@@ -44,9 +44,9 @@ end = struct
         let no-line = Option.some(DeriveLine.no-line) in
         DeriveAst.make None None assumption [] no-line
 
-    let by label-text ast = ast |> DeriveAst.with-main-label label-text
-    let byOp label-text ast = ast |> DeriveAst.with-sub-label label-text
-    let from assumptions ast = ast |> DeriveAst.with-assumptions assumptions
-    let withLine line ast = ast |> DeriveAst.with-line line
+    let by label-text ast = ast |> DeriveAst.set-main-label label-text
+    let byOp label-text ast = ast |> DeriveAst.set-sub-label label-text
+    let from assumptions ast = ast |> DeriveAst.set-assumptions assumptions
+    let withLine line ast = ast |> DeriveAst.set-line line
 
 end

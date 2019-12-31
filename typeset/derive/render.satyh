@@ -6,8 +6,8 @@
 
 module DeriveRender : sig
 
-    val render-math   : derive-config-t -> DeriveAst.t -> math
-    val render-inline : context -> derive-config-t -> DeriveAst.t -> inline-boxes
+    val render-math   : DeriveConfig.t -> DeriveAst.t -> math
+    val render-inline : context -> DeriveConfig.t -> DeriveAst.t -> inline-boxes
 
 end = struct
 
@@ -30,6 +30,8 @@ end = struct
         length-max [assumptions-layout#inner-width; conclusion-layout#inner-width]
 
     let render-bar-with-label ctx config line llabel-text rlabel-text bar-width =
+        open DeriveConfig in
+
         let make-label ctx label-text =
             match label-text with
             | None -> inline-nil
@@ -37,35 +39,39 @@ end = struct
 
         let make-bar ctx config line llabel rlabel bar-width =
             let bar-with-label-width = bar-width +' (get-natural-width llabel) +' (get-natural-width rlabel) in
+            let bar-thickness = config |> get-bar-thickness in
+            let bar-margin = config |> get-bar-top-bottom-margin in
+            let label-margin = config |> get-label-left-right-margin in
             inline-graphics
                 bar-with-label-width
-                (config#bar-thickness +' config#bar-top-bottom-margin)
-                config#bar-top-bottom-margin
+                (bar-thickness +' bar-margin)
+                bar-margin
                 (fun (x, y) -> (
-                    let barx = x +' (get-natural-width llabel) +' config#label-left-right-margin in
-                    let rlabelx = barx +' bar-width +' config#label-left-right-margin in
+                    let barx = x +' (get-natural-width llabel) +' label-margin in
+                    let rlabelx = barx +' bar-width +' label-margin in
                     List.append
                     [
                         Gr.text-rightward (x, y -' (get-axis-height ctx)) llabel;
                         Gr.text-rightward (rlabelx , y -' (get-axis-height ctx)) rlabel
                     ]
-                    (DeriveLine.render line ctx (barx, y) bar-width config#bar-thickness)
+                    (DeriveLine.render line ctx (barx, y) bar-width bar-thickness)
                 )) in 
 
-        let llabel = match config#default-label-position with 
+        let llabel = match config |> get-main-label-position with 
         | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         in
-        let rlabel = match config#default-label-position with
+        let rlabel = match config |> get-main-label-position with
         | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
         in
         let bar = make-bar ctx config line llabel rlabel bar-width in
+        let label-margin = config |> get-label-left-right-margin in
         (|
             rendered = bar;
             layout   = (|
-                left-width  = (get-natural-width llabel) +' config#label-left-right-margin;
-                right-width = (get-natural-width rlabel) +' config#label-left-right-margin;
+                left-width  = (get-natural-width llabel) +' label-margin;
+                right-width = (get-natural-width rlabel) +' label-margin;
                 inner-width   = bar-width;
             |)
         |)
@@ -100,7 +106,7 @@ end = struct
         |)
 
     let render-conclusion ctx config conclusion =
-        let padding = config#content-left-right-padding in
+        let padding = config |> DeriveConfig.get-content-left-right-padding in
         let rendered = inline-skip padding ++ embed-math ctx conclusion ++ inline-skip padding in
         (|
             rendered = rendered;
@@ -143,11 +149,11 @@ end = struct
 
     and render ctx config ast =
         open DeriveAst in
-        let med-assumptions = render-assumptions ctx config (ast |> assumptions) in
-        let med-conclusion = render-conclusion ctx config (ast |> conclusion) in
+        let med-assumptions = render-assumptions ctx config (ast |> get-assumptions) in
+        let med-conclusion = render-conclusion ctx config (ast |> get-conclusion) in
         let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
-        let line = ast |> line |> Option.unwrap-or config#default-line in
-        let med-bar = render-bar-with-label ctx config line (ast |> main-label) (ast |> sub-label) bar-width in
+        let line = ast |> get-line |> Option.unwrap-or (config |> DeriveConfig.get-default-line) in
+        let med-bar = render-bar-with-label ctx config line (ast |> get-main-label) (ast |> get-sub-label) bar-width in
         align-and-stack med-assumptions med-bar med-conclusion
 
     let render-inline ctx config ast = (render ctx config ast)#rendered
