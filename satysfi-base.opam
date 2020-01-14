@@ -1,6 +1,6 @@
 opam-version: "2.0"
 name: "satysfi-base"
-version: "1.0.0"
+version: "1.1.0"
 synopsis: "A collection of utility functions and modules for SATySFi"
 description: """
 This is a collection of utility functions and modules for SATySFi. Because the library bundled with the default installation configuration of SATySFi is currently not rich enough, this project aims to provide a complementary library sufficient for most situations in typesetting.
