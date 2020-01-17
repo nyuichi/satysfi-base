@@ -3,6 +3,8 @@ const gm = require('gm');
 const { toMatchImageSnapshot } = require('jest-image-snapshot');
 expect.extend({ toMatchImageSnapshot });
 
+shell.config.fatal = true
+
 shell.cd('__test__');
 
 const compileSatyToImg = (filename) => {
@@ -20,7 +22,7 @@ const compileSatyToImg = (filename) => {
 }
 
 afterAll(() => {
-  shell.rm('**/*.pdf', '**/*.satysfi-aux');
+  shell.rm('-f', '**/*.pdf', '**/*.satysfi-aux');
 })
 
 test('Confirm that satysfi is installed', () => {
