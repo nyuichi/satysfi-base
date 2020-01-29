@@ -20,6 +20,7 @@ dev-repo: "git+https://github.com/nyuichi/satysfi-base.git"
 depends: [
   "satysfi" {>= "0.0.3" & < "0.0.4"}
   "satyrographos" {>= "0.0.2" & < "0.0.3"}
+  "satysfi-fonts-dejavu" {>= "2.37"}
 ]
 build: [ ]
 install: [
