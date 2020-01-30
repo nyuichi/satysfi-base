@@ -6,14 +6,12 @@ jobs:
   regression-test:
     runs-on: ubuntu-latest
     container:
-      image: amutake/satysfi:nightly
-      volumes:
-        - .:/satysfi
+      image: amutake/satysfi:latest
     steps:
       - uses: actions/checkout@v1
       - name: Install Apt dependencies
         run: |
-          apt-get update && apt install -y curl gnupg
+          apt-get update && apt install -y gnupg
           curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add -
           echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
           apt-get update && apt-get install -y yarn graphicsmagick
@@ -22,8 +20,14 @@ jobs:
           yarn install
       - name: Install Satyrographos dependencies
         run: |
+          export HOME=/root
+          eval $(opam env)
+          opam update
           opam install satysfi-fonts-dejavu
           satyrographos install
       - name: Run regression tests
         run: |
+          export HOME=/root
+          eval $(opam env)
           yarn test
+        working-directory: ./
