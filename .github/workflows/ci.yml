@@ -20,6 +20,10 @@ jobs:
       - name: Install Yarn dependencies
         run: |
           yarn install
+      - name: Install Satyrographos dependencies
+        run: |
+          opam install satysfi-fonts-dejavu
+          satyrographos install
       - name: Run regression tests
         run: |
           yarn test
