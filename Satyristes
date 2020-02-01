@@ -66,4 +66,5 @@
      (package "typeset/derive/line.satyh" "typeset/derive/line.satyh")
      (package "typeset/derive/render.satyh" "typeset/derive/render.satyh")
 	))
-  (opam "satysfi-base.opam"))
+  (opam "satysfi-base.opam")
+  (dependencies ((fonts-dejavu ()))))
