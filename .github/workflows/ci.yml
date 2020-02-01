@@ -23,7 +23,7 @@ jobs:
           export HOME=/root
           eval $(opam env)
           opam update
-          opam install satysfi-fonts-dejavu
+          opam pin add --verbose --yes "."
           satyrographos install
       - name: Run regression tests
         run: |
