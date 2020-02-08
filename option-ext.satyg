@@ -2,7 +2,6 @@
 @require: option
 @import: fn
 @import: eq
-@import: tuple
 
 module Option : sig
   val none : 'a option
@@ -13,7 +12,7 @@ module Option : sig
   val unwrap-or : 'a -> 'a option -> 'a
   val expect : string -> 'a option -> 'a
   val map : ('a -> 'b) -> 'a option -> 'b option
-  val if-present : ('a -> 'b) -> 'a option -> unit
+  val iter : ('a -> 'b) -> 'a option -> unit
   val ret : 'a -> 'a option
   val bind : 'a option -> ('a -> 'b option) -> 'b option
   val join : ('a option) option -> 'a option
@@ -65,9 +64,9 @@ end = struct
     | f (None)    = None
     | f (Some(v)) = Some(f v)
   
-  let-rec if-present
+  let-rec iter
     | f (None) = ()
-    | f (Some(v)) = f v |> Unit.discard
+    | f (Some(v)) = f v |> Fn.ignore
 
   let ret x = Some(x)
 
