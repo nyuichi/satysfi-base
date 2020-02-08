@@ -28,6 +28,7 @@
 @import: ../../either
 @import: ../../stream
 @import: ../../pager
+@import: ../../cross-ref
 
 open Fn in
 open RegExp in
