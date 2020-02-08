@@ -1,7 +1,9 @@
 module Unit : sig
   val make : unit
+  val discard : 'a -> unit
 end = struct
   let make = ()
+  let discard _ = ()
 end
 
 module Pair : sig
