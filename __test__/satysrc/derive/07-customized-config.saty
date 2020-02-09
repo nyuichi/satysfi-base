@@ -1,7 +1,7 @@
 @require: math
 @import: ../util
-@import: ../../../typeset/derive
-@import: ../../../typeset/derive/line
+@import: ../../../src/typeset/derive
+@import: ../../../src/typeset/derive/line
 
 open Derive in
 let my-derive-config = open DeriveConfig in
