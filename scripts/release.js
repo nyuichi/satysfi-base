@@ -34,7 +34,7 @@ const releaseBranch = `release/${newVersion}`;
 
 shell.exec(`git checkout -b ${releaseBranch} master`);
 shell.sed('-i', /^version: "\d+.\d+.\d+"$/, `version: "${newVersion}"`, 'satysfi-base.opam');
-shell.sed('-i', /^  (version "\d+.\d+.\d+")/, `  (version "${newVersion}")`, 'Satyristes');
+shell.sed('-i', /^  \(version "\d+.\d+.\d+"\)/, `  (version "${newVersion}")`, 'Satyristes');
 shell.exec('git add Satyristes satysfi-base.opam');
 shell.exec(`git commit -m "release ${newVersion}"`);
 shell.exec(`git push -u origin HEAD`);
