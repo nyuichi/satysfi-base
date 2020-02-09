@@ -1,22 +1,21 @@
 const shell = require('shelljs');
-const request = require('request');
+const utils = require('./utils.js');
 require('dotenv').config();
 
 const GITHUB_API_URL = 'https://api.github.com'
 
 const usage = () => {
-    console.error(`Usage: node ${process.argv[1]} <last-release-tag>
+    console.error(`Usage: node ${process.argv[1]}
 
 Environment:
     GITHUB_TOKEN    Github API token`);
     process.exit(1);
 }
 
-if (process.argv.length !== 3 || !process.env.GITHUB_TOKEN) {
+if (process.argv.length !== 2 || !process.env.GITHUB_TOKEN) {
     usage();
 }
 
-const lastRelease = process.argv[2];
 const githubToken = process.env.GITHUB_TOKEN;
 
 const listPRsSince = (commit) => {
@@ -27,20 +26,8 @@ const listPRsSince = (commit) => {
         .map((msg) => msg.match(/Merge pull request #(\d+)/)[1]);
 }
 
-const requestPromise = (options) => {
-    return new Promise((resolve, reject) => {
-        request(options, (error, response, body) => {
-            if (error) {
-                reject(error);
-            } else {
-                resolve(body);
-            }
-        });
-    });
-}
-
 const getPRDesc = async (pr) => {
-    const body = await requestPromise({
+    const body = await utils.requestPromise({
         url: `${GITHUB_API_URL}/repos/nyuichi/satysfi-base/pulls/${pr}`,
         method: "GET",
         headers: {
@@ -56,8 +43,13 @@ const getPRDesc = async (pr) => {
     };
 }
 
-console.log(`# Changelog since ${lastRelease}\n`);
-Promise.all(listPRsSince(lastRelease).map(getPRDesc)).then((descs) => {
+const currentVersion = shell
+    .cat('satysfi-base.opam')
+    .grep('^version:')
+    .match(/^version: "(.+)"/)[1];
+
+console.log(`# Changelog since ${currentVersion}\n`);
+Promise.all(listPRsSince(currentVersion).map(getPRDesc)).then((descs) => {
     for (const { number, title, author } of descs) {
         console.log(`- #${number} ${title} by ${author}`);
     }
