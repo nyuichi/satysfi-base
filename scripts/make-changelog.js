@@ -23,6 +23,7 @@ const listPRsSince = (commit) => {
     return shell
         .exec(`git log --merges --first-parent master --pretty=format:"%s" ${commit}..`, { silent: true })
         .split(/\n/)
+        .filter((line) => line !== "")   // makes [""] into []
         .map((msg) => msg.match(/Merge pull request #(\d+)/)[1]);
 }
 
