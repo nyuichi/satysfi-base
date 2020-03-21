@@ -1,3 +1,5 @@
+@require: standalone
+
 module Base : sig
   % `{\embed(it);}` is equivalent to `it`
   direct \embed : [inline-text] inline-cmd
@@ -12,3 +14,7 @@ end = struct
   let-block ctx +eval bbf = bbf ctx
   let-block ctx +eval-const bb = bb
 end
+
+%% [finish] returns an empty document. It is useful when writing a prograam
+%% involving no typesetting logic.
+let finish = standalone '<>
