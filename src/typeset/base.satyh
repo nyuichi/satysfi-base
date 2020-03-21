@@ -12,3 +12,7 @@ end = struct
   let-block ctx +eval bbf = bbf ctx
   let-block ctx +eval-const bb = bb
 end
+
+%% [finish] returns an empty document. It is useful when writing a prograam
+%% involving no typesetting logic.
+let finish = standalone '<>
