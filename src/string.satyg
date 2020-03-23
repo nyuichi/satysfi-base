@@ -82,7 +82,7 @@ end = struct
         (sub 0 len s, Some(sub (len + 1) (maxlen - len - 1) s))
       else
         aux maxlen (len + 1)
-    in aux (string-length s) 0
+    in aux (length s) 0
 
   let-rec split-by d s =
     match split-by-first d s with
