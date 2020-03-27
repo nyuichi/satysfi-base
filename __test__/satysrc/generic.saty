@@ -51,6 +51,18 @@ let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
 
+let () = Debug.log `==== List ====` in
+let lst = [1;3;2;4;5] in
+let () = lst |> List.bubblesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let lst = [(1,2);(2,1);(1,1)] in
+let ord = Ord.make (fun (n1,_) (n2,_) -> Ord.compare Int.ord n1 n2) in
+let show (n1,n2) = `(` ^ String.of-int n1 ^ `,` ^ String.of-int n2 ^ `)` in
+let () = lst |> List.bubblesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+
 let () = Debug.log `==== Array ====` in
 let a = Array.make 3 42 in
 let () = a |> Array.get 0 |> String.of-int |> Debug.log in
