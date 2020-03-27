@@ -21,6 +21,7 @@ depends: [
   "satysfi" {>= "0.0.3" & < "0.0.5"}
   "satyrographos" {>= "0.0.2" & < "0.0.3"}
   "satysfi-fonts-dejavu" {>= "2.37"}
+  "satysfi-zrbase" {>= "0.4.0"}
 ]
 build: [ ]
 install: [

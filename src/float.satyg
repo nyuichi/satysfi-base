@@ -1,4 +1,4 @@
-@import: zrbase/zp0
+@require: zrbase/zp0
 @import: eq
 @import: ord
 
