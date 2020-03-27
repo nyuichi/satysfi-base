@@ -15,6 +15,10 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] c[0m
 [32m[debug.log] ==== List ====[0m
 [32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
 [32m[debug.log] (1,2)(1,1)(2,1)[0m
 [32m[debug.log] ==== Array ====[0m
 [32m[debug.log] 3[0m
