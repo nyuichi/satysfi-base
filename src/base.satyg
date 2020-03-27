@@ -1,4 +1,5 @@
 @import: base0
+@import: __sub__/base-sub
 
 %% [implicit] is used in two ways:
 %% 1. The first way is to declare an argument of a function
@@ -26,6 +27,10 @@ type 'a implicit = 'a
 %% [panic msg] exits the execution of program with message [msg].
 %% It should be used when the program encounters an unrecoverable situation.
 let panic = abort-with-message
+
+%% [finish] returns an empty document. It is useful when writing a prograam
+%% involving no typesetting logic.
+let finish = BaseSub.finish
 
 %% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
 %% through the 0-stage function [make-thunk] or the unary operator [!!].

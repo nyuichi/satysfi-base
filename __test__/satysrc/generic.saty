@@ -1,6 +1,5 @@
 @require: stdjareport
 @require: list
-@import: ../../src/typeset/base
 @import: ../../src/ref
 @import: ../../src/string
 @import: ../../src/debug
