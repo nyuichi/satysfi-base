@@ -49,6 +49,7 @@ let () = Debug.log (String.of-int (Ref.get r)) in % 1
 let () = Debug.log `==== String ====` in
 let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
+let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
 
 let () = Debug.log `==== List ====` in

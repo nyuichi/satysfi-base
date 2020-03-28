@@ -10,6 +10,10 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] ==== String ====[0m
 [32m[debug.log] abc[0m
 [32m[debug.log] true[0m
+[32m[debug.log] spam[0m
+[32m[debug.log] ham[0m
+[32m[debug.log] eggs[0m
+[32m[debug.log] [0m
 [32m[debug.log] a[0m
 [32m[debug.log] b[0m
 [32m[debug.log] c[0m
