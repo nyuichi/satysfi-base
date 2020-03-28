@@ -2,7 +2,7 @@
 @import: base
 @import: char
 @import: eq
-@import: zrbase/zl0
+@require: zrbase/zl0
 
 module String : sig
   val equal : string -> string -> bool
