@@ -165,10 +165,7 @@ end = struct
         (make-i (n * radix) (m + i) xs)
     in
     let cs = str |> String.to-list in
-    match cs with
-    | [] -> None
-    | _ ->
-      let lst = List.reverse-map char-to-int cs in
+    let to-i lst =
       if List.exists Option.is-none lst then
         None
       else
@@ -177,5 +174,17 @@ end = struct
           None
         else
           Some(make-i 1 0 lst)
+    in
+    match cs with
+    | [] -> None
+    | c::cs2 ->
+      if Eq.equal Char.eq c (Char.make `-`) then
+        let i-opt = cs2 |> List.reverse-map char-to-int |> to-i in
+        match i-opt with
+        | None -> None
+        | Some(i) -> Some(i * (-1))
+      else
+        cs |> List.reverse-map char-to-int |> to-i
+
 
 end

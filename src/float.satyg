@@ -120,7 +120,10 @@ end = struct
       match (first-int-opt,second-int-opt) with
       | (Some(n1),Some(n2)) ->
         Some(
-          (of-int n1) +. ((make-fl second-str-len 1.0) *. (of-int n2))
+          if Int.(n1 > 0) then
+            (of-int n1) +. ((make-fl second-str-len 1.0) *. (of-int n2))
+          else
+            (of-int n1) -. ((make-fl second-str-len 1.0) *. (of-int n2))
         )
       | _ -> None
   let to-string = show-float

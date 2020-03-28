@@ -166,6 +166,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 3[0m
 [32m[debug.log] -4611686018427387904[0m
 [32m[debug.log] Some(123)[0m
+[32m[debug.log] Some(-123)[0m
 [32m[debug.log] None[0m
 [32m[debug.log] Some(10)[0m
 [32m[debug.log] ==== Map ====[0m
@@ -221,6 +222,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] inf[0m
 [32m[debug.log] -inf[0m
 [32m[debug.log] Some(123.45)[0m
+[32m[debug.log] Some(-123.45)[0m
 [32m[debug.log] Some(123.)[0m
 [32m[debug.log] Some(0.111)[0m
 [32m[debug.log] None[0m

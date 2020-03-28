@@ -210,6 +210,7 @@ let p-opt o =
   Debug.log s
 in
 let () = p-opt(`123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`-123` |> Int.of-string-opt ?:10) in
 let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
 let () = p-opt(`a` |> Int.of-string-opt ?:16) in
 
@@ -259,6 +260,7 @@ let p-opt o =
   Debug.log s
 in
 let () = p-opt(`123.45` |> Float.of-string-opt) in
+let () = p-opt(`-123.45` |> Float.of-string-opt) in
 let () = p-opt(`123.0` |> Float.of-string-opt) in
 let () = p-opt(`0.111` |> Float.of-string-opt) in
 let () = p-opt(`0.1a11` |> Float.of-string-opt) in
