@@ -7,19 +7,99 @@ module Page : sig
   val a3 : page
   val a4 : page
   val a5 : page
+  val a6 : page
+  val a7 : page
+  val a8 : page
+  val a9 : page
+  val a10 : page
+  val b0 : page
+  val b1 : page
+  val b2 : page
+  val b3 : page
+  val b4 : page
+  val b5 : page
+  val b6 : page
+  val b7 : page
+  val b8 : page
+  val b9 : page
+  val b10 : page
+  val c0 : page
+  val c1 : page
+  val c2 : page
+  val c3 : page
+  val c4 : page
+  val c5 : page
+  val c6 : page
+  val c7 : page
+  val c8 : page
+  val c9 : page
+  val c10 : page
+  val b0j : page
+  val b1j : page
+  val b2j : page
+  val b3j : page
+  val b4j : page
+  val b5j : page
+  val b6j : page
+  val b7j : page
+  val b8j : page
+  val b9j : page
+  val b10j : page
   val us-letter : page
   val us-legal : page
   val custom : length -> length -> page
 end = struct
+  let custom l1 l2 = UserDefinedPaper(l1,l2)
   let a0 = A0Paper
   let a1 = A1Paper
   let a2 = A2Paper
   let a3 = A3Paper
   let a4 = A4Paper
   let a5 = A5Paper
+  let a6 = custom 105mm 148mm
+  let a7 = custom 74mm 105mm
+  let a8 = custom 52mm 74mm
+  let a9 = custom 37mm 52mm
+  let a10 = custom 26mm 37mm
+
+  let b0 = custom 1000mm 1414mm
+  let b1 = custom 707mm 1000mm
+  let b2 = custom 500mm 707mm
+  let b3 = custom 353mm 500mm
+  let b4 = custom 250mm 353mm
+  let b5 = custom 176mm 250mm
+  let b6 = custom 125mm 176mm
+  let b7 = custom 88mm 125mm
+  let b8 = custom 62mm 88mm
+  let b9 = custom 44mm 62mm
+  let b10 = custom 31mm 44mm
+
+  let c0 = custom 917mm 1297mm
+  let c1 = custom 648mm 917mm
+  let c2 = custom 458mm 648mm
+  let c3 = custom 324mm 458mm
+  let c4 = custom 229mm 324mm
+  let c5 = custom 162mm 229mm
+  let c6 = custom 114mm 162mm
+  let c7 = custom 81mm 114mm
+  let c8 = custom 57mm 81mm
+  let c9 = custom 40mm 57mm
+  let c10 = custom 28mm 40mm
+
+  let b0j = custom 1030mm 1456mm
+  let b1j = custom 728mm 1030mm
+  let b2j = custom 515mm 728mm
+  let b3j = custom 364mm 515mm
+  let b4j = custom 257mm 364mm
+  let b5j = custom 182mm 257mm
+  let b6j = custom 128mm 182mm
+  let b7j = custom 91mm 128mm
+  let b8j = custom 64mm 91mm
+  let b9j = custom 45mm 64mm
+  let b10j = custom 32mm 45mm
+
   let us-letter = USLetter
   let us-legal = USLegal
-  let custom l1 l2 = UserDefinedPaper(l1,l2)
 end
 
 type 'a pager-hook = (| page-number : int |) -> 'a
