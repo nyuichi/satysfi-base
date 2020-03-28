@@ -111,20 +111,23 @@ end = struct
     let first-int-opt = Int.of-string-opt first-str in
     let second-int-opt = Int.of-string-opt second-str in
     let second-str-len = String.length second-str in
-    let-rec make-fl n fl =
+    let-rec make-ten n m =
       if Int.(n <= 0) then
-        fl
+        m
       else
-        make-fl (n - 1) (fl *. 0.1)
+        make-ten (n - 1) (m * 10)
     in
       match (first-int-opt,second-int-opt) with
       | (Some(n1),Some(n2)) ->
-        Some(
-          if Int.(n1 > 0) then
-            (of-int n1) +. ((make-fl second-str-len 1.0) *. (of-int n2))
-          else
-            (of-int n1) -. ((make-fl second-str-len 1.0) *. (of-int n2))
-        )
+        if Int.(n2 < 0) then
+          None
+        else
+          Some(
+            if Int.(n1 > 0) then
+              (of-int n1) +. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+            else
+              (of-int n1) -. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+          )
       | _ -> None
   let to-string = show-float
 
