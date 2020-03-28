@@ -1,5 +1,7 @@
 # satysfi-base
 
+[![build status](https://github.com/nyuichi/satysfi-base/workflows/CI/badge.svg)](https://github.com/nyuichi/satysfi-base/actions?query=workflow%3ACI)
+
 ## TL;DR
 
 ```ocaml
