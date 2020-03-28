@@ -201,6 +201,17 @@ let () = p (2 |> Int.pow 3) in
 let () = p (2 |> Int.pow 0) in
 let () = p (Int.sup [1; 3; 2]) in
 let () = p (Int.sup []) in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Int.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
+let () = p-opt(`a` |> Int.of-string-opt ?:16) in
 
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
@@ -239,6 +250,18 @@ let _ =
   let () = Debug.log (String.of-float (1.0 /. 0.0)) in
   let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
 in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Float.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123.45` |> Float.of-string-opt) in
+let () = p-opt(`123.0` |> Float.of-string-opt) in
+let () = p-opt(`0.111` |> Float.of-string-opt) in
+let () = p-opt(`0.1a11` |> Float.of-string-opt) in
 
 let () = Debug.log `==== Stream ====` in
 let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in

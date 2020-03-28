@@ -1,6 +1,8 @@
 @import: base
 @import: string
 @import: char
+@import: list-ext
+@import: option-ext
 
 module Int : sig
   val ord : (int Ord.t) implicit
@@ -11,6 +13,12 @@ module Int : sig
   val bitsize : int
   val max-value : int
   val min-value : int
+
+  val (<) : int -> int -> bool
+  val (>) : int -> int -> bool
+  val (>=) : int -> int -> bool
+  val (<=) : int -> int -> bool
+  val (==) : int -> int -> bool
 
   val succ : int -> int
   val pred : int -> int
@@ -36,6 +44,8 @@ module Int : sig
   val lxor : int -> int -> int
 
   val of-string : int ?-> string -> int % may throw an error
+  val to-string : int -> string
+  val of-string-opt : int ?-> string -> int option
 end = struct
   let ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
   let max = Ord.max ord
@@ -43,6 +53,12 @@ end = struct
 
   let eq = Ord.derive-eq ord
   let equal = Eq.equal eq
+
+  let (<) = (<)
+  let (>) = (>)
+  let (>=) = (>=)
+  let (<=) = (<=)
+  let (==) = (==)
 
   let add i j = i + j
   let sub i j = i - j
@@ -131,4 +147,35 @@ end = struct
         else
           panic (`Int.of-string: invalid string: `# ^ s))) 0 in
       sign * num
+
+  let to-string = arabic
+  let of-string-opt ?:radix-opt str =
+    let radix =
+      match radix-opt with
+      | None -> 10
+      | Some(i) -> i
+    in
+    let-rec make-i n m lst =
+      match lst with
+      | [] -> m
+      | x :: xs ->
+        let i =
+          n * x
+        in
+        (make-i (n * radix) (m + i) xs)
+    in
+    let cs = str |> String.to-list in
+    match cs with
+    | [] -> None
+    | _ ->
+      let lst = List.reverse-map char-to-int cs in
+      if List.exists Option.is-none lst then
+        None
+      else
+        let lst = List.show-opt lst in
+        if List.exists (fun i -> i >= radix) lst then
+          None
+        else
+          Some(make-i 1 0 lst)
+
 end
