@@ -129,24 +129,6 @@ end = struct
     | Some(i) -> Some(i + 10)
     | None -> None))
 
-  let of-string ?:radix s =
-    let radix = match radix with
-    | None -> 10
-    | Some(radix) -> radix in
-    let cs = String.to-list s in
-    match cs with
-    | [] -> panic `Int.of-string: invalid string`
-    | c :: cs2 ->
-      let (sign, cs) = if Eq.equal Char.eq c (Char.make `-`) then (-1, cs2) else (1, cs) in
-      let num = cs |> List.fold-left (fun acc c ->
-        (match char-to-int c with
-        | None -> panic (`Int.of-string: invalid string: `# ^ s)
-        | Some(i) ->
-        if i < radix then
-          acc * radix + i
-        else
-          panic (`Int.of-string: invalid string: `# ^ s))) 0 in
-      sign * num
 
   let to-string = arabic
   let of-string-opt ?:radix-opt str =
@@ -178,13 +160,27 @@ end = struct
     match cs with
     | [] -> None
     | c::cs2 ->
-      if Eq.equal Char.eq c (Char.make `-`) then
-        let i-opt = cs2 |> List.reverse-map char-to-int |> to-i in
-        match i-opt with
-        | None -> None
-        | Some(i) -> Some(i * (-1))
-      else
-        cs |> List.reverse-map char-to-int |> to-i
+      let (sign, cs) = if Eq.equal Char.eq c (Char.make `-`) then (-1, cs2) else (1, cs) in
+      let num-opt = cs |> List.fold-left (fun acc-opt c -> (
+        match acc-opt with
+        | None -> Option.none
+        | Some(acc) -> (
+          match char-to-int c with
+          | None -> Option.none
+          | Some(i) ->
+          if i < radix then
+            Option.some (acc * radix + i)
+          else
+            Option.none
+        ))) (Option.some 0) in
+      match num-opt with
+      | None -> Option.none
+      | Some(num) -> Option.some (sign * num)
+
+  let of-string ?:radix-opt s =
+    match radix-opt with
+    | None -> of-string-opt s |> Option.expect `Int.of-string: nanka okasii`
+    | Some(radix) -> of-string-opt ?:(radix) s |> Option.expect `Int.of-string: nanka okasii`
 
 
 end
