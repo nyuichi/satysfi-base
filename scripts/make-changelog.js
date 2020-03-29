@@ -1,8 +1,7 @@
 const shell = require('shelljs');
-const utils = require('./utils.js');
+const axios = require('axios');
 require('dotenv').config();
-
-const GITHUB_API_URL = 'https://api.github.com'
+shell.set('-e');
 
 const usage = () => {
     console.error(`Usage: node ${process.argv[1]}
@@ -18,28 +17,29 @@ if (process.argv.length !== 2 || !process.env.GITHUB_TOKEN) {
 
 const githubToken = process.env.GITHUB_TOKEN;
 
-const listPRsSince = (commit) => {
+const githubApi = axios.create({
+    baseURL: 'https://api.github.com/repos/nyuichi/satysfi-base',
+    headers: {
+        'Authorization': `token ${githubToken}`,
+        'User-Agent': 'nyuichi,'
+    },
+    responseType: 'json'
+});
+
+const listPulls = (since) => {
     return shell
-        .exec(`git log --merges --first-parent master --pretty=format:"%s" ${commit}..`, { silent: true })
+        .exec(`git log --merges --first-parent master --pretty=format:"%s" ${since}..`, { silent: true })
         .split(/\n/)
         .filter((line) => line !== "")   // makes [""] into []
         .map((msg) => msg.match(/Merge pull request #(\d+)/)[1]);
 }
 
-const getPRDesc = async (pr) => {
-    const body = await utils.requestPromise({
-        url: `${GITHUB_API_URL}/repos/nyuichi/satysfi-base/pulls/${pr}`,
-        method: "GET",
-        headers: {
-            'Authorization': `token ${githubToken}`,
-            'User-Agent': 'nyuichi'
-        }
-    });
-    const json = JSON.parse(body);
+const getPull = async (pr) => {
+    const data = (await githubApi.get(`/pulls/${pr}`)).data;
     return {
-        number: json.number,
-        title: json.title,
-        author: json.user.login
+        number: data.number,
+        title: data.title,
+        author: data.user.login
     };
 }
 
@@ -49,8 +49,8 @@ const currentVersion = shell
     .match(/^version: "(.+)"/)[1];
 
 console.log(`# Changelog since ${currentVersion}\n`);
-Promise.all(listPRsSince(currentVersion).map(getPRDesc)).then((descs) => {
+Promise.all(listPulls(currentVersion).map(getPull)).then((descs) => {
     for (const { number, title, author } of descs) {
         console.log(`- #${number} ${title} by ${author}`);
     }
-});
+}).catch(console.error);

@@ -1,9 +1,7 @@
 const shell = require('shelljs');
-const utils = require('./utils.js');
+const axios = require('axios');
 require('dotenv').config();
 shell.set('-e');
-
-const GITHUB_API_URL = 'https://api.github.com'
 
 const usage = () => {
     console.error(`Usage: node ${process.argv[1]} <new-release>
@@ -19,6 +17,15 @@ if (process.argv.length !== 3 || !process.env.GITHUB_TOKEN) {
 
 const githubToken = process.env.GITHUB_TOKEN;
 const newVersion = process.argv[2];
+
+const githubApi = axios.create({
+    baseURL: 'https://api.github.com/repos/nyuichi/satysfi-base',
+    headers: {
+        'Authorization': `token ${githubToken}`,
+        'User-Agent': 'nyuichi,'
+    },
+    responseType: 'json'
+});
 
 const currentBranch = shell
     .exec('git symbolic-ref --short HEAD')
@@ -41,21 +48,13 @@ shell.exec(`git checkout master`);
 
 const changelog = shell.exec(`node scripts/make-changelog.js`);
 
-const openPR = (branch, title, body) => {
-    return utils.requestPromise({
-        url: `${GITHUB_API_URL}/repos/nyuichi/satysfi-base/pulls`,
-        method: "POST",
-        headers: {
-            'Authorization': `token ${githubToken}`,
-            'User-Agent': 'nyuichi'
-        },
-        json: {
-            title,
-            head: branch,
-            body,
-            base: "master"
-        }
+const openPull = (branch, title, body) => {
+    return githubApi.post('/pulls', {
+        title,
+        head: branch,
+        body,
+        base: "master"
     });
 }
 
-openPR(releaseBranch, `Release ${newVersion}`, changelog).catch(console.error);
+openPull(releaseBranch, `Release ${newVersion}`, changelog).catch(console.error);
