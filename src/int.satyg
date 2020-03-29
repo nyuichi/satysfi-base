@@ -131,32 +131,13 @@ end = struct
 
 
   let to-string = arabic
-  let of-string-opt ?:radix-opt str =
+  let of-string-opt ?:radix-opt s =
     let radix =
       match radix-opt with
       | None -> 10
       | Some(i) -> i
     in
-    let-rec make-i n m lst =
-      match lst with
-      | [] -> m
-      | x :: xs ->
-        let i =
-          n * x
-        in
-        (make-i (n * radix) (m + i) xs)
-    in
-    let cs = str |> String.to-list in
-    let to-i lst =
-      if List.exists Option.is-none lst then
-        None
-      else
-        let lst = List.show-opt lst in
-        if List.exists (fun i -> i >= radix) lst then
-          None
-        else
-          Some(make-i 1 0 lst)
-    in
+    let cs = String.to-list s in
     match cs with
     | [] -> None
     | c::cs2 ->
