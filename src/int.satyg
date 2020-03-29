@@ -159,9 +159,10 @@ end = struct
       | Some(num) -> Option.some (sign * num)
 
   let of-string ?:radix-opt s =
+    let msg = `Int.of-string: invalid string: `# ^ s in
     match radix-opt with
-    | None -> of-string-opt s |> Option.expect `Int.of-string: nanka okasii`
-    | Some(radix) -> of-string-opt ?:(radix) s |> Option.expect `Int.of-string: nanka okasii`
+    | None -> of-string-opt s |> Option.expect msg
+    | Some(radix) -> of-string-opt ?:(radix) s |> Option.expect msg
 
 
 end
