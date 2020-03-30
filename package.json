@@ -1,7 +1,7 @@
 {
   "devDependencies": {
     "gm": "^1.23.1",
-    "jest": "^24.9.0",
+    "jest": "^25.2.4",
     "jest-image-snapshot": "^3.0.1",
     "shelljs": "^0.8.3",
     "dotenv": "^8.2.0"
