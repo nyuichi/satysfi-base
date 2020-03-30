@@ -1,0 +1,24 @@
+module CrossRef : sig
+
+  val register : string -> string -> unit
+  val get : string -> string option
+
+  val universal-register : ('a -> string) -> 'a -> string -> unit
+  val universal-get : (string -> 'a) -> string -> 'a option
+
+end = struct
+
+  let register value label =
+    register-cross-reference label value
+
+  let get label = get-cross-reference label
+
+  let universal-register f value label =
+    register label (f value)
+
+  let universal-get f label =
+    match get label with
+    | None -> None
+    | Some(s) -> f s
+
+end
