@@ -1,0 +1,15 @@
+module Bool : sig
+
+  val to-string : bool -> string
+  val of-string-opt : string -> bool option
+
+end = struct
+
+  let to-strig b = if b then `true` else `false`
+  let of-string-opt str =
+    match str with
+    | `true`  -> Some(true)
+    | `false` -> Some(false)
+    | _       -> None
+
+end

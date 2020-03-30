@@ -1,6 +1,8 @@
 @import: base
 @import: string
 @import: char
+@import: list-ext
+@import: option-ext
 
 module Int : sig
   val ord : (int Ord.t) implicit
@@ -11,6 +13,12 @@ module Int : sig
   val bitsize : int
   val max-value : int
   val min-value : int
+
+  val (<) : int -> int -> bool
+  val (>) : int -> int -> bool
+  val (>=) : int -> int -> bool
+  val (<=) : int -> int -> bool
+  val (==) : int -> int -> bool
 
   val succ : int -> int
   val pred : int -> int
@@ -36,6 +44,8 @@ module Int : sig
   val lxor : int -> int -> int
 
   val of-string : int ?-> string -> int % may throw an error
+  val to-string : int -> string
+  val of-string-opt : int ?-> string -> int option
 end = struct
   let ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
   let max = Ord.max ord
@@ -43,6 +53,12 @@ end = struct
 
   let eq = Ord.derive-eq ord
   let equal = Eq.equal eq
+
+  let (<) = (<)
+  let (>) = (>)
+  let (>=) = (>=)
+  let (<=) = (<=)
+  let (==) = (==)
 
   let add i j = i + j
   let sub i j = i - j
@@ -113,22 +129,40 @@ end = struct
     | Some(i) -> Some(i + 10)
     | None -> None))
 
-  let of-string ?:radix s =
-    let radix = match radix with
-    | None -> 10
-    | Some(radix) -> radix in
+
+  let to-string = arabic
+  let of-string-opt ?:radix-opt s =
+    let radix =
+      match radix-opt with
+      | None -> 10
+      | Some(i) -> i
+    in
     let cs = String.to-list s in
     match cs with
-    | [] -> panic `Int.of-string: invalid string`
-    | c :: cs2 ->
+    | [] -> None
+    | c::cs2 ->
       let (sign, cs) = if Eq.equal Char.eq c (Char.make `-`) then (-1, cs2) else (1, cs) in
-      let num = cs |> List.fold-left (fun acc c ->
-        (match char-to-int c with
-        | None -> panic (`Int.of-string: invalid string: `# ^ s)
-        | Some(i) ->
-        if i < radix then
-          acc * radix + i
-        else
-          panic (`Int.of-string: invalid string: `# ^ s))) 0 in
-      sign * num
+      let num-opt = cs |> List.fold-left (fun acc-opt c -> (
+        match acc-opt with
+        | None -> Option.none
+        | Some(acc) -> (
+          match char-to-int c with
+          | None -> Option.none
+          | Some(i) ->
+          if i < radix then
+            Option.some (acc * radix + i)
+          else
+            Option.none
+        ))) (Option.some 0) in
+      match num-opt with
+      | None -> Option.none
+      | Some(num) -> Option.some (sign * num)
+
+  let of-string ?:radix-opt s =
+    let msg = `Int.of-string: invalid string: `# ^ s in
+    match radix-opt with
+    | None -> of-string-opt s |> Option.expect msg
+    | Some(radix) -> of-string-opt ?:(radix) s |> Option.expect msg
+
+
 end
