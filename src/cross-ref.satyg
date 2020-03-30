@@ -4,7 +4,7 @@ module CrossRef : sig
   val get : string -> string option
 
   val universal-register : ('a -> string) -> 'a -> string -> unit
-  val universal-get : (string -> 'a) -> string -> 'a option
+  val universal-get : (string -> 'a option) -> string -> 'a option
 
 end = struct
 
