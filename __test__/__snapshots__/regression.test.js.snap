@@ -226,6 +226,18 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] Some(123.)[0m
 [32m[debug.log] Some(0.111)[0m
 [32m[debug.log] None[0m
+[32m[debug.log] ==== Bool ====[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
 [32m[debug.log] ==== Stream ====[0m
 [32m[debug.log] 1[0m
 [32m[debug.log] 1[0m
