@@ -22,8 +22,6 @@ module Bool : sig
 
   val to-int : bool -> int
   val of-int-opt : int -> bool option
-  val to-float : bool -> float
-  val of-float-opt : float -> bool option
   val to-string : bool -> string
   val of-string-opt : string -> bool option
 
@@ -56,15 +54,6 @@ end = struct
     | 0 -> Some(false)
     | 1 -> Some(true)
     | _ -> None
-  let to-float b = if b then 1.0 else 0.0
-  let of-float-opt fl =
-    if Float.(fl == 0.0) then
-      Some(false)
-    else
-      if Float.(fl == 1.0) then
-        Some(true)
-      else
-        None
   let to-string b = if b then `true` else `false`
   let of-string-opt str =
     match str with
