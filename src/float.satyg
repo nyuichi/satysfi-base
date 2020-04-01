@@ -123,7 +123,7 @@ end = struct
           None
         else
           Some(
-            if Int.(n1 > 0) then
+            if Int.(n1 >= 0) then
               (of-int n1) +. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
             else
               (of-int n1) -. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
