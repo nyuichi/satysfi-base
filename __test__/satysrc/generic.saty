@@ -29,6 +29,7 @@
 @import: ../../src/stream
 @import: ../../src/pager
 @import: ../../src/cross-ref
+@import: ../../src/bool
 
 open Fn in
 open RegExp in
@@ -264,6 +265,25 @@ let () = p-opt(`-123.45` |> Float.of-string-opt) in
 let () = p-opt(`123.0` |> Float.of-string-opt) in
 let () = p-opt(`0.111` |> Float.of-string-opt) in
 let () = p-opt(`0.1a11` |> Float.of-string-opt) in
+
+let () = Debug.log `==== Bool ====` in
+let p b = b |> Bool.to-string |> Debug.log in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Bool.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p Bool.max-value in
+let () = p Bool.min-value in
+let () = p-opt(0 |> Bool.of-int-opt) in
+let () = p-opt(1 |> Bool.of-int-opt) in
+let () = p-opt(2 |> Bool.of-int-opt) in
+let () = p-opt(`false` |> Bool.of-string-opt) in
+let () = p-opt(`true` |> Bool.of-string-opt) in
+let () = p-opt(`hoge` |> Bool.of-string-opt) in
 
 let () = Debug.log `==== Stream ====` in
 let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
