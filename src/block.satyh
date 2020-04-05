@@ -9,7 +9,7 @@ module Block : sig
   %% [Block.read bt ctx] converts block-text [bt] into a block-boxes using context [ctx].
   val read : block-text -> context -> block-boxes
 
-  %% [Block.of-inline ?:fill-tail may-break-before may-break-after ibf ctx] transforms
+  %% [Block.of-inline ?:(fill-tail = true) may-break-before may-break-after ibf ctx] transforms
   %% the inline-boxes returned by [ibf ctx] into a block-boxes by inserting
   %% line breaks at positions determined by context [ctx] and line break oppotunities
   %% included in the given inline-boxes.
@@ -46,8 +46,8 @@ end = struct
   let of-inline ?:fill-tail b1 b2 ibf ctx =
     let tail =
       match fill-tail with
-      | Some(true) -> Inline.fil
-      | _ -> Inline.nil
+      | Some(false) -> Inline.nil
+      | _ -> Inline.fil
     in line-break b1 b2 ctx ((ibf ctx) ++ tail)
 
   let skip = block-skip
