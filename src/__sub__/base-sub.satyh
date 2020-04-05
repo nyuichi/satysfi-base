@@ -1,0 +1,11 @@
+@require: standalone
+
+module BaseSub :sig
+
+  val finish : document
+
+end = struct
+
+  let finish = standalone '<>
+
+end

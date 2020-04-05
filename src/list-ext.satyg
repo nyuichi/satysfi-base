@@ -61,6 +61,7 @@ module List : sig
   val min : ('a Ord.t) implicit -> 'a list -> 'a option
   val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
   val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
   val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
   val uncons : 'a list -> ('a * 'a list) option
 end = struct
@@ -493,6 +494,24 @@ end = struct
       match lst with
       | [] -> []
       | x :: xs -> is-sub x (insertsort ord xs)
+
+  let-rec mergesort ord lst =
+    let-rec merge lst1 lst2 =
+      match (lst1, lst2) with
+      | (lst1, []) -> lst1
+      | ([], lst2) -> lst2
+      | ((x :: xs), (y :: ys)) ->
+        if Ord.le ord x y then
+          x :: (merge xs lst2)
+        else
+          y :: (merge lst1 ys)
+    in
+    match lst with
+    | [] -> []
+    | [x] -> [x]
+    | _ ->
+      let (ys, zs) = splitat (((length lst) / 2) - 1) lst in
+        merge (mergesort ord ys) (mergesort ord zs)
 
   let acons k v alist = (k, v) :: alist
 

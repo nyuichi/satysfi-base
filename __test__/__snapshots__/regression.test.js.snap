@@ -10,9 +10,20 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] ==== String ====[0m
 [32m[debug.log] abc[0m
 [32m[debug.log] true[0m
+[32m[debug.log] spam[0m
+[32m[debug.log] ham[0m
+[32m[debug.log] eggs[0m
+[32m[debug.log] [0m
 [32m[debug.log] a[0m
 [32m[debug.log] b[0m
 [32m[debug.log] c[0m
+[32m[debug.log] ==== List ====[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
 [32m[debug.log] ==== Array ====[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 43[0m
@@ -154,6 +165,10 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 1[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] -4611686018427387904[0m
+[32m[debug.log] Some(123)[0m
+[32m[debug.log] Some(-123)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(10)[0m
 [32m[debug.log] ==== Map ====[0m
 [32m[debug.log] a[0m
 [32m[debug.log] b[0m
@@ -206,6 +221,20 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 1. == 1. = true[0m
 [32m[debug.log] inf[0m
 [32m[debug.log] -inf[0m
+[32m[debug.log] Some(123.45)[0m
+[32m[debug.log] Some(-123.45)[0m
+[32m[debug.log] Some(123.)[0m
+[32m[debug.log] Some(0.111)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] ==== Bool ====[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
 [32m[debug.log] ==== Stream ====[0m
 [32m[debug.log] 1[0m
 [32m[debug.log] 1[0m

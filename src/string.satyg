@@ -2,7 +2,7 @@
 @import: base
 @import: char
 @import: eq
-@import: zrbase/zl0
+@require: zrbase/zl0
 
 module String : sig
   val equal : string -> string -> bool
@@ -25,6 +25,9 @@ module String : sig
   val to-list : string -> Char.t list
   val pow : int -> string -> string
   val split : int -> string -> string * string
+  val split-by-first : Char.t -> string -> string * string option
+  val split-by : Char.t -> string -> string list
+  val lines : string -> string list
   val index : Char.t -> string -> int option
   % val byte-length : string -> int
   % val sub-bytes : int -> int -> string -> string
@@ -70,7 +73,24 @@ end = struct
 
   let split i s =
     (sub 0 i s, sub i (length s - i) s)
-  
+
+  let split-by-first d s =
+    let-rec aux maxlen len =
+      if len >= maxlen then
+        (s, None)
+      else if Char.equal (Char.at len s) d then
+        (sub 0 len s, Some(sub (len + 1) (maxlen - len - 1) s))
+      else
+        aux maxlen (len + 1)
+    in aux (length s) 0
+
+  let-rec split-by d s =
+    match split-by-first d s with
+    | (head, Some(tail)) -> head :: split-by d tail
+    | (head, None)       -> [head]
+
+  let lines = split-by Char.newline
+
   let index c s =
     let cs = to-list s in
     let-rec aux cs acc = match cs with

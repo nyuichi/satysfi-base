@@ -1,8 +1,11 @@
 {
   "devDependencies": {
+    "axios": "^0.19.2",
+    "dotenv": "^8.2.0",
     "gm": "^1.23.1",
     "jest": "^24.9.0",
-    "jest-image-snapshot": "^2.11.1",
+    "jest-image-snapshot": "^3.0.1",
+    "prettier": "^2.0.2",
     "shelljs": "^0.8.3"
   },
   "scripts": {

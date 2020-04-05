@@ -1,6 +1,9 @@
-@import: zrbase/zp0
+@require: zrbase/zp0
 @import: eq
 @import: ord
+@import: string
+@import: char
+@import: int
 
 module Float : sig
   val inf : float
@@ -33,6 +36,8 @@ module Float : sig
 
   val of-int : int -> float
   val to-int : float -> int
+  val of-string-opt : string -> float option
+  val to-string : float -> string
 
   val ceil : float -> float
   val floor : float -> float
@@ -94,6 +99,37 @@ end = struct
 
   let of-int = float
   let to-int = round
+
+  let of-string-opt str =
+    let dot = Char.make `.` in
+    let (first-str, second-str-opt) = String.split-by-first dot str in
+    let second-str =
+      match second-str-opt with
+      | Some(s) -> s
+      | None -> `0`
+    in
+    let first-int-opt = Int.of-string-opt first-str in
+    let second-int-opt = Int.of-string-opt second-str in
+    let second-str-len = String.length second-str in
+    let-rec make-ten n m =
+      if Int.(n <= 0) then
+        m
+      else
+        make-ten (n - 1) (m * 10)
+    in
+      match (first-int-opt,second-int-opt) with
+      | (Some(n1),Some(n2)) ->
+        if Int.(n2 < 0) then
+          None
+        else
+          Some(
+            if Int.(n1 >= 0) then
+              (of-int n1) +. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+            else
+              (of-int n1) -. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+          )
+      | _ -> None
+  let to-string = show-float
 
   let pow y x = ZP0.pow x y % x^y == (x |> pow y)
 

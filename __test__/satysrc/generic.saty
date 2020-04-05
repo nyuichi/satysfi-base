@@ -1,33 +1,35 @@
 @require: stdjareport
 @require: list
-@import: ../../ref
-@import: ../../string
-@import: ../../debug
-@import: ../../array
-@import: ../../regexp
-@import: ../../list-ext
-@import: ../../option-ext
-@import: ../../typeset/code2
-@import: ../../parser
-@import: ../../int
-@import: ../../map
-@import: ../../color-ext
-@import: ../../promise
-@import: ../../fn
-@import: ../../float
-@import: ../../length
-@import: ../../set
-@import: ../../tuple
-@import: ../../graphics
-@import: ../../path
-@import: ../../typeset/math-ext
-@import: ../../result
-@import: ../../void
-@import: ../../ord
-@import: ../../eq
-@import: ../../either
-@import: ../../stream
-@import: ../../pager
+@import: ../../src/ref
+@import: ../../src/string
+@import: ../../src/debug
+@import: ../../src/array
+@import: ../../src/regexp
+@import: ../../src/list-ext
+@import: ../../src/option-ext
+@import: ../../src/typeset/code2
+@import: ../../src/parser
+@import: ../../src/int
+@import: ../../src/map
+@import: ../../src/color-ext
+@import: ../../src/promise
+@import: ../../src/fn
+@import: ../../src/float
+@import: ../../src/length
+@import: ../../src/set
+@import: ../../src/tuple
+@import: ../../src/graphics
+@import: ../../src/path
+@import: ../../src/typeset/math-ext
+@import: ../../src/result
+@import: ../../src/void
+@import: ../../src/ord
+@import: ../../src/eq
+@import: ../../src/either
+@import: ../../src/stream
+@import: ../../src/pager
+@import: ../../src/cross-ref
+@import: ../../src/bool
 
 open Fn in
 open RegExp in
@@ -48,7 +50,20 @@ let () = Debug.log (String.of-int (Ref.get r)) in % 1
 let () = Debug.log `==== String ====` in
 let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
+let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
+
+let () = Debug.log `==== List ====` in
+let lst = [1;3;2;4;5] in
+let () = lst |> List.bubblesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let lst = [(1,2);(2,1);(1,1)] in
+let ord = Ord.make (fun (n1,_) (n2,_) -> Ord.compare Int.ord n1 n2) in
+let show (n1,n2) = `(` ^ String.of-int n1 ^ `,` ^ String.of-int n2 ^ `)` in
+let () = lst |> List.bubblesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
 
 let () = Debug.log `==== Array ====` in
 let a = Array.make 3 42 in
@@ -187,6 +202,18 @@ let () = p (2 |> Int.pow 3) in
 let () = p (2 |> Int.pow 0) in
 let () = p (Int.sup [1; 3; 2]) in
 let () = p (Int.sup []) in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Int.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`-123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
+let () = p-opt(`a` |> Int.of-string-opt ?:16) in
 
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
@@ -225,6 +252,38 @@ let _ =
   let () = Debug.log (String.of-float (1.0 /. 0.0)) in
   let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
 in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Float.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123.45` |> Float.of-string-opt) in
+let () = p-opt(`-123.45` |> Float.of-string-opt) in
+let () = p-opt(`123.0` |> Float.of-string-opt) in
+let () = p-opt(`0.111` |> Float.of-string-opt) in
+let () = p-opt(`0.1a11` |> Float.of-string-opt) in
+
+let () = Debug.log `==== Bool ====` in
+let p b = b |> Bool.to-string |> Debug.log in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Bool.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p Bool.max-value in
+let () = p Bool.min-value in
+let () = p-opt(0 |> Bool.of-int-opt) in
+let () = p-opt(1 |> Bool.of-int-opt) in
+let () = p-opt(2 |> Bool.of-int-opt) in
+let () = p-opt(`false` |> Bool.of-string-opt) in
+let () = p-opt(`true` |> Bool.of-string-opt) in
+let () = p-opt(`hoge` |> Bool.of-string-opt) in
 
 let () = Debug.log `==== Stream ====` in
 let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
