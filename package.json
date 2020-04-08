@@ -3,7 +3,7 @@
     "axios": "^0.19.2",
     "dotenv": "^8.2.0",
     "gm": "^1.23.1",
-    "jest": "^24.9.0",
+    "jest": "^25.3.0",
     "jest-image-snapshot": "^3.0.1",
     "prettier": "^2.0.4",
     "shelljs": "^0.8.3"
