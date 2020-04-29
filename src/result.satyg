@@ -27,6 +27,7 @@ module Result : sig
   val ret : 'a -> 'a 'e result
   val fold-list : 'a list -> ('a -> 'b -> 'b 'e result) -> 'b -> 'b 'e result
 
+  % obsoleted
   val bind : ('a -> 'b 'e result) -> 'a 'e result -> 'b 'e result
   val join : ('a 'e result) 'e result -> 'a 'e result
   val to-option : 'a 'e result -> 'a option
