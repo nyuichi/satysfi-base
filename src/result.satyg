@@ -25,6 +25,7 @@ module Result : sig
   val transpose : ('a option) 'e result -> ('a 'e result) option
   val flatten : ('a 'e result) 'e result -> 'a 'e result
   val ret : 'a -> 'a 'e result
+  val fold-list : 'a list -> ('a -> 'b -> 'b 'e result) -> 'b -> 'b 'e result
 
   val bind : ('a -> 'b 'e result) -> 'a 'e result -> 'b 'e result
   val join : ('a 'e result) 'e result -> 'a 'e result
@@ -124,6 +125,11 @@ end = struct
     match r with
     | Ok(r) -> r
     | Err(e) -> err e
+
+  let-rec fold-list list f init =
+    match list with
+    | [] -> init |> ret
+    | (x::xs) -> init |> f x |> and-then (fold-list xs f)
 
   let bind = and-then
   let join = flatten

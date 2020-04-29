@@ -32,6 +32,7 @@ module Option : sig
   val transpose : ('a 'e result) option -> ('a option) 'e result
   val flatten : ('a option) option -> 'a option
   val ret : 'a -> 'a option
+  val fold-list : 'a list -> ('a -> 'b -> 'b option) -> 'b -> 'b option
   val to-list : 'a option -> 'a list
   val iter : ('a -> unit) -> 'a option -> unit
 
@@ -123,17 +124,22 @@ end = struct
   | (Some(r)) = r |> Result.map some
 
   let flatten opt = opt |> and-then Fn.id
+  let ret x = some x
 
   let to-list opt =
     match opt with
     | None -> []
     | Some(x) -> [x]
 
+  let-rec fold-list list f init =
+    match list with
+    | [] -> init |> ret
+    | (x::xs) -> init |> f x |> and-then (fold-list xs f)
+
   let-rec iter
   | f (None) = ()
   | f (Some(v)) = f v
 
-  let ret x = some x
   let bind m f = and-then f m
   let join m = flatten m
 
