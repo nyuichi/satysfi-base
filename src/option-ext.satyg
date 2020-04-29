@@ -54,7 +54,7 @@ module Option : sig
   val (^/') : length option -> length option -> float option
   val from : 'a -> 'a option -> 'a
   val value : 'a -> 'a option -> 'a
-  val bind : 'a option -> ('a -> 'b option) -> 'b option
+  val bind : 'a option -> ('a -> 'b option) -> 'b option  % TODO: swap arguments
   val join : ('a option) option -> 'a option
 end = struct
   let none = None
