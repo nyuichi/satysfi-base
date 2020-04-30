@@ -36,7 +36,7 @@ module Option : sig
   val to-list : 'a option -> 'a list
   val iter : ('a -> unit) -> 'a option -> unit
 
-  % obsoleted
+  % deprecated
   val (^&&) : bool option -> bool option -> bool option
   val (^||) : bool option -> bool option -> bool option
   val (^::) : 'a option -> ('a list) option -> ('a list) option

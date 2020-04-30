@@ -62,7 +62,7 @@ module List : sig
   val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
   val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
 
-  % obsoleted
+  % deprecated
   val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option  % TODO: use Eq
   val takewhile : ('a -> bool) -> 'a list -> 'a list
   val dropwhile : ('a -> bool) -> 'a list -> 'a list

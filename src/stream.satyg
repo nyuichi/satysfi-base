@@ -56,7 +56,7 @@ module Stream : sig
   val of-option : 'a option -> 'a t
   val to-list : 'a t -> 'a list
 
-  % obsoleted
+  % deprecated
   val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t  % TODO: swap arguments
   val fold : ('b -> 'a -> 'b) -> 'b -> 'a t -> 'b  % TODO: swap arguments
 end = struct
