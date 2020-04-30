@@ -54,4 +54,3 @@ If you are intersted in development of this project, please contact us.
 ## License
 
 All files in this repository are licensed under MIT.
-Files under `zrbase` are originally written by Takayuki YATO.
