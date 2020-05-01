@@ -11,6 +11,7 @@ module Stream : sig
   type 'a t
   val nil : unit -> 'a t
   val cons : 'a thunk -> ('a t) thunk -> 'a t
+  val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t
   val const : 'a -> 'a t
   val nat : int t
   val fib : int t
@@ -57,7 +58,6 @@ module Stream : sig
   val to-list : 'a t -> 'a list
 
   % deprecated
-  val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t  % TODO: swap arguments
   val fold : ('b -> 'a -> 'b) -> 'b -> 'a t -> 'b  % TODO: swap arguments
 end = struct
 
@@ -100,7 +100,7 @@ end = struct
       | None -> Option.none
       | Some(x, s) -> Option.some (f x, s)
     in
-      unfold go s
+      s |> unfold go
 
   let filter f s =
     let-rec go s =
@@ -112,7 +112,7 @@ end = struct
         else
           go s
     in
-      unfold go s
+      s |> unfold go
 
   let zip s1 s2 =
     let go (s1, s2) =
@@ -121,7 +121,7 @@ end = struct
       | (_, None) -> Option.none
       | (Some(x1, s1), Some(x2, s2)) -> Option.some ((x1, x2), (s1, s2))
     in
-      unfold go (s1, s2)
+      (s1, s2) |> unfold go
 
   let-rec unzip s =
     (map Pair.fst s, map Pair.snd s)
@@ -363,7 +363,7 @@ end = struct
       else
         Option.some (Char.at i s, i + 1)
     in
-      unfold step 0
+      0 |> unfold step
 
   let of-array s =
     let len = Array.length s in
@@ -373,11 +373,11 @@ end = struct
       else
         Option.some (Array.get i s, i + 1)
     in
-      unfold step 0
+      0 |> unfold step
 
   let of-option opt =
     let go opt =
       opt |> Option.map (fun x -> (x, Option.none))
     in
-      unfold go opt
+      opt |> unfold go
 end
