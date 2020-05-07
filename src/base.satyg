@@ -38,3 +38,7 @@ type 'a thunk = unit -> 'a
 
 %% [run-thunk t] evaluates thunk [t] and returns the result.
 let run-thunk t = t ()
+
+type 'ok 'err result =
+| Ok of 'ok
+| Err of 'err

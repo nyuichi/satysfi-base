@@ -3,30 +3,63 @@
 @import: option-ext
 @import: list-ext
 @import: tuple
-
+@import: result
 @import: string
-@import: debug
+@import: array
 
 module Stream : sig
   type 'a t
-  val cons : 'a thunk -> ('a t) thunk -> 'a t
   val nil : unit -> 'a t
+  val cons : 'a thunk -> ('a t) thunk -> 'a t
+  val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t
+  val const : 'a -> 'a t
+  val nat : int t
+  val fib : int t
   val uncons : 'a t -> ('a * 'a t) option
+  val null : 'a t -> bool
   val head : 'a t -> 'a option
   val tail : 'a t -> ('a t) option
-  val map : ('a -> 'b) -> 'a t -> 'b t
-  val filter : ('a -> bool) -> 'a t -> 'a t
-  val of-list : 'a list -> 'a t
-  val to-list : 'a t -> 'a list
-  val unfold : ('a -> ('b * 'a) option) -> 'a -> 'b t
-  val fold : ('a -> 'b -> 'a) -> 'a -> 'b t -> 'a
-  val take : int -> 'a t -> 'a t
-  val drop : int -> 'a t -> 'a t
+  val length : 'a t -> int
+  val last : 'a t -> 'a option
+  val nth : int -> 'a t -> 'a option
+  val step-by : int -> 'a t -> 'a t
+  val append : 'a t -> 'a t -> 'a t
+  val chain : 'a t -> 'a t -> 'a t
   val zip : 'a t -> 'b t -> ('a * 'b) t
+  val map : ('a -> 'b) -> 'a t -> 'b t
+  val iter : ('a -> unit) -> 'a t -> unit
+  val filter : ('a -> bool) -> 'a t -> 'a t
+  val filter-map : ('a -> 'b option) -> 'a t -> 'b t
+  val enumerate : 'a t -> (int * 'a) t
+  val drop-while : ('a -> bool) -> 'a t -> 'a t
+  val take-while : ('a -> bool) -> 'a t -> 'a t
+  val map-while : ('a -> 'b option) -> 'a t -> 'b t
+  val drop : int -> 'a t -> 'a t
+  val take : int -> 'a t -> 'a t
+  val flat-map : ('a -> 'b t) -> 'a t -> 'b t
+  val flatten : ('a t) t -> 'a t
+  val tap : ('a -> unit) -> 'a t -> 'a t
+  val partition : ('a -> bool) -> 'a t -> ('a t * 'a t)
+  val fold-option : 'b -> ('a -> 'b -> 'b option) -> 'a t -> 'b option
+  val fold-result : 'b -> ('a -> 'b -> 'b 'e result) -> 'a t -> 'b 'e result
+  val iter-option : ('a -> unit option) -> 'a t -> unit option
+  val iter-result : ('a -> unit 'e result) -> 'a t -> unit 'e result
+  val all : ('a -> bool) -> 'a t -> bool
+  val any : ('a -> bool) -> 'a t -> bool
+  val find : ('a -> bool) -> 'a t -> 'a option
+  val find-map : ('a -> 'b option) -> 'a t -> 'b option
+  val find-result : ('a -> bool 'e result) -> 'a t -> ('a option) 'e result
+  val position : ('a -> bool) -> 'a t -> int option
   val unzip : ('a * 'b) t -> ('a t * 'b t)
-  val fib : int t
-  val nat : int t
-  val const : 'a -> 'a t
+  val of-list : 'a list -> 'a t
+  val of-string : string -> Char.t t
+  val of-array : 'a Array.t -> 'a t
+  val of-option : 'a option -> 'a t
+  val to-list : 'a t -> 'a list
+  val to-array : 'a t -> 'a Array.t
+
+  % deprecated
+  val fold : ('b -> 'a -> 'b) -> 'b -> 'a t -> 'b  % TODO: swap arguments
 end = struct
 
   type 'a state =
@@ -53,36 +86,43 @@ end = struct
   let tail s =
     uncons s |> Option.map Pair.snd
 
-  let-rec map f s =
+  let-rec unfold f x =
     Promise.delay-force
-      ~(!!(&(match uncons s with
+      ~(!!(&(match f x with
             | None -> nil ()
-            | Some(x, s) ->
+            | Some(a, x) ->
               cons
-                ~(!!(&(f x)))
-                ~(!!(&(map f s))))))
+                ~(!!(&a))
+                ~(!!(&(unfold f x))))))
 
-  let-rec filter f s =
-    Promise.delay-force
-      ~(!!(&(match uncons s with
-            | None -> nil ()
-            | Some(x, s) ->
-              if f x then
-                cons
-                  ~(!!(&x))
-                  ~(!!(&(filter f s)))
-              else
-                filter f s)))
+  let map f s =
+    let go s =
+      match uncons s with
+      | None -> Option.none
+      | Some(x, s) -> Option.some (f x, s)
+    in
+      s |> unfold go
 
-  let-rec zip s1 s2 =
-    Promise.delay-force
-      ~(!!(&(match (uncons s1, uncons s2) with
-            | (None, _) -> nil ()
-            | (_, None) -> nil ()
-            | (Some(x1, s1), Some(x2, s2)) ->
-              cons
-                ~(!!(&(x1, x2)))
-                ~(!!(&(zip s1 s2))))))
+  let filter f s =
+    let-rec go s =
+      match uncons s with
+      | None -> Option.none
+      | Some(x, s) ->
+        if f x then
+          Option.some (x, s)
+        else
+          go s
+    in
+      s |> unfold go
+
+  let zip s1 s2 =
+    let go (s1, s2) =
+      match (uncons s1, uncons s2) with
+      | (None, _) -> Option.none
+      | (_, None) -> Option.none
+      | (Some(x1, s1), Some(x2, s2)) -> Option.some ((x1, x2), (s1, s2))
+    in
+      (s1, s2) |> unfold go
 
   let-rec unzip s =
     (map Pair.fst s, map Pair.snd s)
@@ -114,15 +154,6 @@ end = struct
     | Some(x, xs) ->
       x :: to-list xs
 
-  let-rec unfold f x =
-    Promise.delay-force
-      ~(!!(&(match f x with
-            | None -> nil ()
-            | Some(a, x) ->
-              cons
-                ~(!!(&a))
-                ~(!!(&(unfold f x))))))
-
   let of-list xs =
     xs |> unfold List.uncons
 
@@ -153,4 +184,212 @@ end = struct
       ~(!!(&x))
       ~(!!(&(const x)))
 
+  let null s =
+    s |> uncons |> Option.is-none
+
+  let length s =
+    let-rec go i s =
+      match uncons s with
+      | None -> i
+      | Some(_, s) -> go (i + 1) s
+    in
+      go 0 s
+
+  let last s =
+    let-rec go x s =
+      match uncons s with
+      | None -> x
+      | Some(x, s) -> go (Option.some x) s
+    in
+      go Option.none s
+
+  let nth n s =
+    let-rec go i s =
+      match uncons s with
+      | None -> Option.none
+      | Some(x, s) ->
+        if i == 0 then
+          Option.some x
+        else
+          go (i - 1) s
+    in
+      go n s
+
+  let enumerate s =
+    zip nat s
+
+  let step-by n s =
+    if n == 0 then
+      panic `Stream.step-by: invalid argument`
+    else
+      s |> enumerate |> filter (fun (i, x) -> i mod n == 0) |> map Pair.snd
+
+  let-rec chain s2 s1 =
+    Promise.delay-force
+      ~(!!(&(match uncons s1 with
+            | None -> s2
+            | Some(x, s1) ->
+              cons
+                ~(!!(&x))
+                ~(!!(&(chain s1 s2))))))
+
+  let append s1 s2 =
+    s1 |> chain s2
+
+  let iter f s =
+    let-rec go s =
+      match uncons s with
+      | None -> ()
+      | Some(x, s) -> f x before go s
+    in
+      go s
+
+  let filter-map f s =
+    s |> map f |> filter Option.is-some |> map Option.unwrap
+
+  let drop-while f s =
+    let-rec go s =
+      match uncons s with
+      | None -> nil ()
+      | Some(x, _) when not (f x) -> s
+      | Some(_, s) -> go s
+    in
+      Promise.delay-force ~(!!(&(go s)))
+
+  let-rec take-while f s =
+    Promise.delay-force
+      ~(!!(&(match uncons s with
+            | None -> nil ()
+            | Some(x, s) ->
+              if f x then
+                cons
+                  ~(!!(&x))
+                  ~(!!(&(take-while f s)))
+              else
+                nil ())))
+
+  let map-while f s =
+    s |> map f |> take-while Option.is-some |> map Option.unwrap
+
+  let-rec flatten s =
+    Promise.delay-force
+      ~(!!(&(match uncons s with
+            | None -> nil ()
+            | Some(x, s) ->
+              append
+                x
+                (flatten s))))
+
+  let flat-map f s =
+    s |> map f |> flatten
+  
+  let tap f s =
+    s |> map (fun x -> (f x before x))
+
+  let partition f s =
+    (s |> filter f, s |> filter (Fn.non f))
+
+  let fold-option x f s =
+    let-rec go s x =
+      match uncons s with
+      | None -> x |> Option.ret
+      | Some(y, s) -> x |> f y |> Option.and-then (go s)
+    in
+      go s x
+
+  let fold-result x f s =
+    let-rec go s x =
+      match uncons s with
+      | None -> x |> Result.ret
+      | Some(y, s) -> x |> f y |> Result.and-then (go s)
+    in
+      go s x
+
+  let iter-option f s =
+    let-rec go s =
+      match uncons s with
+      | None -> () |> Option.ret
+      | Some(x, s) -> x |> f |> Option.and-then (fun () -> go s)
+    in
+      go s
+
+  let iter-result f s =
+    let-rec go s =
+      match uncons s with
+      | None -> Result.ret ()
+      | Some(x, s) -> f x |> Result.and-then (fun () -> go s)
+    in
+      go s
+
+  let find f s =
+    s |> fold-result () (fun x () -> (
+      if f x then
+        Result.err x
+      else
+        Result.ok ()
+      ))
+      |> Result.to-err
+
+  let all f s =
+    s |> map f |> find (fun b -> not b) |> Option.is-none
+
+  let any f s =
+    s |> map f |> find (fun b -> b) |> Option.is-some
+
+  let find-map f s =
+    s |> filter-map f |> head
+
+  let find-result f s =
+    s |> fold-result () (fun x () -> (
+      f x
+        |> Result.map-err Result.err
+        |> Result.and-then (fun b -> (
+          if b then
+            Result.err (Result.ok x)
+          else
+            Result.ok ()
+        ))
+      ))
+      |> Result.to-err
+      |> Option.transpose
+
+  let position f s =
+    s |> enumerate |> find (Fn.compose f Pair.snd) |> Option.map Pair.fst
+
+  let of-string s =
+    let len = String.length s in
+    let step i =
+      if i == len then
+        Option.none
+      else
+        Option.some (Char.at i s, i + 1)
+    in
+      0 |> unfold step
+
+  let of-array s =
+    let len = Array.length s in
+    let step i =
+      if i == len then
+        Option.none
+      else
+        Option.some (Array.get i s, i + 1)
+    in
+      0 |> unfold step
+
+  let of-option opt =
+    let go opt =
+      opt |> Option.map (fun x -> (x, Option.none))
+    in
+      opt |> unfold go
+
+  let to-array s =
+    match uncons s with
+    | None -> Array.of-list []
+    | Some(x, _) ->
+      let result = Array.make x (s |> length) in
+      s |> enumerate
+        |> iter (fun (i, a) -> (
+          result |> Array.set i a
+        )) before
+      result
 end

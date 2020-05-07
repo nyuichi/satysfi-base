@@ -5,36 +5,30 @@
 @import: ord
 
 module List : sig
+  val eq : ('a Eq.t) implicit -> (('a list) Eq.t) implicit
+
   val null : 'a list -> bool
   val nil : 'a list
   val cons : 'a -> 'a list -> 'a list
+  val uncons : 'a list -> ('a * 'a list) option
   val map : ('a -> 'b) -> 'a list -> 'b list
   val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
   val iter : ('a -> unit) -> 'a list -> unit
   val iteri : (int -> 'a -> unit) -> 'a list -> unit
-  val fold-left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-  val fold-lefti : (int -> 'a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-  val fold-right : ('a -> 'b -> 'b) -> 'b -> 'a list -> 'b
   val filter : ('a -> bool) -> 'a list -> 'a list
-  val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option
   val reverse : 'a list -> 'a list
   val append : 'a list -> 'a list -> 'a list
   val concat : ('a list) list -> 'a list
-  val fold-left-adjacent : ('a -> 'b -> 'b option -> 'b option -> 'a) -> 'a -> 'b list -> 'a
-  val map-adjacent : ('a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
-  val mapi-adjacent : (int -> 'a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
   val length : 'a list -> int
   val nth : int -> 'a list -> 'a option
-
-  val eq : ('a Eq.t) implicit -> (('a list) Eq.t) implicit
   val intersperse : 'a -> 'a list -> 'a list
   val find : ('a -> bool) -> 'a list -> 'a option
   val apply : 'a -> ('a -> 'b) list -> 'b list
   val take : int -> 'a list -> 'a list
   val drop : int -> 'a list -> 'a list
-  val takewhile : ('a -> bool) -> 'a list -> 'a list
-  val dropwhile : ('a -> bool) -> 'a list -> 'a list
-  val splitat : int -> 'a list -> ('a list * 'a list)
+  val take-while : ('a -> bool) -> 'a list -> 'a list
+  val drop-while : ('a -> bool) -> 'a list -> 'a list
+  val split-at : int -> 'a list -> ('a list * 'a list)
   val span : ('a -> bool) -> 'a list -> ('a list * 'a list)
   val break : ('a -> bool) -> 'a list -> ('a list * 'a list)
   val head : 'a list -> 'a option
@@ -43,27 +37,46 @@ module List : sig
   val init : 'a list -> ('a list) option
   val reverse-append : 'a list -> 'a list -> 'a list
   val reverse-map : ('a -> 'b) -> 'a list -> 'b list
+  val all : ('a -> bool) -> 'a list -> bool
+  val any : ('a -> bool) -> 'a list -> bool
+  val zip : 'a list -> 'b list -> ('a * 'b) list
+  val unzip : ('a * 'b) list -> 'a list * 'b list
+  val find : ('a -> bool) -> 'a list -> 'a option
+  val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
+  val iterate : int -> ('a -> 'a) -> 'a -> 'a list
+  val repeat : int -> 'a -> 'a list
+  val cycle- : int -> 'a list -> 'a list
+  val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+  val max : ('a Ord.t) implicit -> 'a list -> 'a option
+  val min : ('a Ord.t) implicit -> 'a list -> 'a option
+  val fold : 'b -> ('a -> 'b -> 'b) -> 'a list -> 'b
+
+  % unstable API (may subject to change in the future)
+  val fold-left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val fold-lefti : (int -> 'a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val fold-right : ('a -> 'b -> 'b) -> 'b -> 'a list -> 'b
+  val fold-left-adjacent : ('a -> 'b -> 'b option -> 'b option -> 'a) -> 'a -> 'b list -> 'a
+  val map-adjacent : ('a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
+  val mapi-adjacent : (int -> 'a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
+  val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
+
+  % deprecated
+  val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option  % TODO: use Eq
+  val takewhile : ('a -> bool) -> 'a list -> 'a list
+  val dropwhile : ('a -> bool) -> 'a list -> 'a list
+  val splitat : int -> 'a list -> ('a list * 'a list)
   val all-and : bool list -> bool
   val or : bool list -> bool
   val for-all : ('a -> bool) -> 'a list -> bool
   val exists : ('a -> bool) -> 'a list -> bool
   val for-all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
   val exists2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
-  val find : ('a -> bool) -> 'a list -> 'a option
-  val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
   val split : ('a * 'b) list -> 'a list * 'b list
   val combine : 'a list -> 'b list -> (('a * 'b) list) option
   val show-opt : ('a option) list -> 'a list
-  val iterate : int -> ('a -> 'a) -> 'a -> 'a list
-  val repeat : int -> 'a -> 'a list
   val make-cycle : int -> 'a list -> 'a list
-  val max : ('a Ord.t) implicit -> 'a list -> 'a option
-  val min : ('a Ord.t) implicit -> 'a list -> 'a option
-  val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
-  val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
-  val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
-  val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
-  val uncons : 'a list -> ('a * 'a list) option
 end = struct
 
   let nil = []
@@ -231,31 +244,34 @@ end = struct
       )
 
 
-  let-rec takewhile f lst =
+  let-rec take-while f lst =
     match lst with
     | []      -> []
     | x :: xs -> (
         if f x then
-          x :: takewhile f xs
+          x :: take-while f xs
         else
-          takewhile f xs
+          take-while f xs
     )
 
+  let takewhile f lst = take-while f lst
 
-  let-rec dropwhile f lst =
+  let-rec drop-while f lst =
     match lst with
     | []      -> []
     | x :: xs -> (
         if f x then
-          dropwhile f xs
+          drop-while f xs
         else
-          x :: dropwhile f xs
+          x :: drop-while f xs
     )
 
+  let dropwhile f lst = drop-while f lst
 
-  let splitat n lst =
+  let split-at n lst =
     (take n lst, drop n lst)
 
+  let splitat n lst = split-at n lst
 
   let span f lst =
     let-rec span-sub lst1 lst2 =
@@ -337,17 +353,19 @@ end = struct
     | x :: xs -> x || or xs
 
 
-  let-rec for-all f lst =
+  let-rec all f lst =
     match lst with
     | []      -> true
-    | x :: xs -> f x && for-all f xs
+    | x :: xs -> f x && all f xs
 
+  let for-all f lst = all f lst
 
-  let-rec exists f lst =
+  let-rec any f lst =
     match lst with
     | []      -> false
-    | x :: xs -> f x || exists f xs
+    | x :: xs -> f x || any f xs
 
+  let exists f lst = any f lst
 
   let-rec for-all2 f lst1 lst2 =
     match (lst1, lst2) with
@@ -378,10 +396,17 @@ end = struct
       part [] [] lst
 
 
-  let-rec split lst =
+  let-rec unzip lst =
     match lst with
     | []       -> ([], [])
-    | (x, y) :: xs -> let (rx, ry) = split xs in (x :: rx, y :: ry)
+    | (x, y) :: xs -> let (rx, ry) = unzip xs in (x :: rx, y :: ry)
+
+  let split lst = unzip lst
+
+  let-rec zip lst1 lst2 =
+    match (lst1, lst2) with
+    | (x1 :: xs1, x2 :: xs2) -> (x1, x2) :: (zip xs1 xs2)
+    | (_, _)                 -> []
 
 
   let-rec combine lst1 lst2 =
@@ -414,12 +439,13 @@ end = struct
       initial :: repeat (n - 1) initial
 
 
-  let-rec make-cycle n lst =
+  let-rec cycle- n lst =
     if n == 0 then
       []
     else
-      List.append lst (make-cycle (n - 1) lst)
+      List.append lst (cycle- (n - 1) lst)
 
+  let make-cycle n lst = cycle- n lst
 
   let-rec max ord lst =
     match lst with
@@ -519,4 +545,7 @@ end = struct
     match xs with
     | [] -> None
     | x :: xs -> Some(x, xs)
+
+  let fold x f l =
+    fold-left (Fn.flip f) x l
 end
