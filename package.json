@@ -4,7 +4,7 @@
     "dotenv": "^8.2.0",
     "gm": "^1.23.1",
     "jest": "^26.1.0",
-    "jest-image-snapshot": "^4.0.2",
+    "jest-pdf-snapshot": "^0.5.2",
     "prettier": "^2.0.5",
     "shelljs": "^0.8.4"
   },

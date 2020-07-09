@@ -2151,6 +2151,15 @@ jest-mock@^26.1.0:
   dependencies:
     "@jest/types" "^26.1.0"
 
+jest-pdf-snapshot@^0.5.2:
+  version "0.5.2"
+  resolved "https://registry.yarnpkg.com/jest-pdf-snapshot/-/jest-pdf-snapshot-0.5.2.tgz#ef9d59043ad22bfc97df4f08f8334f3885b72862"
+  integrity sha512-6WSmTC2seAw1k/gK5rgzjycZ13kUq2Iv3Dcl0nKvAD2leBMtp3wO3O5Oo4BftHj4k8MR1M6L2qqfqt8MY0zvGg==
+  dependencies:
+    chalk "^4.0.0"
+    lodash "^4.17.15"
+    shelljs "^0.8.4"
+
 jest-pnp-resolver@^1.2.1:
   version "1.2.1"
   resolved "https://registry.yarnpkg.com/jest-pnp-resolver/-/jest-pnp-resolver-1.2.1.tgz#ecdae604c077a7fbc70defb6d517c3c1c898923a"
