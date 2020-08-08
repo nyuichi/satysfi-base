@@ -4,9 +4,10 @@
     "dotenv": "^8.2.0",
     "gm": "^1.23.1",
     "jest": "^26.1.0",
-    "jest-pdf-snapshot": "^0.5.2",
+    "jest-pdf-snapshot": "^0.5.4",
     "prettier": "^2.0.5",
-    "shelljs": "^0.8.4"
+    "shelljs": "^0.8.4",
+    "tmp": "^0.2.1"
   },
   "scripts": {
     "test": "jest"
