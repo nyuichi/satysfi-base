@@ -1,6 +1,6 @@
 {
   "devDependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.20.0",
     "dotenv": "^8.2.0",
     "gm": "^1.23.1",
     "jest": "^26.2.2",
