@@ -20,7 +20,9 @@ let satysfi-it ?:text-width ?:margin math =
   let (top, right, bottom, left) = margin |> Option.unwrap-or (3pt, 3pt, 3pt, 3pt) in
   let default-ctx = Context.make text-width in
   let ib = default-ctx |> Inline.of-math math in
-  let (w, h) = (Inline.natural-width ib +' left +' right, Inline.natural-height ib +' top +' bottom) in
+  let (w0, h0, d0) = Inline.natural-metrics ib in
+  let w = w0 +' left +' right in
+  let h = h0 +' d0 +' top +' bottom in
   Pager.make-document
     (Page.custom w h)
     (Fn.const (| text-height = 0pt; text-origin = (left, top) |))
