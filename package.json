@@ -5,7 +5,7 @@
     "gm": "^1.23.1",
     "jest": "^26.2.2",
     "jest-pdf-snapshot": "^0.5.3",
-    "prettier": "^2.0.5",
+    "prettier": "^2.1.0",
     "shelljs": "^0.8.4"
   },
   "scripts": {
