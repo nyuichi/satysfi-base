@@ -112,9 +112,6 @@ end = struct
     else xs ^ `pt`
     % -- end
 
-  let of-list ls =
-    ls |> List.map of-char |> concat
-
   % let byte-length = string-byte-length
   % let sub-bytes i j s = string-sub-bytes s i j
 end
