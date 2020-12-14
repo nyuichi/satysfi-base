@@ -1,0 +1,64 @@
+@import: base
+@import: ord
+@import: eq
+@import: float
+
+module Bool : sig
+  val ord : (bool Ord.t) implicit
+  val eq : (bool Eq.t) implicit
+
+  val equal : bool -> bool -> bool
+
+  val (<) : bool -> bool -> bool
+  val (>) : bool -> bool -> bool
+  val (>=) : bool -> bool -> bool
+  val (<=) : bool -> bool -> bool
+  val (==) : bool -> bool -> bool
+
+  val max : bool -> bool -> bool
+  val min : bool -> bool -> bool
+  val max-value : bool
+  val min-value : bool
+
+  val to-int : bool -> int
+  val of-int-opt : int -> bool option
+  val to-string : bool -> string
+  val of-string-opt : string -> bool option
+
+end = struct
+  let ord = Ord.make (fun b1 b2 ->
+    (match (b1, b2) with
+      | (true, true) -> Eq
+      | (false, false) -> Eq
+      | (true, false) -> Gt
+      | (false, true) -> Lt
+  ))
+
+  let max = ( || )
+  let min = ( && )
+  let max-value = true
+  let min-value = false
+
+  let eq = Ord.derive-eq ord
+  let equal = Eq.equal eq
+
+  let (<) = Ord.lt ord
+  let (>) = Ord.gt ord
+  let (>=) = Ord.ge ord
+  let (<=) = Ord.le ord
+  let (==) = Ord.eq ord
+
+  let to-int b = if b then 1 else 0
+  let of-int-opt n =
+    match n with
+    | 0 -> Some(false)
+    | 1 -> Some(true)
+    | _ -> None
+  let to-string b = if b then `true` else `false`
+  let of-string-opt str =
+    match str with
+    | `true`  -> Some(true)
+    | `false` -> Some(false)
+    | _       -> None
+
+end

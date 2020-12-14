@@ -1,0 +1,12 @@
+@require: math
+@import: ../util
+@import: ../../../src/typeset/derive
+
+open Derive in
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${A \vdash A}
+    |> by {Refl}
+  )
+}

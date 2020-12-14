@@ -1,0 +1,337 @@
+@import: list-ext
+@import: option-ext
+@import: string
+@import: char
+@import: fn
+@import: result
+@import: ord
+@import: int
+@import: promise
+@import: stream
+
+type token-position = (|
+  line : int;  % one origin
+  column : int;  % zero origin
+|)
+
+module Token : sig
+  type 'd t
+  %% [make d pos] returns a new token with data [d] and
+  %% position [pos].
+  val make : 'd -> token-position -> 'd t
+  val data : 'd t -> 'd
+  val position : 'd t -> token-position
+  val initial-position : token-position
+end = struct
+  type 'd token = 'd * token-position
+  type 'd t = 'd token
+  let make d pos = (d, pos)
+  let data (d, _) = d
+  let position (_, pos) = pos
+  let initial-position = (| line = 1; column = 0 |)
+end
+
+type 'd parse-error = (|
+  token: ('d Token.t) option;  % None for EOF
+  desc: string
+|)
+
+module Parser : sig
+  type 'a 'd t
+
+  val run : 'a 'd t -> ('d Token.t) Stream.t -> 'a (('d parse-error) list) result
+
+  % functor
+  val map : ('a -> 'b) -> 'a 'd t -> 'b 'd t
+  val (<&>) : 'a 'd t -> ('a -> 'b) -> 'b 'd t
+
+  % applicative
+  val pure : 'a -> 'a 'd t
+  val ap : 'a 'd t -> ('a -> 'b) 'd t -> 'b 'd t
+  val (<*>) : ('a -> 'b) 'd t -> 'a 'd t -> 'b 'd t
+  val (*>) : 'a 'd t -> 'b 'd t -> 'b 'd t
+  val (<*) : 'a 'd t -> 'b 'd t -> 'a 'd t
+  val traverse : ('a -> 'b 'd t) -> 'a list -> ('b list) 'd t
+  val sequence : ('a 'd t) list -> ('a list) 'd t
+
+  % monad
+  val ret : 'a -> 'a 'd t
+  val bind : ('a -> 'b 'd t) -> 'a 'd t -> 'b 'd t
+  val (>>=) : 'a 'd t -> ('a -> 'b 'd t) -> 'b 'd t
+  val (>>) : 'a 'd t -> 'b 'd t -> 'b 'd t
+  val (<<) : 'a 'd t -> 'b 'd t -> 'a 'd t
+
+  % alternative
+  val empty : 'a 'd t
+  val alt : 'a 'd t -> 'a 'd t -> 'a 'd t   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
+  val (<|>) : 'a 'd t -> 'a 'd t -> 'a 'd t
+  val some : 'a 'd t -> ('a list) 'd t  % one or more; use `try` if necessary
+  val many : 'a 'd t -> ('a list) 'd t  % zero or more; use `try` if necessary
+  val optional : 'a 'd t -> ('a option) 'd t  % zero or one; use `try` if necessary
+  val choice : ('a 'd t) list -> 'a 'd t  % use `try` if necessary
+
+  % error handling
+  val report : string -> unit 'd t  % reports new error messege; always succeeds and never consumes input
+  val label : string -> 'a 'd t -> 'a 'd t  % reports new error message on failure of the given parser regardless of consumption of input
+  val (<?>) : 'a 'd t -> string -> 'a 'd t
+  val fail : string -> 'a 'd t
+
+  % parser
+  val try : 'a 'd t -> 'a 'd t  % mark savepoints to perform backtracking
+  val lookahead : 'a 'd t -> 'a 'd t
+  val not-followed-by : 'a 'd t -> unit 'd t  % flip success and failure; never consumes input
+  val catch : 'a 'd t -> ('a option * ('d parse-error) list) 'd t
+  val any : ('d Token.t) 'd t
+
+  % recursively defined grammars
+  val delay : ('a 'd t) Promise.t -> 'a 'd t
+  val fix : ('a 'd t -> 'a 'd t) -> 'a 'd t
+
+  % derived combinators
+  val eof : unit 'd t
+  val satisfy : ('d Token.t -> bool) -> ('d Token.t) 'd t
+  val some-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
+  val many-sep-by : 'sep 'd t -> 'a 'd t -> ('a list) 'd t
+  val between : 'open 'd t -> 'close 'd t -> 'a 'd t -> 'a 'd t
+  val pair : 'a 'd t -> 'b 'd t -> ('a * 'b) 'd t
+  val triple : 'a 'd t -> 'b 'd t -> 'c 'd t -> ('a * 'b * 'c) 'd t
+  val some-chain-left : ('a -> 'a -> 'a) 'd t -> 'a 'd t -> 'a 'd t
+end = struct
+
+  % state of parser
+  type 'd state = (|
+    input : ('d Token.t) Stream.t;
+  |)
+
+  % indicates whether backtracking is to be performed on failure; see `alt`
+  type consumption = Consumed | Virgin
+
+  let (<+>) c1 c2 =
+    match (c1, c2) with
+    | (Virgin, Virgin) -> Virgin
+    | _ -> Consumed
+
+  % (Some a, _, []) -> parsing success with result a
+  % (Some a, _, es) -> parsing continued while some errors were found and recovered (e.g. parsing continues after missing `}`)
+  type 'a 'd t = 'd state -> ('d state * 'a) option * consumption * ('d parse-error) list
+
+  let run p s =
+    let initial-state = (| input = s |) in
+    match p initial-state with
+    | (Some (_, a), _, []) ->
+      Result.ok a
+    | (_, _, es) ->
+      Result.err es
+
+  let delay t =
+    fun state -> (Promise.force t) state
+
+  let map f p s =
+    match p s with
+    | (Some (s, a), c, es) ->
+      (Option.some (s, f a), c, es)
+    | (None, c, es) ->
+      (Option.none, c, es)
+
+  let (<&>) p f = map f p
+
+  let ret a s =
+    (Option.some (s, a), Virgin, [])
+
+  let bind k p s =
+    match p s with
+    | (Some (s, a), c1, e1) ->
+      (match (k a) s with
+      | (Some (s, b), c2, e2) ->
+        (Option.some (s, b), c1 <+> c2, List.append e2 e1)
+      | (None, c2, e2) ->
+        (Option.none, c1 <+> c2, List.append e2 e1))
+    | (None, c1, e1) ->
+      (Option.none, c1, e1)
+
+  let (>>=) p f = bind f p
+  let (>>) p1 p2 = p1 >>= (fun _ -> p2)
+  let (<<) p1 p2 = p1 >>= (fun x -> (p2 >> ret x))
+
+  let pure = ret
+  let ap p1 p2 = p2 >>= (fun f -> p1 >>= (fun x -> ret (f x)))
+  let (<*>) p1 p2 = ap p2 p1
+  let (*>) = (>>)
+  let (<*) = (<<)
+
+  let traverse f xs =
+    let-rec aux xs =
+      match xs with
+      | [] -> pure []
+      | x :: xs -> (pure List.cons <*> f x) <*> aux xs
+    in aux xs
+
+  let sequence xs =
+    traverse Fn.id xs
+
+  let empty s =
+    (Option.none, Virgin, [])
+
+  let alt p1 p2 s =
+    match p1 s with
+    | (None, Virgin, e1) ->
+      let (o, c, e2) = p2 s in
+      (o, c, List.append e2 e1)
+    | r -> r
+
+  let (<|>) = alt
+
+  let-rec
+    many p = some p <|> pure []
+  and
+    some p = p >>= (fun x -> many p >>= (fun xs -> ret (x :: xs)))
+
+  let optional p = (pure Option.some <*> p) <|> pure Option.none
+
+  let choice ps =
+    List.fold-right alt empty ps
+
+  % private API; impredictive choice a la PEG
+  let (</>) p1 p2 s =
+    match p1 s with
+    | (None, c1, e1) ->
+      let (o, c2, e2) = p2 s in
+      (o, c2 <+> c1, List.append e2 e1)
+    | r -> r
+
+  let make-error s desc =
+    (| token = Stream.head s#input; desc = desc |)
+
+  let report desc s =
+    (Option.some (s, ()), Virgin, [make-error s desc])
+
+  let label desc p =
+    p </> (report desc >> empty)
+
+  let (<?>) p desc = label desc p
+
+  let fail desc =
+    empty <?> desc
+
+  let try p s =
+    match p s with
+    | (None, _, e) ->
+      (Option.none, Virgin, e)
+    | r -> r
+
+  let lookahead p s =
+    match p s with
+    | (Some (s, a), _, e) ->
+      (Option.some (s, a), Virgin, e)
+    | r -> r
+
+  let not-followed-by p s =
+    match p s with
+    | (None, _, _) ->
+      (Option.some (s, ()), Virgin, [])
+    | _ ->
+      (Option.none, Virgin, [])
+
+  let catch p s =
+    let (o, _, e) = p s in
+    (Option.some (s, (o |> Option.map Pair.snd, e)), Virgin, [])
+
+  let any s =
+    match Stream.uncons s#input with
+    | None ->
+      (Option.none, Virgin, [])
+    | Some(t, new-input) ->
+      (Option.some ((| input = new-input |), t), Consumed, [])
+
+  % derived combinators
+
+  let eof state =
+    (not-followed-by any) state
+
+  let satisfy pred =
+    try (any >>= (fun t -> (
+      if pred t then
+        ret t
+      else
+        empty
+    )))
+
+  let some-sep-by sep p =
+    p >>= (fun x -> many (try (sep >> p)) >>= (fun xs -> ret (x :: xs)))
+
+  let many-sep-by sep p = try (some-sep-by sep p) <|> ret []
+
+  let between op cl p =
+    op >> p >>= (fun x -> cl >> ret x)
+
+  let pair p1 p2 =
+    (pure Pair.make <*> p1) <*> p2
+
+  let triple p1 p2 p3 =
+    p1 >>= (fun x -> p2 >>= (fun y -> p3 >>= (fun z -> ret (x, y, z))))
+
+  let chain-left op a p =
+    many (pair op p) |> map (List.fold-left (fun a (op, b) -> op a b) a)
+
+  let some-chain-left op p =
+    p >>= (fun x -> p |> chain-left op x)
+
+  let fix f =
+    let stash = Ref.make empty in
+    let main = delay (Promise.delay ~(!!(&(!stash)))) in
+    let () = stash |> Ref.set (f main) in
+    main
+
+end
+
+module StringParser : sig
+  val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
+  val char : Char.t -> Char.t Char.t Parser.t
+  val string : string -> string Char.t Parser.t  % wrapped with `try`
+  val satisfy : (Char.t -> bool) -> Char.t Char.t Parser.t
+  val digit : Char.t Char.t Parser.t
+  val hex-digit : Char.t Char.t Parser.t
+  val alpha : Char.t Char.t Parser.t
+  val alnum : Char.t Char.t Parser.t
+  val space : Char.t Char.t Parser.t
+  val spaces : string Char.t Parser.t
+end = struct
+
+  open Parser
+
+  let char c =
+    let test t = Char.equal (t |> Token.data) c
+    in satisfy test <&> Token.data
+
+  let string str =
+    let-rec aux
+    | [] = ret str
+    | (c :: cs) = char c >> aux cs
+    in try (aux (String.to-list str))
+
+  let lex-string input =
+    Stream.unfold (fun (cs, pos) -> (
+      match List.uncons cs with
+      | None -> Option.none
+      | Some(c, new-cs) ->
+        let token = Token.make c pos in
+        let new-pos =
+          let line = pos#line + (if Char.equal c Char.newline then 1 else 0) in
+          let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
+          (| line = line; column = column |)
+        in Option.some (token, (new-cs, new-pos))
+    )) (String.to-list input, Token.initial-position)
+
+  let run p input =
+    input |> lex-string |> Parser.run p
+
+  let satisfy f =
+    Parser.satisfy (fun t -> f (Token.data t)) <&> Token.data
+
+  let digit = satisfy Char.is-digit
+  let hex-digit = satisfy Char.is-hex-digit
+  let alpha = satisfy Char.is-alpha
+  let alnum = satisfy Char.is-alnum
+  let space = satisfy Char.is-space
+  let spaces = many space |> map String.of-list
+end

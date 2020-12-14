@@ -1,0 +1,52 @@
+@import: ../option-ext
+@import: derive/ast
+@import: derive/config
+@import: derive/line
+@import: derive/render
+
+module Derive : sig
+
+    val \proven : [DeriveConfig.t?; DeriveAst.t] math-cmd
+
+end = struct
+
+    open DeriveRender
+
+    let-math \proven ?:config ast = render-math (config |> Option.unwrap-or DeriveConfig.default) ast
+
+end
+
+module DeriveDSL : sig
+
+    % DSL
+    val derive: math -> DeriveAst.t
+    val by: inline-text -> DeriveAst.t -> DeriveAst.t
+    val byOp: inline-text -> DeriveAst.t -> DeriveAst.t
+    val from: DeriveAst.t list -> DeriveAst.t -> DeriveAst.t
+    val withLine: DeriveLine.t -> DeriveAst.t -> DeriveAst.t
+
+    val assume: math -> DeriveAst.t
+
+    % Lines
+    val standard-line : DeriveLine.t
+    val no-line       : DeriveLine.t
+    val dotted-line   : length -> length -> DeriveLine.t
+
+end = struct
+
+    let standard-line = DeriveLine.standard-line
+    let no-line = DeriveLine.no-line
+    let dotted-line = DeriveLine.dotted-line
+
+    let derive conclusion = DeriveAst.make None None conclusion [] None
+
+    let assume assumption =
+        let no-line = Option.some(DeriveLine.no-line) in
+        DeriveAst.make None None assumption [] no-line
+
+    let by label-text ast = ast |> DeriveAst.set-main-label label-text
+    let byOp label-text ast = ast |> DeriveAst.set-sub-label label-text
+    let from assumptions ast = ast |> DeriveAst.set-assumptions assumptions
+    let withLine line ast = ast |> DeriveAst.set-line line
+
+end

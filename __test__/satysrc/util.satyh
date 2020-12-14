@@ -1,0 +1,3 @@
+@import: ../../src/typeset/satysfi-it
+
+let satysfi-it math = satysfi-it ?:440pt ?:(50pt, 50pt, 50pt, 50pt) math

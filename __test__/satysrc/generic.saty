@@ -1,0 +1,293 @@
+@require: stdjareport
+@require: list
+@import: ../../src/ref
+@import: ../../src/string
+@import: ../../src/debug
+@import: ../../src/array
+@import: ../../src/regexp
+@import: ../../src/list-ext
+@import: ../../src/option-ext
+@import: ../../src/typeset/code2
+@import: ../../src/parser
+@import: ../../src/int
+@import: ../../src/map
+@import: ../../src/color-ext
+@import: ../../src/promise
+@import: ../../src/fn
+@import: ../../src/float
+@import: ../../src/length
+@import: ../../src/set
+@import: ../../src/tuple
+@import: ../../src/graphics
+@import: ../../src/path
+@import: ../../src/typeset/math-ext
+@import: ../../src/result
+@import: ../../src/void
+@import: ../../src/ord
+@import: ../../src/eq
+@import: ../../src/either
+@import: ../../src/stream
+@import: ../../src/pager
+@import: ../../src/cross-ref
+@import: ../../src/bool
+
+open Fn in
+open RegExp in
+
+let () = Debug.log `==== Ref ====` in
+let r = Ref.make 1 in
+let () = r |> Ref.get |> String.of-int |> Debug.log in
+let () = r |> Ref.set 2 in
+let () = r |> Ref.get |> String.of-int |> Debug.log in
+let r1 = Ref.make 1 in
+let r2 = Ref.make 2 in
+let () = Ref.swap r1 r2 in
+let () = Debug.log (String.of-int (Ref.get r1) ^ `:` ^ String.of-int (Ref.get r2)) in % 2:1
+let r = Ref.make 1 in
+let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get r))) in % 2
+let () = Debug.log (String.of-int (Ref.get r)) in % 1
+
+let () = Debug.log `==== String ====` in
+let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
+let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
+let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
+let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
+
+let () = Debug.log `==== List ====` in
+let lst = [1;3;2;4;5] in
+let () = lst |> List.bubblesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
+let lst = [(1,2);(2,1);(1,1)] in
+let ord = Ord.make (fun (n1,_) (n2,_) -> Ord.compare Int.ord n1 n2) in
+let show (n1,n2) = `(` ^ String.of-int n1 ^ `,` ^ String.of-int n2 ^ `)` in
+let () = lst |> List.bubblesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.insertsort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+let () = lst |> List.mergesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
+
+let () = Debug.log `==== Array ====` in
+let a = Array.make 3 42 in
+let () = a |> Array.get 0 |> String.of-int |> Debug.log in
+let () = a |> Array.set 0 43 in
+let () = a |> Array.get 0 |> String.of-int |> Debug.log in
+let a = 10 |> Array.init id in
+let is = [0;1;2;3;4;5;6;7;8;9] in
+let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
+let () = is |> List.iter (fun i -> a |> Array.set i (10 - i)) in
+let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
+let () = a |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
+let a1 = Array.of-list [0;1;2;3;4;] in
+let a2 = Array.of-list [5;6;7;8;9] in
+let a = Array.append a1 a2 in
+let () = Debug.log (String.of-int (Array.get 0 a)) in
+let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
+
+let () = Debug.log `==== RegExp ====` in
+%let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
+let print-result r =
+  r |> List.iter (fun s -> (
+    match s with
+    | None -> Debug.log `None`
+    | Some (i, s) -> Debug.log (`Some(` ^ String.of-int i ^ `, "` ^ s ^ `")`)
+  )) in
+%let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
+%let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
+let char-a = char (Char.make `a`) in
+let char-b = char (Char.make `b`) in
+let char-c = char (Char.make `c`) in
+% (a+)(b+)
+let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in % true
+let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
+let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in % true
+% (a+|(c))(b+)
+let re1 = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
+let (iseq1, _) = compile re1 in
+let () = print-iseq iseq1 in
+let ss = exec re1 `aabbb` |> print-result in
+let re3 = many (many char-a) in
+let (iseq3, _) = compile (seq (many-ng any) (group re3)) in
+let () = print-iseq iseq3 in
+let () = `aaaaa` |> test re3 |> String.of-bool |> Debug.log in
+let re4 = seq (group (seq any (char (Char.make `e`)))) eof in
+let () = `the apple` |> exec re4 |> print-result in
+let re6 = sequence [bol; string `apple`; eol] in
+let () = `the apple
+apple
+leapple` |> exec re6 |> print-result in
+let () = exec spaces #`  asdf`# |> print-result in
+% % backreference
+% let re2 = seq (group (alt (string `cat`) (string `dog`))) (ref 1) in
+% let () = `dogdog` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `dogcat` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `catcat` |> test re2 |> String.of-bool |> Debug.log in
+% let () = `aaadogdogbbb` |> test re2 |> String.of-bool |> Debug.log in
+% % aaaba vs (a*)a*b\1
+% let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
+% let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
+let () = RegExp.of-string `a` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `.` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `((a))` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a*?)` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a(c))(b)` |> RegExp.print |> Debug.log in
+let () = RegExp.of-string `(a+|(c))(b+)` |> RegExp.print |> Debug.log in
+let () = `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`) |> String.of-bool |> Debug.log in
+let () = RegExp.of-string `\n\r\t\$\(\)\*\?` |> RegExp.print |> Debug.log in
+let _ = RegExp.of-string `^\s\d$` in
+% let _ = RegExp.of-string `[]` in
+let _ = RegExp.of-string `[a-z]` in
+let _ = `0X` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log in
+let _ = `0x1f2e3d` |> test (RegExp.of-string `0[xX][A-Fa-f0-9]+`) |> String.of-bool |> Debug.log in
+let _ = `0a` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log in
+let _ = `0xaZb` |> test (RegExp.of-string `^0[xX][A-Fa-f0-9]+$`) |> String.of-bool |> Debug.log in
+let _ = `][][` |> test (RegExp.of-string `[][]+`) |> String.of-bool |> Debug.log in
+let _ = `][]-[` |> test (RegExp.of-string `[][-]+`) |> String.of-bool |> Debug.log in
+
+let () = Debug.log `==== Parser ====` in
+let () =
+  open Parser in
+  `aaa` |> StringParser.run (many (StringParser.char (Char.make `a`)) >>= (fun cs -> (Debug.log (String.of-list cs) before ret cs))) |> Fn.ignore in
+
+let () =
+  open Parser in
+  open StringParser in
+  let op name f = string name >> ret f in
+  let addop = op `+` Int.add in
+  let subop = op `-` Int.sub in
+  let mulop = op `*` Int.mul in
+  let divop = op `/` Int.div in
+  let number = some digit >>= (fun cs -> ret (Int.of-string (String.of-list cs))) in
+  let expr = fix (fun expr -> (
+    let factor = between (string `(`) (string `)`) expr <|> number in
+    let term = factor |> some-chain-left (mulop <|> divop) in
+    let expr = term |> some-chain-left (addop <|> subop) in
+    expr
+  ))
+  in
+    `12/2/2` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore before
+    `1+2*4-12/2/2+4` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
+
+let () = Debug.log `==== Lexer ====` in
+let rules = [
+  (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
+  (| kind = `whitespace`; regexp = spaces |);
+] in
+let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
+let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
+
+let () = Debug.log `==== Int ====` in
+let p i = i |> String.of-int |> Debug.log in
+let () = p (13 |> Int.lsl 2) in %==52
+let () = p (13 |> Int.asr 0) in %==13
+let () = p (13 |> Int.asr 1) in %==6
+let () = p (13 |> Int.asr 2) in %==3
+let () = p (13 |> Int.asr 3) in %==1
+let () = p (13 |> Int.asr 4) in %==0
+let () = p (13 |> Int.asr 5) in %==0
+let () = p (-13 |> Int.asr 0) in %==-13
+let () = p (-13 |> Int.asr 1) in %==-7
+let () = p (-13 |> Int.asr 2) in %==-4
+let () = p (-13 |> Int.asr 3) in %==-2
+let () = p (-13 |> Int.asr 4) in %==-1
+let () = p (-13 |> Int.asr 5) in %==-1
+let () = p (13 |> Int.land 10) in %==8
+let () = p (-13 |> Int.land 31) in %==19
+let () = p (13 |> Int.lor 10) in %==15
+let () = p (13 |> Int.lxor 10) in %==7
+let () = p (13 |> Int.lsr 2) in %==3
+let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
+let () = p (`12345678` |> Int.of-string ?:10) in
+let () = p (`-123` |> Int.of-string ?:10) in
+let () = p (`ffff` |> Int.of-string ?:16) in
+let () = p (2 |> Int.pow 3) in
+let () = p (2 |> Int.pow 0) in
+let () = p (Int.sup [1; 3; 2]) in
+let () = p (Int.sup []) in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Int.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`-123` |> Int.of-string-opt ?:10) in
+let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
+let () = p-opt(`a` |> Int.of-string-opt ?:16) in
+
+let () = Debug.log `==== Map ====` in
+let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
+let option-force (Some v) = v in
+let () = m |> Map.of- Int.eq 1 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 2 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 3 |> option-force |> Debug.log in
+let m = m |> Map.bind 2 `d` in
+let () = m |> Map.of- Int.eq 1 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 2 |> option-force |> Debug.log in
+let () = m |> Map.of- Int.eq 3 |> option-force |> Debug.log in
+
+let _ = Color.of-css `#F5F5DC` in
+let _ = Color.of-css `beige` in
+
+let () = Debug.log `==== Promise ====` in
+let p = Promise.delay ~(!!(&(let () = Debug.log `foo` in 1))) in
+let () = Debug.log `bar` in
+let _ = Promise.force p in
+let _ = Promise.force p in
+let p = Promise.delay ~(!!(&(let () = Debug.log `foobar` in 3.14))) in
+let () = Debug.log `barbaz` in
+let _ = Promise.force p in
+let _ = Promise.force p in
+
+let () = Debug.log `==== Float ====` in
+let _ =
+  open Float in
+  let _ = pi |> String.of-float |> Debug.log in
+  let l = [inf; ninf; nan; 0.0; neg 0.0; 1.0] in
+  l |> List.iter (fun a ->
+    l |> List.iter (fun b ->
+      Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
+    )
+  ) in
+  let () = Debug.log (String.of-float (1.0 /. 0.0)) in
+  let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
+in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Float.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p-opt(`123.45` |> Float.of-string-opt) in
+let () = p-opt(`-123.45` |> Float.of-string-opt) in
+let () = p-opt(`123.0` |> Float.of-string-opt) in
+let () = p-opt(`0.111` |> Float.of-string-opt) in
+let () = p-opt(`0.1a11` |> Float.of-string-opt) in
+
+let () = Debug.log `==== Bool ====` in
+let p b = b |> Bool.to-string |> Debug.log in
+let p-opt o =
+  let s =
+    match o with
+    | None -> `None`
+    | Some(i) -> `Some(` ^ Bool.to-string i ^ `)`
+  in
+  Debug.log s
+in
+let () = p Bool.max-value in
+let () = p Bool.min-value in
+let () = p-opt(0 |> Bool.of-int-opt) in
+let () = p-opt(1 |> Bool.of-int-opt) in
+let () = p-opt(2 |> Bool.of-int-opt) in
+let () = p-opt(`false` |> Bool.of-string-opt) in
+let () = p-opt(`true` |> Bool.of-string-opt) in
+let () = p-opt(`hoge` |> Bool.of-string-opt) in
+
+let () = Debug.log `==== Stream ====` in
+let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
+let () = Stream.nat |> Stream.take 5 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x)
+in
+
+finish

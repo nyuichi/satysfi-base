@@ -1,9 +1,0 @@
-module Image : sig
-%   type t
-  val of-jpeg : string -> image
-  val of-pdf : string -> int -> image
-end = struct
-%   type t = image
-  let of-jpeg = load-image
-  let of-pdf = load-pdf-image
-end

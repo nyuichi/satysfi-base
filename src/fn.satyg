@@ -1,0 +1,53 @@
+%% Right-associative function application operator.
+%% [f x <| g y <| h z] is interpreted as [f x (g y (h z))].
+let (<|) f x = f x
+
+module Fn : sig
+  %% The identity function. [id x] returns [x].
+  val id : 'a -> 'a
+
+  %% Function composition. [compose f g x] is equivalent to [f (g x)].
+  val compose : ('b -> 'c) -> ('a -> 'b) -> ('a -> 'c)
+
+  %% [apply f x] is equivalent to [f x].
+  val apply : ('a -> 'b) -> 'a -> 'b
+
+  %% [flip f x y] is equivalent to [f y x].
+  val flip : ('a -> 'b -> 'c) -> ('b -> 'a -> 'c)
+
+  %% [const x y] returns [x].
+  val const : 'a -> 'b -> 'a
+
+  %% [ignore x] returns the unit value ignoring the argument.
+  val ignore : 'a -> unit
+
+  %% [non pred] returns a predicate function whose result is negated.
+  val non : ('a -> bool) -> ('a -> bool)
+
+  %% [tap f x] evaluates [f x] and then returns [x].
+  %%
+  %% e.g. [v |> tap (fun x -> Debug.log x)]
+  val tap : ('a -> 'b) -> 'a -> 'a
+
+  %% [on f g] converts binary function [g] by prepending function [f].
+  %%
+  %% e.g. [String.equal |> on Tuple.fst]
+  val on : ('a -> 'b) -> ('b -> 'b -> 'c) -> ('a -> 'a -> 'c)
+
+  %% [as-type-of x y] returns [y]. This should be used to help
+  %% the type checker to infer the type of [x].
+  %%
+  %% e.g. [str |> as-type-of ` `]
+  val as-type-of : 'a -> 'a -> 'a
+end = struct
+  let id x = x
+  let compose f g x = f (g x)
+  let apply f x = f x
+  let flip f y x = f x y
+  let const x _ = x
+  let ignore _ = ()
+  let non f a = not (f a)
+  let tap f x = ignore (f x) before x
+  let on f g a1 a2 = g (f a1) (f a2)
+  let as-type-of x y = y
+end

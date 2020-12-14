@@ -1,0 +1,17 @@
+@require: math
+@import: ../util
+@import: ../../../src/typeset/derive
+
+open Derive in
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${ \Gamma \vdash \Delta }
+    |> by {Cut}
+    |> withLine (dotted-line 2pt 1pt)
+    |> from [
+      assume ${\Gamma \vdash \Delta, A};
+      assume ${\Gamma, A \vdash \Delta}
+    ]
+  )
+}

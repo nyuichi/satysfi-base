@@ -1,0 +1,552 @@
+@stage: persistent
+@require: list
+@import: ord
+@import: eq
+@import: option-ext
+@import: ord
+
+module List : sig
+  val eq : ('a Eq.t) implicit -> (('a list) Eq.t) implicit
+
+  val null : 'a list -> bool
+  val nil : 'a list
+  val cons : 'a -> 'a list -> 'a list
+  val uncons : 'a list -> ('a * 'a list) option
+  val map : ('a -> 'b) -> 'a list -> 'b list
+  val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
+  val iter : ('a -> unit) -> 'a list -> unit
+  val iteri : (int -> 'a -> unit) -> 'a list -> unit
+  val filter : ('a -> bool) -> 'a list -> 'a list
+  val reverse : 'a list -> 'a list
+  val append : 'a list -> 'a list -> 'a list
+  val concat : ('a list) list -> 'a list
+  val length : 'a list -> int
+  val nth : int -> 'a list -> 'a option
+  val intersperse : 'a -> 'a list -> 'a list
+  val find : ('a -> bool) -> 'a list -> 'a option
+  val apply : 'a -> ('a -> 'b) list -> 'b list
+  val take : int -> 'a list -> 'a list
+  val drop : int -> 'a list -> 'a list
+  val take-while : ('a -> bool) -> 'a list -> 'a list
+  val drop-while : ('a -> bool) -> 'a list -> 'a list
+  val split-at : int -> 'a list -> ('a list * 'a list)
+  val span : ('a -> bool) -> 'a list -> ('a list * 'a list)
+  val break : ('a -> bool) -> 'a list -> ('a list * 'a list)
+  val head : 'a list -> 'a option
+  val tail : 'a list -> ('a list) option
+  val last : 'a list -> 'a option
+  val init : 'a list -> ('a list) option
+  val reverse-append : 'a list -> 'a list -> 'a list
+  val reverse-map : ('a -> 'b) -> 'a list -> 'b list
+  val all : ('a -> bool) -> 'a list -> bool
+  val any : ('a -> bool) -> 'a list -> bool
+  val zip : 'a list -> 'b list -> ('a * 'b) list
+  val unzip : ('a * 'b) list -> 'a list * 'b list
+  val find : ('a -> bool) -> 'a list -> 'a option
+  val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
+  val iterate : int -> ('a -> 'a) -> 'a -> 'a list
+  val repeat : int -> 'a -> 'a list
+  val cycle- : int -> 'a list -> 'a list
+  val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
+  val max : ('a Ord.t) implicit -> 'a list -> 'a option
+  val min : ('a Ord.t) implicit -> 'a list -> 'a option
+  val fold : 'b -> ('a -> 'b -> 'b) -> 'a list -> 'b
+
+  % unstable API (may subject to change in the future)
+  val fold-left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val fold-lefti : (int -> 'a -> 'b -> 'a) -> 'a -> 'b list -> 'a
+  val fold-right : ('a -> 'b -> 'b) -> 'b -> 'a list -> 'b
+  val fold-left-adjacent : ('a -> 'b -> 'b option -> 'b option -> 'a) -> 'a -> 'b list -> 'a
+  val map-adjacent : ('a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
+  val mapi-adjacent : (int -> 'a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
+  val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
+
+  % deprecated
+  val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option  % TODO: use Eq
+  val takewhile : ('a -> bool) -> 'a list -> 'a list
+  val dropwhile : ('a -> bool) -> 'a list -> 'a list
+  val splitat : int -> 'a list -> ('a list * 'a list)
+  val all-and : bool list -> bool
+  val or : bool list -> bool
+  val for-all : ('a -> bool) -> 'a list -> bool
+  val exists : ('a -> bool) -> 'a list -> bool
+  val for-all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
+  val exists2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
+  val split : ('a * 'b) list -> 'a list * 'b list
+  val combine : 'a list -> 'b list -> (('a * 'b) list) option
+  val show-opt : ('a option) list -> 'a list
+  val make-cycle : int -> 'a list -> 'a list
+end = struct
+
+  let nil = []
+  let cons x xs = x :: xs
+
+  let-rec map
+    | f []        = []
+    | f (x :: xs) = (f x) :: map f xs
+
+
+  let mapi f =
+    let-rec aux
+      | i f []        = []
+      | i f (x :: xs) = (f i x) :: aux (i + 1) f xs
+    in
+    aux 0 f
+
+
+  let-rec iter
+    | f []        = ()
+    | f (x :: xs) = f x before iter f xs
+
+
+  let iteri f =
+    let-rec aux
+      | i f []        = ()
+      | i f (x :: xs) = f i x before aux (i + 1) f xs
+    in
+    aux 0 f
+
+
+  let-rec fold-left
+    | f init []        = init
+    | f init (x :: xs) = fold-left f (f init x) xs
+
+
+  let fold-lefti f =
+    let-rec aux
+      | i f init []        = init
+      | i f init (x :: xs) = aux (i + 1) f (f i init x) xs
+    in
+    aux 0 f
+
+
+  let-rec fold-right
+    | f init []        = init
+    | f init (x :: xs) = f x (fold-right f init xs)
+
+
+  let-rec filter
+    | _ []        = []
+    | p (x :: xs) = if p x then x :: filter p xs else filter p xs
+
+
+  let-rec assoc
+    | _ _ []              = None
+    | eq a ((x, y) :: xs) = if eq a x then Some(y) else assoc eq a xs
+
+
+  let reverse lst =
+    fold-left (fun acc x -> x :: acc) [] lst
+
+
+  let-rec append lst1 lst2 =
+    match lst1 with
+    | []      -> lst2
+    | x :: xs -> x :: append xs lst2
+
+
+  let concat lst = fold-right append [] lst
+
+
+  let fold-left-adjacent f =
+    let-rec aux leftopt init lst =
+      match lst with
+      | [] ->
+          init
+
+      | head :: [] ->
+          let initnew = f init head leftopt None in
+          initnew
+
+      | head :: ((right :: _) as tail) ->
+          let initnew = f init head leftopt (Some(right)) in
+          aux (Some(head)) initnew tail
+    in
+    aux None
+
+
+  let map-adjacent f lst =
+      lst |> fold-left-adjacent (fun acc x leftopt rightopt -> (
+        f x leftopt rightopt :: acc
+      )) [] |> reverse
+
+
+  let mapi-adjacent f lst =
+    let (_, acc) =
+      lst |> fold-left-adjacent (fun (i, acc) x leftopt rightopt -> (
+        (i + 1, f i x leftopt rightopt :: acc)
+      )) (0, [])
+    in
+      reverse acc
+
+
+  let length lst =
+    fold-right (fun _ i -> i + 1) 0 lst
+
+
+  let nth lst =
+    let-rec aux i n xs =
+      match xs with
+      | []           -> None
+      | head :: tail -> if n == i then Some(head) else aux (i + 1) n tail
+    in
+      aux 0 lst
+
+  let eq eq =
+    let-rec aux
+    | [] [] = true
+    | (x::xs) (y::ys) = ~(&(Eq.equal eq x y) &&& &(aux xs ys))
+    | _ _ = false
+    in Eq.make aux
+
+  let intersperse s xs =
+    match xs with
+    | [] -> []
+    | (x :: xs) ->
+      x :: List.concat (xs |> List.map (fun x -> [s; x]))
+
+
+  let-rec apply v lst =
+    match lst with
+    | []      -> []
+    | x :: xs -> x v :: apply v xs
+
+
+  let null lst =
+    match lst with
+    | [] -> true
+    | _  -> false
+
+
+  let-rec take i lst =
+    match lst with
+    | []      -> []
+    | x :: xs -> (
+        if i < 0 then
+          []
+        else
+          x :: (take (i - 1) xs)
+    )
+
+
+  let-rec drop i lst =
+    if i < 0 then
+      lst
+    else
+      match lst with
+      | []      -> []
+      | x :: xs -> (
+          if i < 1 then
+            xs
+          else
+            drop (i - 1) xs
+      )
+
+
+  let-rec take-while f lst =
+    match lst with
+    | []      -> []
+    | x :: xs -> (
+        if f x then
+          x :: take-while f xs
+        else
+          take-while f xs
+    )
+
+  let takewhile f lst = take-while f lst
+
+  let-rec drop-while f lst =
+    match lst with
+    | []      -> []
+    | x :: xs -> (
+        if f x then
+          drop-while f xs
+        else
+          x :: drop-while f xs
+    )
+
+  let dropwhile f lst = drop-while f lst
+
+  let split-at n lst =
+    (take n lst, drop n lst)
+
+  let splitat n lst = split-at n lst
+
+  let span f lst =
+    let-rec span-sub lst1 lst2 =
+      match lst2 with
+      | y :: ys -> (
+          if f y then
+            span-sub (y :: lst1) ys
+          else
+            (List.reverse lst1, lst2)
+        )
+      | _ -> (List.reverse lst1, lst2)
+    in
+      span-sub [] lst
+
+
+  let break f lst =
+    let-rec break-sub lst1 lst2 =
+      match lst2 with
+      | y :: ys -> (
+          if f y then
+            (List.reverse lst1, lst2)
+          else
+            break-sub (y :: lst1) ys
+        )
+      | [] -> (List.reverse lst1, lst2)
+    in
+      break-sub [] lst
+
+
+  let head lst =
+    match lst with
+    | []        -> None
+    | head :: _ -> Some(head)
+
+
+  let tail lst =
+    match lst with
+    | []        -> None
+    | _ :: tail -> Some(tail)
+
+
+  let-rec last lst =
+    match lst with
+    | []      -> None
+    | x :: [] -> Some(x)
+    | _ :: xs -> last xs
+
+
+  let-rec init lst =
+    match lst with
+    | []      -> None
+    | x :: [] -> Some([])
+    | x :: xs -> Option.(Some(x) ^:: (init xs))
+
+
+  let-rec reverse-append lst1 lst2 =
+    match lst1 with
+    | []      -> lst2
+    | x :: xs -> reverse-append xs (x :: lst2)
+
+
+  let reverse-map f lst =
+    let-rec rmap-f accu lst =
+      match lst with
+      | []        -> accu
+      | (x :: xs) -> rmap-f (f x :: accu) xs
+    in
+      rmap-f [] lst
+
+  let-rec all-and lst =
+    match lst with
+    | []      -> true
+    | x :: xs -> x && all-and xs
+
+
+  let-rec or lst =
+    match lst with
+    | []      -> false
+    | x :: xs -> x || or xs
+
+
+  let-rec all f lst =
+    match lst with
+    | []      -> true
+    | x :: xs -> f x && all f xs
+
+  let for-all f lst = all f lst
+
+  let-rec any f lst =
+    match lst with
+    | []      -> false
+    | x :: xs -> f x || any f xs
+
+  let exists f lst = any f lst
+
+  let-rec for-all2 f lst1 lst2 =
+    match (lst1, lst2) with
+    |  ([], [])              -> Some(true)
+    | (x1 :: xs1, x2 :: xs2) -> Option.(Some(f x1 x2) ^&& for-all2 f xs1 xs2)
+    | (_, _)                 -> None
+
+
+  let-rec exists2 f lst1 lst2 =
+    match (lst1, lst2) with
+    | ([], [])               -> Some(false)
+    | (x1 :: xs1, x2 :: xs2) -> Option.(Some(f x1 x2) ^|| (exists2 f xs1 xs2))
+    | (_, _)                 -> None
+
+
+  let-rec find f lst =
+    match lst with
+    | []      -> None
+    | x :: xs -> if f x then Some(x) else find f xs
+
+
+  let partition f lst =
+    let-rec part yes no lst =
+    match lst with
+      | []      -> (List.reverse yes, List.reverse no)
+      | x :: xs -> if f x then part (x :: yes) no xs else part yes (x :: no) xs
+    in
+      part [] [] lst
+
+
+  let-rec unzip lst =
+    match lst with
+    | []       -> ([], [])
+    | (x, y) :: xs -> let (rx, ry) = unzip xs in (x :: rx, y :: ry)
+
+  let split lst = unzip lst
+
+  let-rec zip lst1 lst2 =
+    match (lst1, lst2) with
+    | (x1 :: xs1, x2 :: xs2) -> (x1, x2) :: (zip xs1 xs2)
+    | (_, _)                 -> []
+
+
+  let-rec combine lst1 lst2 =
+    match (lst1, lst2) with
+    | ([], [])               -> Some([])
+    | (x1 :: xs1, x2 :: xs2) -> Option.(Some((x1, x2)) ^:: (combine xs1 xs2))
+    | (_, _)                 -> None
+
+
+  let-rec show-opt lst =
+    match lst with
+    | []      -> []
+    | x :: xs -> (
+      match x with
+      | Some(x) -> x :: show-opt xs
+      | None    -> show-opt xs
+    )
+
+
+  let-rec iterate n f initial =
+    if n == 0 then
+      []
+    else
+      f initial :: iterate (n - 1) f (f initial)
+
+  let-rec repeat n initial =
+    if n == 0 then
+      []
+    else
+      initial :: repeat (n - 1) initial
+
+
+  let-rec cycle- n lst =
+    if n == 0 then
+      []
+    else
+      List.append lst (cycle- (n - 1) lst)
+
+  let make-cycle n lst = cycle- n lst
+
+  let-rec max ord lst =
+    match lst with
+    | []           -> None
+    | x :: []      -> Some(x)
+    | x :: y :: zs -> (
+      if Ord.lt ord x y then
+        max ord (y :: zs)
+      else
+        max ord (x :: zs)
+    )
+
+
+  let-rec min ord lst =
+    match lst with
+    | []           -> None
+    | x :: []      -> Some(x)
+    | x :: y :: zs -> (
+      if Ord.gt ord x y then
+        min ord (y :: zs)
+      else
+        min ord (x :: zs)
+    )
+
+
+  let-rec bubblesort ord lst =
+    let-rec last lst =
+      match lst with
+        | [] -> panic `List.bubblesort: empty list`
+        | x :: [] -> x
+        | _ :: xs -> last xs
+    in
+    let-rec init lst =
+      match lst with
+        | [] -> panic `List.bubblesort: empty list`
+        | _ :: [] -> []
+        | x :: xs -> x :: (init xs)
+    in
+    let-rec bs-sub lst =
+      match lst with
+        | (x :: y :: zs) -> (
+            if Ord.le ord x y then
+              y :: bs-sub (x :: zs)
+            else
+              x :: bs-sub (y :: zs)
+          )
+        | _ -> lst
+    in
+      match lst with
+        | []      -> []
+        | x :: [] -> [x]
+        | _ -> (
+            let a = bs-sub lst in
+            let x = last a in
+            let xs = init a in
+              match xs with
+                | [] -> x :: []
+                | _  -> x :: (bubblesort ord xs)
+        )
+
+  let-rec insertsort ord lst =
+    let-rec is-sub x lst =
+      match lst with
+      | [] -> [x]
+      | y :: ys -> (
+          if Ord.le ord x y then
+            x :: y :: ys
+          else
+            y :: is-sub x (ys)
+        )
+    in
+      match lst with
+      | [] -> []
+      | x :: xs -> is-sub x (insertsort ord xs)
+
+  let-rec mergesort ord lst =
+    let-rec merge lst1 lst2 =
+      match (lst1, lst2) with
+      | (lst1, []) -> lst1
+      | ([], lst2) -> lst2
+      | ((x :: xs), (y :: ys)) ->
+        if Ord.le ord x y then
+          x :: (merge xs lst2)
+        else
+          y :: (merge lst1 ys)
+    in
+    match lst with
+    | [] -> []
+    | [x] -> [x]
+    | _ ->
+      let (ys, zs) = splitat (((length lst) / 2) - 1) lst in
+        merge (mergesort ord ys) (mergesort ord zs)
+
+  let acons k v alist = (k, v) :: alist
+
+  let uncons xs =
+    match xs with
+    | [] -> None
+    | x :: xs -> Some(x, xs)
+
+  let fold x f l =
+    fold-left (Fn.flip f) x l
+end

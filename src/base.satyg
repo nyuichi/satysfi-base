@@ -1,0 +1,44 @@
+@import: base0
+@import: __sub__/base-sub
+
+%% [implicit] is used in two ways:
+%% 1. The first way is to declare an argument of a function
+%%    should be a *type class*, whose actual value can be
+%%    inferred only from the type.
+%%
+%%    e.g. [val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a]
+%% 
+%% 2. The second way is to declare a value is used to infer
+%%    implicit arguments declared elsewhere. This corresponds
+%%    to *instance* declaration in Haskell.
+%%
+%%    e.g. [val int-ord : (int Ord.t) implicit]
+%%
+%% Also one can combine these two usages in a single declaration.
+%% For example, automatic derivation of type class instances can be
+%% defined as follows:
+%%
+%%   e.g. [val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit]
+%%
+%% Currently [implicit] is only a syntactic marker that tells
+%% human programmers how arguments should be considered.
+type 'a implicit = 'a
+
+%% [panic msg] exits the execution of program with message [msg].
+%% It should be used when the program encounters an unrecoverable situation.
+let panic = abort-with-message
+
+%% [finish] returns an empty document. It is useful when writing a prograam
+%% involving no typesetting logic.
+let finish = BaseSub.finish
+
+%% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
+%% through the 0-stage function [make-thunk] or the unary operator [!!].
+type 'a thunk = unit -> 'a
+
+%% [run-thunk t] evaluates thunk [t] and returns the result.
+let run-thunk t = t ()
+
+type 'ok 'err result =
+| Ok of 'ok
+| Err of 'err

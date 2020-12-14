@@ -1,0 +1,76 @@
+@require: list
+@import: fn
+@require: deco
+@import: length
+@import: inline
+
+%% Module for manipulating block-boxes.
+module Block : sig
+  %% [Block.read bt ctx] converts block-text [bt] into a block-boxes using context [ctx].
+  val read : block-text -> context -> block-boxes
+
+  %% [Block.of-inline ?:fill-tail may-break-before may-break-after ibf ctx] transforms
+  %% the inline-boxes returned by [ibf ctx] into a block-boxes by inserting
+  %% line breaks at positions determined by context [ctx] and line break oppotunities
+  %% included in the given inline-boxes.
+  %%
+  %% If [fill-tail] is true, [Inline.fil] is added at the end of the return value.
+  %% [may-break-before] indicates whether a page break may be inserted before
+  %% the paragraph represented by the return value.
+  %% [may-break-after] is similar to [may-break-before], but affects the tail of
+  %% the paragraph.
+  val of-inline : bool ?-> bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
+
+  %% [Block.skip len] creates a block-boxes with length [len].
+  val skip : length -> block-boxes
+
+  %% [Block.nil] returns the empty block-boxes.
+  val nil : block-boxes
+
+  %% [Block.append b1 b2] returns a block-boxes containing b1 followed by b2.
+  val append : block-boxes -> block-boxes -> block-boxes
+
+  %% [Block.concat ls] concatenates block-boxes [ls].
+  val concat : block-boxes list -> block-boxes
+
+  %% [Block.natural-length b] returns the natural length of block-boxes [b].
+  val natural-length : block-boxes -> length
+
+  %% [Block.centering ibf ctx] evaluates [ibf] in context [ctx], and
+  %% converts it into a block-boxes so that the resulted paragraph is centered.
+  %% Centering is performed only if the length is less than the length of the page.
+  val centering : (context -> inline-boxes) -> context -> block-boxes
+end = struct
+  let read = Fn.flip read-block
+
+  let of-inline ?:fill-tail b1 b2 ibf ctx =
+    let tail =
+      match fill-tail with
+      | Some(true) -> Inline.fil
+      | _ -> Inline.nil
+    in line-break b1 b2 ctx ((ibf ctx) ++ tail)
+
+  let skip = block-skip
+
+  let nil = block-nil
+
+  let append b1 b2 = b1 +++ b2
+
+  let concat bbs =
+    List.fold-right append nil bbs
+
+  let natural-length = get-natural-length
+
+  let centering ibf ctx =
+    let text-width = ctx |> get-text-width in
+    let ib = ctx |> ibf in
+    let ib-center =
+      if Length.(get-natural-width ib > text-width) then
+        ib ++ Inline.fil
+      else
+        Inline.fil ++ ib ++ Inline.fil
+    in ctx |> of-inline true true (Fn.const ib-center)
+
+  let frame-breakable pads deco f ctx =
+    block-frame-breakable ctx pads deco f
+end

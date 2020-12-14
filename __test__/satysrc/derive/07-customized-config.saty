@@ -1,0 +1,27 @@
+@require: math
+@import: ../util
+@import: ../../../src/typeset/derive
+@import: ../../../src/typeset/derive/line
+
+open Derive in
+let my-derive-config = open DeriveConfig in
+    default
+    |> set-main-label-position LabelRight
+    |> set-default-line (DeriveLine.dotted-line 5pt 5pt)
+    |> set-bar-top-bottom-margin 10pt
+    |> set-label-left-right-margin 10pt
+    |> set-bar-thickness 10pt
+    |> set-content-left-right-padding 30pt
+in
+satysfi-it ${
+  \proven ?:!(my-derive-config) !(
+    open DeriveDSL in
+    derive ${ \Gamma \vdash \Delta }
+    |> by {Cut}
+    |> from [
+      assume ${\Gamma \vdash \Delta, A};
+      assume ${\Gamma, A \vdash \Delta}
+    ]
+  )
+}
+

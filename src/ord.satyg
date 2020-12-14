@@ -1,0 +1,63 @@
+@import: base
+@import: eq
+
+% total order on 'a
+
+type ordering = Lt | Gt | Eq
+
+module Ord : sig
+  type 'a t
+  val make : ('a -> 'a -> ordering) -> 'a t
+  val compare : ('a t) implicit -> 'a -> 'a -> ordering
+  val min : ('a t) implicit -> 'a -> 'a -> 'a
+  val max : ('a t) implicit -> 'a -> 'a -> 'a
+  val eq : ('a t) implicit -> 'a -> 'a -> bool
+  val lt : ('a t) implicit -> 'a -> 'a -> bool
+  val le : ('a t) implicit -> 'a -> 'a -> bool
+  val gt : ('a t) implicit -> 'a -> 'a -> bool
+  val ge : ('a t) implicit -> 'a -> 'a -> bool
+  val derive-eq : ('a t) implicit -> ('a Eq.t) implicit
+end = struct
+  type 'a t = 'a -> 'a -> ordering
+
+  let make ord = ord
+
+  let compare ord = ord
+
+  let eq ord a b =
+    match compare ord a b with
+    | Eq -> true
+    | _ -> false
+  let lt ord a b =
+    match compare ord a b with
+    | Lt -> true
+    | _ -> false
+  let le ord a b =
+    match compare ord a b with
+    | Lt -> true
+    | Eq -> true
+    | _ -> false
+  let gt ord a b =
+    match compare ord a b with
+    | Gt -> true
+    | _ -> false
+  let ge ord a b =
+    match compare ord a b with
+    | Gt -> true
+    | Eq -> true
+    | _ -> false
+
+  let min ord a b =
+    if le ord a b then
+      a
+    else
+      b
+
+  let max ord a b =
+    if ge ord a b then
+      a
+    else
+      b
+
+  let derive-eq ord = Eq.make (eq ord)
+end

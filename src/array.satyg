@@ -1,0 +1,100 @@
+@import: ref
+@import: base
+@import: list-ext
+
+module Array : sig
+  %% Mutable array with elements of type ['a].
+  type 'a t
+
+  %% Return the number of elements of the given array.
+  val length : 'a t -> int
+
+  %% [Array.get n a] returns the [n]-th element of array [a].
+  %% It throws an error if [n] is out of range.
+  val get : int -> 'a t -> 'a
+
+  %% [Array.set n x a] modifies array [a] by replacing its [n]-th
+  %% element with [x].
+  %% It throws an error if [n] is out of range.
+  val set : int -> 'a -> 'a t -> unit
+
+  %% [Array.make x n] creates a new array of length [n] whose every
+  %% cell is initialized with [x].
+  val make : 'a -> int -> 'a t
+
+  %% [Array.init f n] is similar to [Array.make], but every element is
+  %% initialized with the result of [f] applied to the corresponding
+  %% index.
+  val init : (int -> 'a) -> int -> 'a t
+
+  %% [Array.append a1 a2] returns a new array such that the first part
+  %% is a copy of [a1] and the rest part is a copy of [a2].
+  val append : 'a t -> 'a t -> 'a t
+
+  %% [Array.concat ls] concatenates a list of arrays.
+  val concat : ('a t) list -> 'a t
+
+  %% [Array.sub start len a] returns a new array containing [len]
+  %% elements from array [a] in range [start] to [len - start + 1].
+  val sub : int -> int -> 'a t -> 'a t
+
+  %% [Array.to-list a] returns a new list containing the elements of
+  %% array [a] in the same order.
+  val to-list : 'a t -> 'a list
+
+  %% [Array.of-list ls] returns a new array containing the elements of
+  %% list [ls] in the same order.
+  val of-list : 'a list -> 'a t
+
+  %% [Array.map f a] applies [f] to every elements of array [a], and
+  %% collects the results as a new array.
+  val map : ('a -> 'b) -> 'a t -> 'b t
+end = struct
+  % Polyfill for mutable array structure.
+  % The current implementation is based on singly-linked lists and is very slow.
+  % The following code should be replaced with a more efficient implementation when
+  % the runtime support is ready.
+  type 'a t = ('a ref) list
+
+  let length = List.length
+
+  let get i a =
+    match a |> List.nth i with
+    | None -> panic `array: index out of range`
+    | Some r -> Ref.get r
+
+  let set i v a =
+    match a |> List.nth i with
+    | None -> panic `array: index out of range`
+    | Some r -> r |> Ref.set v
+
+  let make v n =
+    let-rec aux i acc =
+      if i == n then
+        acc
+      else
+        aux (i + 1) (Ref.make v :: acc)
+    in aux 0 []
+
+  let init f n =
+    let-rec aux i =
+      if i == n then
+        []
+      else
+        let v = f i in
+        Ref.make v :: aux (i + 1)
+    in aux 0
+
+  let append = List.append
+
+  let concat = List.concat
+
+  let sub start len a =
+    a |> List.drop start |> List.take len
+
+  let to-list a = List.map Ref.get a
+
+  let of-list l = List.map Ref.make l
+
+  let map f a = of-list (List.map f (to-list a))
+end

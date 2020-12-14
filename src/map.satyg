@@ -1,0 +1,62 @@
+@import: set
+@require: list
+@import: fn
+@import: tuple
+
+% immutable map
+%
+% In [Kunen, 2011], a _function_ is defined to be a set of ordered pairs such that
+% no two ordered pairs share the same object in their first position.
+% So, technically, what the following module implements is _function_.
+
+module Map : sig
+  type 'k 'v t
+  val empty : 'k 'v t
+  val is-empty : 'k 'v t -> bool
+  val size : 'k 'v t -> int
+  val of- : ('k Eq.t) implicit  -> 'k -> 'k 'v t -> 'v option
+  val bind : 'k -> 'v -> 'k 'v t -> 'k 'v t
+  val unbind : ('k Eq.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
+  val dom : ('k Eq.t) implicit -> 'k 'v t -> 'k list
+  val ran : ('k Eq.t) implicit -> 'k 'v t -> 'v list
+  val of-list : ('k * 'v) list -> 'k 'v t
+  val to-list : ('k Eq.t) implicit -> 'k 'v t -> ('k * 'v) list
+end = struct
+  type 'k 'v u = ('k * 'v) Set.t
+  type 'k 'v t = 'k 'v u
+
+  let size m = Set.size m
+
+  let empty = Set.empty
+
+  let is-empty m = Set.is-empty m
+
+  let key-eq eq =
+    Eq.make (Eq.equal eq |> Fn.on Pair.fst)
+
+  let of- eq k m =
+    match Set.choose m with
+    | None -> None
+    | Some(_, v) ->
+      (match m |> Set.mem-opt (key-eq eq) (k, v) with
+      | None -> None
+      | Some(_, v) -> Some(v))
+
+  let bind k v m = Set.insert (k, v) m
+
+  let unbind eq k m = match Set.choose m with
+  | None -> m
+  | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
+
+  let dom eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.fst
+
+  let ran eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.snd
+
+  let of-list alist =
+    let-rec aux
+    | [] = empty
+    | ((k, v) :: alist) = bind k v (aux alist)
+    in aux (List.reverse alist)
+
+  let to-list eq m = Set.to-list (key-eq eq) m
+end

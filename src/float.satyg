@@ -1,0 +1,154 @@
+@require: zrbase/zp0
+@import: eq
+@import: ord
+@import: string
+@import: char
+@import: int
+
+module Float : sig
+  val inf : float
+  val ninf : float
+  val nan : float
+
+  val is-zero : float -> bool
+  val is-inf : float -> bool
+  val is-nan : float -> bool
+
+  val (<) : float -> float -> bool
+  val (>) : float -> float -> bool
+  val (>=) : float -> float -> bool
+  val (<=) : float -> float -> bool
+  val (==) : float -> float -> bool  % ieee754-compliant comparison
+
+  % only defined for non-nan values
+  val ord : (float Ord.t) implicit
+  val eq : (float Eq.t) implicit
+
+  val equal : float -> float -> bool
+
+  val neg : float -> float
+  val abs : float -> float
+  val min : float -> float -> float
+  val max : float -> float -> float
+  val min-value : float % == neg-inf
+  val max-value : float % == inf
+  val pow : float -> float -> float
+
+  val of-int : int -> float
+  val to-int : float -> int
+  val of-string-opt : string -> float option
+  val to-string : float -> string
+
+  val ceil : float -> float
+  val floor : float -> float
+  val round : float -> float
+%  val truncate : float -> float
+
+  val sin : float -> float
+  val cos : float -> float
+  val tan : float -> float
+  val asin : float -> float
+  val acos : float -> float
+  val atan : float -> float
+  val atan2 : float -> float -> float
+  val sqrt : float -> float
+  val exp : float -> float
+  val log : float -> float
+  val log10 : float -> float
+
+  val pi : float
+end = struct
+  let neg f = (0.0 -. 1.0) *. f % `0.0 -. f` does not work properly when f == 0.0
+
+  let nan = 0.0 /. 0.0
+  let inf = 1.0 /. 0.0
+  let ninf = neg inf
+
+  let to-length f = 1pt *' f % never introduces inexactness
+
+  let (<) f g = to-length f <' to-length g
+  let (>) f g = g < f
+
+  let abs f = if f < 0.0 then neg f else f
+
+  let is-zero-or-nan f = not (f < neg f || f > neg f)
+  let is-nan f = is-zero-or-nan f && is-zero-or-nan (f +. 1.0)
+  let is-zero f = is-zero-or-nan f && not (is-nan f)
+  let is-inf f = not (is-nan f) && is-nan (f -. f)
+  let (==) f g =
+    if is-nan f || is-nan g then
+      false
+    else if is-inf f || is-inf g then
+      (is-inf f && is-inf g && f *. g > 0.0)
+    else
+      is-zero (f -. g)
+
+  let (<=) f g = f < g || f == g
+  let (>=) f g = g <= f
+
+  let ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
+  let eq = Ord.derive-eq ord
+
+  let equal = Eq.equal eq
+
+  let min f g = if is-nan f || is-nan g then nan else if f < g then f else g
+  let max f g = if is-nan f || is-nan g then nan else if f > g then f else g
+
+  let min-value = ninf
+  let max-value = inf
+
+  let of-int = float
+  let to-int = round
+
+  let of-string-opt str =
+    let dot = Char.make `.` in
+    let (first-str, second-str-opt) = String.split-by-first dot str in
+    let second-str =
+      match second-str-opt with
+      | Some(s) -> s
+      | None -> `0`
+    in
+    let first-int-opt = Int.of-string-opt first-str in
+    let second-int-opt = Int.of-string-opt second-str in
+    let second-str-len = String.length second-str in
+    let-rec make-ten n m =
+      if Int.(n <= 0) then
+        m
+      else
+        make-ten (n - 1) (m * 10)
+    in
+      match (first-int-opt,second-int-opt) with
+      | (Some(n1),Some(n2)) ->
+        if Int.(n2 < 0) then
+          None
+        else
+          Some(
+            if Int.(n1 >= 0) then
+              (of-int n1) +. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+            else
+              (of-int n1) -. ((of-int n2) /. (make-ten second-str-len 1 |> of-int))
+          )
+      | _ -> None
+  let to-string = show-float
+
+  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
+
+  let ceil = ZP0.ceil
+  let floor = ZP0.floor
+  let round f = of-int (to-int f)
+%  let truncate = ZP0.truncate
+
+  let sin = sin
+  let cos = cos
+  let tan = tan
+  let asin = asin
+  let acos = acos
+  let atan = atan
+  let atan2 = atan2
+  let sqrt = ZP0.sqrt
+  let exp = ZP0.exp
+  let log = ZP0.log
+  let log10 = ZP0.log10
+
+  let pi = atan2 0.0 (neg 1.0)
+end

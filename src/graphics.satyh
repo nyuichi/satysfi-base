@@ -1,0 +1,17 @@
+@require: pervasives
+
+module Graphics : sig
+  val of-inline : point -> inline-boxes -> graphics
+  val stroke : length -> color -> path -> graphics
+  val dashed-stroke : length -> (length * length * length) -> color -> path -> graphics
+  val fill : color -> path -> graphics
+  val shift : point -> graphics -> graphics
+  val bbox : graphics -> point * point
+end = struct
+  let of-inline = draw-text
+  let shift = shift-graphics
+  let bbox = get-graphics-bbox
+  let stroke = stroke
+  let dashed-stroke = dashed-stroke
+  let fill = fill
+end

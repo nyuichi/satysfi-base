@@ -1,2 +1,3 @@
-*.pdf
+__test__/satysrc/*.pdf
 *.satysfi-aux
+node_modules

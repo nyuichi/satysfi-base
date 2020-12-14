@@ -1,0 +1,16 @@
+@require: math
+@import: ../util
+@import: ../../../src/typeset/derive
+
+open Derive in
+satysfi-it ${
+  \proven!(
+    open DeriveDSL in
+    derive ${ \vdash A \wedge B }
+    |> by {${\wedge} I}
+    |> from [
+        assume ${\vdash A};
+        assume ${\vdash B}
+    ]
+  )
+}

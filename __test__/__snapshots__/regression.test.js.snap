@@ -1,0 +1,275 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Check compiler outputs 1`] = `
+"[32m[debug.log] ==== Ref ====[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 2:1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] ==== String ====[0m
+[32m[debug.log] abc[0m
+[32m[debug.log] true[0m
+[32m[debug.log] spam[0m
+[32m[debug.log] ham[0m
+[32m[debug.log] eggs[0m
+[32m[debug.log] [0m
+[32m[debug.log] a[0m
+[32m[debug.log] b[0m
+[32m[debug.log] c[0m
+[32m[debug.log] ==== List ====[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] (1,2)(1,1)(2,1)[0m
+[32m[debug.log] ==== Array ====[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 43[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] 10[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 10[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] ==== RegExp ====[0m
+[32m[debug.log] true[0m
+[32m[debug.log] 0: SPLIT 1 3[0m
+[32m[debug.log] 1: CHAR a[0m
+[32m[debug.log] 2: JMP 2[0m
+[32m[debug.log] 3: CHAR b[0m
+[32m[debug.log] 4: MATCH[0m
+[32m[debug.log] true[0m
+[32m[debug.log] 0: SAVE 0[0m
+[32m[debug.log] 1: SPLIT 1 4[0m
+[32m[debug.log] 2: CHAR a[0m
+[32m[debug.log] 3: SPLIT -1 1[0m
+[32m[debug.log] 4: JMP 4[0m
+[32m[debug.log] 5: SAVE 2[0m
+[32m[debug.log] 6: CHAR c[0m
+[32m[debug.log] 7: SAVE 3[0m
+[32m[debug.log] 8: SAVE 1[0m
+[32m[debug.log] 9: SAVE 4[0m
+[32m[debug.log] 10: CHAR b[0m
+[32m[debug.log] 11: SPLIT -1 1[0m
+[32m[debug.log] 12: SAVE 5[0m
+[32m[debug.log] 13: MATCH[0m
+[32m[debug.log] Some(0, \\"aabbb\\")[0m
+[32m[debug.log] Some(0, \\"aa\\")[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(2, \\"bbb\\")[0m
+[32m[debug.log] 0: SPLIT 3 1[0m
+[32m[debug.log] 1: ANY[0m
+[32m[debug.log] 2: JMP -2[0m
+[32m[debug.log] 3: SAVE 0[0m
+[32m[debug.log] 4: SPLIT 1 5[0m
+[32m[debug.log] 5: SPLIT 1 3[0m
+[32m[debug.log] 6: CHAR a[0m
+[32m[debug.log] 7: JMP -2[0m
+[32m[debug.log] 8: JMP -4[0m
+[32m[debug.log] 9: SAVE 1[0m
+[32m[debug.log] 10: MATCH[0m
+[32m[debug.log] true[0m
+[32m[debug.log] Some(7, \\"le\\")[0m
+[32m[debug.log] Some(7, \\"le\\")[0m
+[32m[debug.log] Some(10, \\"apple\\")[0m
+[32m[debug.log] Some(0, \\"  \\")[0m
+[32m[debug.log] ()|((a)())[0m
+[32m[debug.log] ()|((.)())[0m
+[32m[debug.log] ()|((\\\\(()|((\\\\(()|((a)())\\\\))())\\\\))())[0m
+[32m[debug.log] ()|((\\\\(()|(((a)*?)())\\\\))())[0m
+[32m[debug.log] ()|((\\\\(()|((a)((\\\\(()|((c)())\\\\))()))\\\\))((\\\\(()|((b)())\\\\))()))[0m
+[32m[debug.log] ()|((\\\\((()|(((a)+)()))|((\\\\(()|((c)())\\\\))())\\\\))((\\\\(()|(((b)+)())\\\\))()))[0m
+[32m[debug.log] true[0m
+[32m[debug.log] ()|((
+)((
+)((	)(($)((()(())((*)((?)()))))))))[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] ==== Parser ====[0m
+[32m[debug.log] aaa[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 10[0m
+[32m[debug.log] ==== Lexer ====[0m
+[32m[debug.log] (| kind = identifier, data = \\"abc\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"defg\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\"   \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"hijklMNL\\" |)[0m
+[32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
+[32m[debug.log] (| kind = identifier, data = \\"op123\\" |)[0m
+[32m[debug.log] ==== Int ====[0m
+[32m[debug.log] 52[0m
+[32m[debug.log] 13[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] -13[0m
+[32m[debug.log] -7[0m
+[32m[debug.log] -4[0m
+[32m[debug.log] -2[0m
+[32m[debug.log] -1[0m
+[32m[debug.log] -1[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 19[0m
+[32m[debug.log] 15[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 2305843009213693948[0m
+[32m[debug.log] 12345678[0m
+[32m[debug.log] -123[0m
+[32m[debug.log] 65535[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] -4611686018427387904[0m
+[32m[debug.log] Some(123)[0m
+[32m[debug.log] Some(-123)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(10)[0m
+[32m[debug.log] ==== Map ====[0m
+[32m[debug.log] a[0m
+[32m[debug.log] b[0m
+[32m[debug.log] c[0m
+[32m[debug.log] a[0m
+[32m[debug.log] d[0m
+[32m[debug.log] c[0m
+[32m[debug.log] ==== Promise ====[0m
+[32m[debug.log] bar[0m
+[32m[debug.log] foo[0m
+[32m[debug.log] barbaz[0m
+[32m[debug.log] foobar[0m
+[32m[debug.log] ==== Float ====[0m
+[32m[debug.log] 3.14159265359[0m
+[32m[debug.log] inf == inf = true[0m
+[32m[debug.log] inf == -inf = false[0m
+[32m[debug.log] inf == -nan = false[0m
+[32m[debug.log] inf == 0. = false[0m
+[32m[debug.log] inf == -0. = false[0m
+[32m[debug.log] inf == 1. = false[0m
+[32m[debug.log] -inf == inf = false[0m
+[32m[debug.log] -inf == -inf = true[0m
+[32m[debug.log] -inf == -nan = false[0m
+[32m[debug.log] -inf == 0. = false[0m
+[32m[debug.log] -inf == -0. = false[0m
+[32m[debug.log] -inf == 1. = false[0m
+[32m[debug.log] -nan == inf = false[0m
+[32m[debug.log] -nan == -inf = false[0m
+[32m[debug.log] -nan == -nan = false[0m
+[32m[debug.log] -nan == 0. = false[0m
+[32m[debug.log] -nan == -0. = false[0m
+[32m[debug.log] -nan == 1. = false[0m
+[32m[debug.log] 0. == inf = false[0m
+[32m[debug.log] 0. == -inf = false[0m
+[32m[debug.log] 0. == -nan = false[0m
+[32m[debug.log] 0. == 0. = true[0m
+[32m[debug.log] 0. == -0. = true[0m
+[32m[debug.log] 0. == 1. = false[0m
+[32m[debug.log] -0. == inf = false[0m
+[32m[debug.log] -0. == -inf = false[0m
+[32m[debug.log] -0. == -nan = false[0m
+[32m[debug.log] -0. == 0. = true[0m
+[32m[debug.log] -0. == -0. = true[0m
+[32m[debug.log] -0. == 1. = false[0m
+[32m[debug.log] 1. == inf = false[0m
+[32m[debug.log] 1. == -inf = false[0m
+[32m[debug.log] 1. == -nan = false[0m
+[32m[debug.log] 1. == 0. = false[0m
+[32m[debug.log] 1. == -0. = false[0m
+[32m[debug.log] 1. == 1. = true[0m
+[32m[debug.log] inf[0m
+[32m[debug.log] -inf[0m
+[32m[debug.log] Some(123.45)[0m
+[32m[debug.log] Some(-123.45)[0m
+[32m[debug.log] Some(123.)[0m
+[32m[debug.log] Some(0.111)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] ==== Bool ====[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] Some(false)[0m
+[32m[debug.log] Some(true)[0m
+[32m[debug.log] None[0m
+[32m[debug.log] ==== Stream ====[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 13[0m
+[32m[debug.log] 21[0m
+[32m[debug.log] 34[0m
+[32m[debug.log] 55[0m
+[32m[debug.log] 89[0m
+[32m[debug.log] 144[0m
+[32m[debug.log] 233[0m
+[32m[debug.log] 377[0m
+[32m[debug.log] 610[0m
+[32m[debug.log] 987[0m
+[32m[debug.log] 1597[0m
+[32m[debug.log] 2584[0m
+[32m[debug.log] 4181[0m
+[32m[debug.log] 6765[0m
+[32m[debug.log] 10946[0m
+[32m[debug.log] 17711[0m
+[32m[debug.log] 28657[0m
+[32m[debug.log] 46368[0m
+[32m[debug.log] 75025[0m
+[32m[debug.log] 121393[0m
+[32m[debug.log] 196418[0m
+[32m[debug.log] 317811[0m
+[32m[debug.log] 514229[0m
+[32m[debug.log] 832040[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+"
+`;
