@@ -1,4 +1,4 @@
-@import: base
+@stage: persistent
 @require: option
 @import: fn
 @import: eq

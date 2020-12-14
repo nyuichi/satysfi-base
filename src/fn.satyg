@@ -1,3 +1,6 @@
+@stage: persistent
+@import: base
+
 %% Right-associative function application operator.
 %% [f x <| g y <| h z] is interpreted as [f x (g y (h z))].
 let (<|) f x = f x

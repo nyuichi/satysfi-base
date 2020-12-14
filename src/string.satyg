@@ -1,9 +1,8 @@
 @stage: persistent
-@require: list
 @import: base
+@require: list
 @import: char
 @import: eq
-@require: zrbase/zl0
 
 module String : sig
   val equal : string -> string -> bool
@@ -17,7 +16,6 @@ module String : sig
   val of-codepoints : int list -> string
   val of-char : Char.t -> string
   val of-length : length -> string
-  val of-list : Char.t list -> string
   val append : string -> string -> string
   val concat : string list -> string
   val is-empty : string -> bool

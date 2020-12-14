@@ -1,3 +1,4 @@
+@stage: persistent
 @import: base
 
 module Eq : sig

@@ -1,3 +1,5 @@
+@stage: 1
+@import: base0
 @import: base
 @import: ref
 

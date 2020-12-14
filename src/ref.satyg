@@ -1,3 +1,5 @@
+@stage: persistent
+
 module Ref : sig
   %% [Ref.make x] creates a new mutable cell with default value [x].
   val make : 'a -> 'a ref
@@ -63,4 +65,3 @@ end = struct
     r |> update (fun x -> x - 1)
 
 end
-  

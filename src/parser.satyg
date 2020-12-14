@@ -1,3 +1,4 @@
+@stage: persistent
 @import: list-ext
 @import: option-ext
 @import: string
