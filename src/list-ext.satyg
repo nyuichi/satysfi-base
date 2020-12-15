@@ -197,7 +197,7 @@ end = struct
   let eq eq =
     let-rec aux
     | [] [] = true
-    | (x::xs) (y::ys) = (Eq.equal eq x y) &&& (fun () -> aux xs ys)
+    | (x::xs) (y::ys) = (Eq.equal eq x y) &&&- (fun () -> aux xs ys)
     | _ _ = false
     in Eq.make aux
 

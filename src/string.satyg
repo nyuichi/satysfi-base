@@ -54,12 +54,12 @@ end = struct
   let starts-with p s =
     let s-len = length s in
     let p-len = length p in
-    (s-len >= p-len) &&& (fun () -> equal (s |> sub 0 p-len) p)
+    (s-len >= p-len) &&&- (fun () -> equal (s |> sub 0 p-len) p)
 
   let ends-with p s =
     let s-len = length s in
     let p-len = length p in
-    (s-len >= p-len) &&& (fun () -> equal (s |> sub (s-len - 1 - p-len) p-len) p)
+    (s-len >= p-len) &&&- (fun () -> equal (s |> sub (s-len - 1 - p-len) p-len) p)
 
   let to-list s =
     let-rec go i acc = (match i with
