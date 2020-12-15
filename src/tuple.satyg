@@ -1,3 +1,5 @@
+@stage: persistent
+
 module Unit : sig
   val make : unit
 end = struct

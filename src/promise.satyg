@@ -1,5 +1,4 @@
-@stage: 1
-@import: base0
+@stage: persistent
 @import: base
 @import: ref
 
@@ -23,7 +22,7 @@ end = struct
     Ref.make (Ref.make (Thunk e))
 
   let delay e =
-    delay-force ~(!!(&(make (run-thunk e))))
+    delay-force (fun () -> make (run-thunk e))
 
   let-rec force p =
     match p |> Ref.get |> Ref.get with
