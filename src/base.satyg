@@ -3,9 +3,13 @@
 %% Short-circuit conjunction operator.
 %%
 %% e.g. [if (i < String.length s) &&&- (fun () -> Char.equal (Char.at i s) Char.space) then `yes` else `no`]
+%%
+%% Note: this operator is an unstable API and subject to change in the future.
 let ( &&&- ) b1 b2f = if b1 then b2f () else false
 
 %% Short-circuit disjunction operator. See also [(&&&-)].
+%%
+%% Note: this operator is an unstable API and subject to change in the future.
 let ( |||- ) b1 b2f = if b1 then true else b2f ()
 
 %% [implicit] is used in two ways:
