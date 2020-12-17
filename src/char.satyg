@@ -10,6 +10,7 @@ module Char : sig
   val equal : t -> t -> bool
   val eq : (t Eq.t) implicit
   val of-codepoint : int -> t
+  val to-codepoint : t -> int
   val newline : t
   val tab : t
   val space : t
@@ -23,7 +24,6 @@ module Char : sig
   val is-alnum : t -> bool
   val is-hex-digit : t -> bool
   val is-space : t -> bool
-  val get-unicode-point : t -> int
 end = struct
   type t = string
   let equal = string-same
@@ -47,9 +47,10 @@ end = struct
   let is-hex-digit = char-pred `[0-9A-Fa-f]`
   let is-space = char-pred (`[` ^ string-unexplode [9;10;11;12;13;32] ^ `]`)  % see https://stackoverflow.com/questions/39813584/how-to-split-on-whitespaces-in-ocaml
 
-  let get-unicode-point c =
+
+  let to-codepoint c =
     match string-explode c with
     | i::_ -> i
-    | _ -> panic `Char.get-unicode-point: invalid argument`
+    | _ -> panic `Char.to-codepoint: invalid argument`
 
 end
