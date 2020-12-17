@@ -1,5 +1,5 @@
 % based on https://swtch.com/~rsc/regexp/regexp2.html
-
+@stage: persistent
 @import: base
 @import: string
 @import: array
@@ -98,13 +98,13 @@ end = struct
       let main pc sp =
         match iseq |> Array.get pc with
         | MATCH -> true
-        | CHAR c -> ~(&(sp < len) &&& &(Eq.equal Char.eq c (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
+        | CHAR c -> (sp < len) &&&- (fun () -> Eq.equal Char.eq c (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1))
         | JMP l -> loop (pc + l) sp
-        | SPLIT (l1, l2) -> ~(&(loop (pc + l1) sp) ||| &(loop (pc + l2) sp))
+        | SPLIT (l1, l2) -> (loop (pc + l1) sp) |||- (fun () -> loop (pc + l2) sp)
         | ANY -> if sp < len then loop (pc + 1) (sp + 1) else false
         | STRING c ->
           let l = String.length c in
-          ~(&(sp + l <= len) &&& &(Eq.equal String.eq c (s |> String.sub sp l)) &&& &(loop (pc + 1) (sp + l)))
+          (sp + l <= len) &&&- (fun () -> Eq.equal String.eq c (s |> String.sub sp l)) &&&- (fun () -> loop (pc + 1) (sp + l))
         | SAVE i ->
           let old = trace |> Array.get i in
           let () = trace |> Array.set i (Some sp) in
@@ -121,16 +121,16 @@ end = struct
         %     let l = String.length c in
         %     if sp + l <= len then if String.equal c (s |> String.sub sp l) then loop (pc + 1) (sp + l) else false else false)
         | ANCHOR a ->
-          ~(&(match a with
+            (match a with
               | BOF -> sp == 0
               | EOF -> sp == String.length s
-              | BOL -> ~(&(sp == 0) ||| &(Eq.equal Char.eq (Char.at (sp - 1) s) Char.newline))
-              | EOL -> ~(&(sp == String.length s) ||| &(Eq.equal Char.eq (Char.at sp s) Char.newline))
+              | BOL -> (sp == 0) |||- (fun () -> Eq.equal Char.eq (Char.at (sp - 1) s) Char.newline)
+              | EOL -> (sp == String.length s) |||- (fun () -> Eq.equal Char.eq (Char.at sp s) Char.newline)
               | NOWHERE -> false)
-            &&& &(loop (pc + 1) sp))
+            &&&- (fun () -> loop (pc + 1) sp)
         | PRED f ->
-          ~(&(sp < len) &&& &(f (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
-        | REGEXP re -> ~(&(sp < len) &&& &(string-match re (s |> String.sub sp 1)) &&& &(loop (pc + 1) (sp + 1))) in
+            (sp < len) &&&- (fun () -> f (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1))
+        | REGEXP re -> (sp < len) &&&- (fun () -> string-match re (s |> String.sub sp 1)) &&&- (fun () -> loop (pc + 1) (sp + 1)) in
       memoize2 main pc sp in
     let r = loop 0 0 in
     (r, trace)

@@ -1,0 +1,7 @@
+@stage: 1
+@import: base0
+@import: __sub__/base-sub
+
+%% [finish] returns an empty document. It is useful when writing a prograam
+%% involving no typesetting logic.
+let finish = BaseSub.finish

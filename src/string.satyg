@@ -1,8 +1,8 @@
-@require: list
+@stage: persistent
 @import: base
+@require: list
 @import: char
 @import: eq
-@require: zrbase/zl0
 
 module String : sig
   val equal : string -> string -> bool
@@ -16,13 +16,13 @@ module String : sig
   val of-codepoints : int list -> string
   val of-char : Char.t -> string
   val of-length : length -> string
-  val of-list : Char.t list -> string
   val append : string -> string -> string
   val concat : string list -> string
   val is-empty : string -> bool
   val starts-with : string -> string -> bool
   val ends-with : string -> string -> bool
   val to-list : string -> Char.t list
+  val of-list : Char.t list -> string
   val pow : int -> string -> string
   val split : int -> string -> string * string
   val split-by-first : Char.t -> string -> string * string option
@@ -54,18 +54,21 @@ end = struct
   let starts-with p s =
     let s-len = length s in
     let p-len = length p in
-    ~(&(s-len >= p-len) &&& &(equal (s |> sub 0 p-len) p))
+    (s-len >= p-len) &&&- (fun () -> equal (s |> sub 0 p-len) p)
 
   let ends-with p s =
     let s-len = length s in
     let p-len = length p in
-    ~(&(s-len >= p-len) &&& &(equal (s |> sub (s-len - 1 - p-len) p-len) p))
+    (s-len >= p-len) &&&- (fun () -> equal (s |> sub (s-len - 1 - p-len) p-len) p)
 
   let to-list s =
     let-rec go i acc = (match i with
     | 0 -> acc
     | _ -> go (i - 1) (Char.at (i - 1) s :: acc)) in
     go (length s) []
+
+  let of-list chars =
+    chars |> List.map Char.to-string |> concat
 
   let pow n s =
     let-rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in
@@ -97,11 +100,15 @@ end = struct
     | [] -> None
     | (x::xs) -> if Eq.equal Char.eq c x then Some(acc) else aux xs (acc + 1) in
     aux cs 0
-  
-  let of-length l = ZL0.string-of-length l
 
-  let of-list ls =
-    ls |> List.map of-char |> concat
+  let of-length l =
+    % -- the following are mostly copied from `ZL0.string-of-length` in `zrbase/zl0`
+    let xs = show-float (l /' 1pt) in
+    let pu = string-length xs - 1 in
+    if string-same (string-sub xs pu 1) `.` then
+      string-sub xs 0 pu ^ `pt`
+    else xs ^ `pt`
+    % -- end
 
   % let byte-length = string-byte-length
   % let sub-bytes i j s = string-sub-bytes s i j

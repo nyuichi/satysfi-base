@@ -1,5 +1,8 @@
 @require: stdjareport
 @require: list
+@import: ../../src/base
+@import: ../../src/base0
+@import: ../../src/base1
 @import: ../../src/ref
 @import: ../../src/string
 @import: ../../src/debug

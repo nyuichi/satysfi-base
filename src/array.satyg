@@ -1,3 +1,4 @@
+@stage: persistent
 @import: ref
 @import: base
 @import: list-ext

@@ -1,4 +1,4 @@
-@import: base
+@stage: persistent
 @import: fn
 
 module Result : sig
@@ -49,7 +49,7 @@ end = struct
     match r with
     | Ok(a) -> Some(a)
     | _ -> None
-  
+
   let to-err r =
     match r with
     | Err(e) -> Some(e)

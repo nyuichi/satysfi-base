@@ -1,3 +1,4 @@
+@stage: persistent
 @import: string
 
 module Debug : sig

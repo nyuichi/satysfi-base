@@ -1,3 +1,4 @@
+@stage: persistent
 @import: list-ext
 @import: option-ext
 @import: string
@@ -278,7 +279,7 @@ end = struct
 
   let fix f =
     let stash = Ref.make empty in
-    let main = delay (Promise.delay ~(!!(&(!stash)))) in
+    let main = delay (Promise.delay (fun () -> (!stash))) in
     let () = stash |> Ref.set (f main) in
     main
 
