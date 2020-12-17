@@ -1,6 +1,7 @@
 @stage: persistent
 @import: base
 @import: eq
+@import: ord
 
 module Char : sig
   %% Type representing a single unicode codepoint.
@@ -9,6 +10,7 @@ module Char : sig
   val equal : t -> t -> bool
   val eq : (t Eq.t) implicit
   val of-codepoint : int -> t
+  val to-codepoint : t -> int
   val newline : t
   val tab : t
   val space : t
@@ -44,4 +46,11 @@ end = struct
   let is-alnum = char-pred `[0-9A-Za-z]`
   let is-hex-digit = char-pred `[0-9A-Fa-f]`
   let is-space = char-pred (`[` ^ string-unexplode [9;10;11;12;13;32] ^ `]`)  % see https://stackoverflow.com/questions/39813584/how-to-split-on-whitespaces-in-ocaml
+
+
+  let to-codepoint c =
+    match string-explode c with
+    | i::_ -> i
+    | _ -> panic `Char.to-codepoint: invalid argument`
+
 end
