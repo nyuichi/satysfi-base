@@ -55,6 +55,10 @@ let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
 let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
+let () = String.(`a` < `b`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`ab` < `ba`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`aab` < `aba`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`bbb` < `bbba`) |> Bool.to-string |> Debug.log in % true
 
 let () = Debug.log `==== List ====` in
 let lst = [1;3;2;4;5] in

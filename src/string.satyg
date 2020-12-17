@@ -2,11 +2,20 @@
 @import: base
 @require: list
 @import: char
+@import: ord
 @import: eq
 
 module String : sig
   val equal : string -> string -> bool
+  val ord : (string Ord.t) implicit
   val eq : (string Eq.t) implicit
+  val max : string -> string -> string
+  val min : string -> string -> string
+  val (<) : string -> string -> bool
+  val (>) : string -> string -> bool
+  val (>=) : string -> string -> bool
+  val (<=) : string -> string -> bool
+  val (==) : string -> string -> bool
   val length : string -> int
   val sub : int -> int -> string -> string
   val empty : string
@@ -109,6 +118,37 @@ end = struct
       string-sub xs 0 pu ^ `pt`
     else xs ^ `pt`
     % -- end
+
+  let ord =
+    Ord.make (fun sl sr -> (
+      let lstl = string-explode sl in
+      let lstr = string-explode sr in
+      let-rec sub lstl lstr =
+          match (lstl, lstr) with
+          | ([],[]) -> Eq
+          | (_, []) -> Gt
+          | ([],_) -> Lt
+          | (nl::xl,nr::xr) -> (
+              if nl < nr then
+                  Lt
+              else
+                  if nl > nr then
+                      Gt
+                  else
+                      sub xl xr
+          )
+      in
+      sub lstl lstr
+    ))
+  let max = Ord.max ord
+  let min = Ord.min ord
+  let (<) = Ord.lt ord
+  let (>) = Ord.gt ord
+  let (>=) = Ord.ge ord
+  let (<=) = Ord.le ord
+  let (==) = Ord.eq ord
+
+
 
   % let byte-length = string-byte-length
   % let sub-bytes i j s = string-sub-bytes s i j
