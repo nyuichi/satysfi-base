@@ -286,10 +286,11 @@ end = struct
 end
 
 module StringParser : sig
-  % [run p ?:init-pos s] runs parser [p] for input [s].
+  val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
+  % [run-with-init-position p init-pos s] runs parser [p] for input [s].
   % Here, [init-pos] stands for the initial position of the input.
   % If omitted, the optional argument defaults to [Token.initial-position], i.e., [(|line = 1; column = 0|)].
-  val run : 'a Char.t Parser.t -> token-position?-> string -> 'a ((Char.t parse-error) list) result
+  val run-with-init-position : 'a Char.t Parser.t -> token-position -> string -> 'a ((Char.t parse-error) list) result
   val char : Char.t -> Char.t Char.t Parser.t
   val string : string -> string Char.t Parser.t  % wrapped with `try`
   val satisfy : (Char.t -> bool) -> Char.t Char.t Parser.t
@@ -326,8 +327,10 @@ end = struct
         in Option.some (token, (new-cs, new-pos))
     )) (String.to-list input, init-pos)
 
-  let run p ?:init-pos-opt input =
-    let init-pos = init-pos-opt |> Option.from Token.initial-position in
+  let run p input =
+    input |> lex-string Token.initial-position |> Parser.run p
+
+  let run-with-init-position p init-pos input =
     input |> lex-string init-pos |> Parser.run p
 
   let satisfy f =
