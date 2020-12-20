@@ -134,6 +134,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] aaa[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 10[0m
+[32m[debug.log] bar[0m
 [32m[debug.log] ==== Lexer ====[0m
 [32m[debug.log] (| kind = identifier, data = \\"abc\\" |)[0m
 [32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
