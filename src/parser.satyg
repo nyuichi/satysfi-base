@@ -119,9 +119,9 @@ end = struct
   let run p s =
     let initial-state = (| input = s |) in
     match p initial-state with
-    | (Some (_, a), _, []) ->
+    | (Some (_, a), _, _) ->
       Result.ok a
-    | (_, _, es) ->
+    | (None, _, es) ->
       Result.err es
 
   let delay t =
