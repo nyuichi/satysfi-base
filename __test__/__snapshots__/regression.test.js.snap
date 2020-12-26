@@ -282,5 +282,17 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 2[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 4[0m
+[32m[debug.log] ==== Fn ====[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] done[0m
 "
 `;
