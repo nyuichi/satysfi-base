@@ -261,7 +261,8 @@ let _ =
   let () = p (Float.exp Float.pi) in
   let () = p (Float.log Float.pi) in
   let () = p (Float.pi |> Float.pow Float.pi) in
-  let () = p (2.1 |> Float.pow 54.0)
+  let () = p (2.1 |> Float.pow 54.0) in
+  let () = p (Float.sqrt 2.0)
 in
 let p-opt o =
   let s =

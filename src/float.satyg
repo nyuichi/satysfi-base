@@ -143,12 +143,12 @@ end = struct
   let acos = acos
   let atan = atan
   let atan2 = atan2
-  let sqrt = ZP0.sqrt
   let exp = exp
   let log = log
   let log10 = ZP0.log10
 
   let pow y x = exp (y *. log x) % x^y == (x |> pow y)
+  let sqrt = pow 0.5
 
   let pi = atan2 0.0 (neg 1.0)
 end
