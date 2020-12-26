@@ -258,12 +258,31 @@ let _ = l |> List.iter (fun a ->
 ) in
 let () = p (1.0 /. 0.0) in
 let () = p (1.0 /. Float.neg 0.0) in
+let () = p (0.0 /. 0.0) in
 let () = p (Float.exp Float.pi) in
 let () = p (Float.log Float.pi) in
 let () = p (Float.pi |> Float.pow Float.pi) in
 let () = p (2.1 |> Float.pow 54.0) in
 let () = p (Float.sqrt 2.0) in
 let () = p (Float.log10 Float.pi) in
+let dbl-min = Stream.nat |> Stream.take 1022 |> Fn.flip Stream.fold 1.0 (fun f _ -> f /. 2.0) in
+let () = p dbl-min in
+let half-dbl-min = dbl-min /. 2.0 in
+let () = p half-dbl-min in
+let l = l |> List.append [dbl-min; half-dbl-min] in
+let p-bool b = b |> String.of-bool |> Debug.log in
+let () = l |> List.iter (fun f -> p-bool (Float.is-zero f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-inf f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-nan f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-normal f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-subnormal f)) in
+let l = [2.3; 3.8; 5.5; Float.neg 2.3; Float.neg 3.8; Float.neg 5.5; 6.0] in
+let () = l |> List.iter (fun a -> (p (Float.round a))) in
+let () = l |> List.iter (fun a -> (p (Float.floor a))) in
+let () = l |> List.iter (fun a -> (p (Float.ceil a))) in
+let () = l |> List.iter (fun a -> (p (Float.truncate a))) in
+% virtually testing exp2i
+let () = [-1073; -1074; -1075; 1022; 1023; 1024] |> List.iter (fun a -> (p (1.0 |> Float.ldexp a))) in
 let p-opt o =
   let s =
     match o with
