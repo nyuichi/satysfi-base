@@ -145,7 +145,8 @@ end = struct
   let atan2 = atan2
   let exp = exp
   let log = log
-  let log10 = ZP0.log10
+  let log10- = log 10.0
+  let log10 x = log x /. log10-
 
   let pow y x = exp (y *. log x) % x^y == (x |> pow y)
   let sqrt = pow 0.5
