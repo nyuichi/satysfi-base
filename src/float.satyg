@@ -131,8 +131,6 @@ end = struct
       | _ -> None
   let to-string = show-float
 
-  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
-
   let ceil = ZP0.ceil
   let floor = ZP0.floor
   let round f = of-int (to-int f)
@@ -149,6 +147,8 @@ end = struct
   let exp = exp
   let log = log
   let log10 = ZP0.log10
+
+  let pow y x = exp (y *. log x) % x^y == (x |> pow y)
 
   let pi = atan2 0.0 (neg 1.0)
 end

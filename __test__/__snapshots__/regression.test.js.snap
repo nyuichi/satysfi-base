@@ -227,6 +227,8 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] -inf[0m
 [32m[debug.log] 23.1406926328[0m
 [32m[debug.log] 1.14472988585[0m
+[32m[debug.log] 36.4621596072[0m
+[32m[debug.log] 2.51097226443e+17[0m
 [32m[debug.log] Some(123.45)[0m
 [32m[debug.log] Some(-123.45)[0m
 [32m[debug.log] Some(123.)[0m

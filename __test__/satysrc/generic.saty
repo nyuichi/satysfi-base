@@ -255,10 +255,13 @@ let _ =
       Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
     )
   ) in
-  let () = Debug.log (String.of-float (1.0 /. 0.0)) in
-  let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0)) in
-  let () = Debug.log (String.of-float (Float.exp Float.pi)) in
-  let () = Debug.log (String.of-float (Float.log Float.pi))
+  let p f = f |> String.of-float |> Debug.log in
+  let () = p (1.0 /. 0.0) in
+  let () = p (1.0 /. Float.neg 0.0) in
+  let () = p (Float.exp Float.pi) in
+  let () = p (Float.log Float.pi) in
+  let () = p (Float.pi |> Float.pow Float.pi) in
+  let () = p (2.1 |> Float.pow 54.0)
 in
 let p-opt o =
   let s =
