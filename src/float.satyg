@@ -146,8 +146,8 @@ end = struct
   let atan = atan
   let atan2 = atan2
   let sqrt = ZP0.sqrt
-  let exp = ZP0.exp
-  let log = ZP0.log
+  let exp = exp
+  let log = log
   let log10 = ZP0.log10
 
   let pi = atan2 0.0 (neg 1.0)

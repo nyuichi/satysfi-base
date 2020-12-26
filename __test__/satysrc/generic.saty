@@ -248,16 +248,17 @@ let _ = Promise.force p in
 
 let () = Debug.log `==== Float ====` in
 let _ =
-  open Float in
-  let _ = pi |> String.of-float |> Debug.log in
-  let l = [inf; ninf; nan; 0.0; neg 0.0; 1.0] in
+  let _ = Float.pi |> String.of-float |> Debug.log in
+  let l = [Float.inf; Float.ninf; Float.nan; 0.0; Float.neg 0.0; 1.0] in
   l |> List.iter (fun a ->
     l |> List.iter (fun b ->
       Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
     )
   ) in
   let () = Debug.log (String.of-float (1.0 /. 0.0)) in
-  let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
+  let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0)) in
+  let () = Debug.log (String.of-float (Float.exp Float.pi)) in
+  let () = Debug.log (String.of-float (Float.log Float.pi))
 in
 let p-opt o =
   let s =
