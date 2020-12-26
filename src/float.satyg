@@ -57,6 +57,7 @@ module Float : sig
   val log10 : float -> float
 
   val pi : float
+  val e : float
 end = struct
   let neg f = (0.0 -. 1.0) *. f % `0.0 -. f` does not work properly when f == 0.0
 
@@ -131,8 +132,6 @@ end = struct
       | _ -> None
   let to-string = show-float
 
-  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
-
   let ceil = ZP0.ceil
   let floor = ZP0.floor
   let round f = of-int (to-int f)
@@ -145,10 +144,14 @@ end = struct
   let acos = acos
   let atan = atan
   let atan2 = atan2
-  let sqrt = ZP0.sqrt
-  let exp = ZP0.exp
-  let log = ZP0.log
-  let log10 = ZP0.log10
+  let exp = exp
+  let log = log
+  let log10- = log 10.0
+  let log10 x = log x /. log10-
+
+  let pow y x = exp (y *. log x) % x^y == (x |> pow y)
+  let sqrt = pow 0.5
 
   let pi = atan2 0.0 (neg 1.0)
+  let e = exp 1.0
 end
