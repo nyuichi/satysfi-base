@@ -22,15 +22,14 @@ module RegExp : sig
 
   % quantifiers
   val many : t -> t
-  val many1 : t -> t
+  val some : t -> t
   val opt : t -> t
   val many-ng : t -> t  % non-greedy Kleene star
-  val many1-ng : t -> t
+  val some-ng : t -> t
   val opt-ng : t -> t
 
   % submatching
   val group : t -> t
-  %val ref : int -> t
 
   % anchors
   val bof : t  % beginning of file
@@ -59,6 +58,10 @@ module RegExp : sig
   val test : t -> string -> bool
   val exec : t -> string -> ((int * string) option) list
 
+  % deprecated
+  val many1 : t -> t % use `some` instead
+  val many1-ng : t -> t % use `some-ng` instead
+
   % for debug
   type vm-inst
   val compile : t -> vm-inst Array.t * int
@@ -76,10 +79,8 @@ end = struct
   | ANY
   | STRING of string
   | SAVE of int
-%  | REF of int   % backreference
   | ANCHOR of anchor
   | PRED of Char.t -> bool
-  | REGEXP of regexp  % tests a character using built-in regexp; mainly for performance
 
   let run iseq ngroup s =
     let len = String.length s in
@@ -111,15 +112,6 @@ end = struct
           if loop (pc + 1) sp then true else
           let () = trace |> Array.set i old in
           false
-        % % The current implementation of REF instruction does not work well with memoize2.
-        % % I leave this for future refactoring.
-        % | REF i ->
-        %   (match trace |> Array.get (2 * i + 1) with
-        %   | None -> panic `unbound backreference`
-        %   | Some(j) -> let (Some st) = trace |> Array.get (2 * i) in
-        %     let c = s |> String.sub st (j - st) in
-        %     let l = String.length c in
-        %     if sp + l <= len then if String.equal c (s |> String.sub sp l) then loop (pc + 1) (sp + l) else false else false)
         | ANCHOR a ->
             (match a with
               | BOF -> sp == 0
@@ -129,66 +121,63 @@ end = struct
               | NOWHERE -> false)
             &&&- (fun () -> loop (pc + 1) sp)
         | PRED f ->
-            (sp < len) &&&- (fun () -> f (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1))
-        | REGEXP re -> (sp < len) &&&- (fun () -> string-match re (s |> String.sub sp 1)) &&&- (fun () -> loop (pc + 1) (sp + 1)) in
+            (sp < len) &&&- (fun () -> f (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1)) in
       memoize2 main pc sp in
     let r = loop 0 0 in
     (r, trace)
 
   type pattern =
-  | P-alt of pattern * pattern
-  | P-seq of pattern * pattern
-  | P-any
-  | P-empty
-  | P-string of string
-  | P-char of Char.t
-  | P-many of pattern
-  | P-many1 of pattern
-  | P-opt of pattern
-  | P-many-ng of pattern
-  | P-many1-ng of pattern
-  | P-opt-ng of pattern
-  | P-group of pattern
-%  | P-ref of int
-  | P-anchor of anchor
-  | P-satisfy of Char.t -> bool
-  | P-regexp of regexp
+  | PatAlt of pattern * pattern
+  | PatSeq of pattern * pattern
+  | PatAny
+  | PatEmpty
+  | PatString of string
+  | PatChar of Char.t
+  | PatMany of pattern
+  | PatSome of pattern
+  | PatOpt of pattern
+  | PatManyNg of pattern
+  | PatSomeNg of pattern
+  | PatOptNg of pattern
+  | PatGroup of pattern
+  | PatAnchor of anchor
+  | PatSatisfy of Char.t -> bool
 
   type t = pattern
 
-  let alt p1 p2 = P-alt (p1, p2)
-  let seq p1 p2 = P-seq (p1, p2)
-  let any = P-any
-  let empty = P-empty
-  let string c = P-string c
-  let char c = P-char c
-  let many p = P-many p
-  let many1 p = P-many1 p
-  let opt p = P-opt p
-  let many-ng p = P-many-ng p
-  let many1-ng p = P-many1-ng p
-  let opt-ng p = P-opt-ng p
-  let group p = P-group p
-%  let ref i = P-ref i
-  let bof = P-anchor (BOF)
-  let eof = P-anchor (EOF)
-  let bol = P-anchor (BOL)
-  let eol = P-anchor (EOL)
-  let fail = P-anchor (NOWHERE)
-  let satisfy f = P-satisfy f
+  let alt p1 p2 = PatAlt(p1, p2)
+  let seq p1 p2 = PatSeq(p1, p2)
+  let any = PatAny
+  let empty = PatEmpty
+  let string c = PatString(c)
+  let char c = PatChar(c)
+  let many p = PatMany(p)
+  let some p = PatSome(p)
+  let opt p = PatOpt(p)
+  let many-ng p = PatManyNg(p)
+  let some-ng p = PatSomeNg(p)
+  let opt-ng p = PatOptNg(p)
+  let group p = PatGroup(p)
+  let bof = PatAnchor(BOF)
+  let eof = PatAnchor(EOF)
+  let bol = PatAnchor(BOL)
+  let eol = PatAnchor(EOL)
+  let fail = PatAnchor(NOWHERE)
+  let satisfy f = PatSatisfy(f)
 
-  let oneof s = % TODO: use regexp
-    let s = String.to-list s in
-    satisfy (fun c -> (Option.is-some (List.find (Eq.equal Char.eq c) s)))
-  let alpha = P-satisfy Char.is-alpha
-  let digit = P-satisfy Char.is-digit
-  let hex-digit = P-satisfy Char.is-hex-digit
-  let space = P-satisfy Char.is-space
-  let spaces = many1 space
+  let oneof s = satisfy (Char.mem s)
+  let alpha = satisfy Char.is-alpha
+  let digit = satisfy Char.is-digit
+  let hex-digit = satisfy Char.is-hex-digit
+  let space = satisfy Char.is-space
+  let spaces = some space
 
   let between op cl p = seq op (seq p cl)
   let choice ts = List.fold-left alt fail ts
   let sequence ts = List.fold-right seq empty ts
+
+  let many1 = some
+  let many1-ng = some-ng
 
   let compile p =
     let-mutable ngroup <- 0 in
@@ -202,7 +191,7 @@ end = struct
       let emit-chunk chunk =
         chunk |> List.fold-right (fun inst () -> emit inst) () in
       let-rec loop p = match p with
-      | P-alt (p1, p2) ->
+      | PatAlt (p1, p2) ->
         let (chunk1, len1) = codegen p1 in
         let (chunk2, len2) = codegen p2 in
         let () = emit (SPLIT (1, len1 + 2)) in
@@ -210,67 +199,63 @@ end = struct
         let () = emit (JMP (len2 + 1)) in
         let () = emit-chunk chunk2 in
         ()
-      | P-seq (p1, p2) ->
+      | PatSeq (p1, p2) ->
         let () = loop p1 in
         let () = loop p2 in
         ()
-      | P-any ->
+      | PatAny ->
         emit ANY
-      | P-empty ->
+      | PatEmpty ->
         ()
-      | P-string c ->
+      | PatString c ->
         emit (STRING c)
-      | P-char c ->
+      | PatChar c ->
         emit (CHAR c)
-      | P-many p ->
+      | PatMany p ->
         let (chunk, len) = codegen p in
         let () = emit (SPLIT (1, len + 2)) in
         let () = emit-chunk chunk in
         let () = emit (JMP (- len - 1)) in
         ()
-      | P-many1 p ->
+      | PatSome p ->
         let c1 = !cnt in
         let () = loop p in
         let len = !cnt - c1 in
         let () = emit (SPLIT (-len, 1)) in
         ()
-      | P-opt p ->
+      | PatOpt p ->
         let (chunk, len) = codegen p in
         let () = emit (SPLIT (1, len + 1)) in
         let () = emit-chunk chunk in
         ()
-      | P-many-ng p ->
+      | PatManyNg p ->
         let (chunk, len) = codegen p in
         let () = emit (SPLIT (len + 2, 1)) in
         let () = emit-chunk chunk in
         let () = emit (JMP (- len - 1)) in
         ()
-      | P-many1-ng p ->
+      | PatSomeNg p ->
         let c1 = !cnt in
         let () = loop p in
         let len = !cnt - c1 in
         let () = emit (SPLIT (1, -len)) in
         ()
-      | P-opt-ng p ->
+      | PatOptNg p ->
         let (chunk, len) = codegen p in
         let () = emit (SPLIT (len + 1, 1)) in
         let () = emit-chunk chunk in
         ()
-      | P-group p ->
+      | PatGroup p ->
         let i = !ngroup in
         let () = ngroup <- !ngroup + 1 in
         let () = emit (SAVE (2 * i)) in
         let () = loop p in
         let () = emit (SAVE (2 * i + 1)) in
         ()
-%      | P-ref i ->
-%        emit (REF i)
-      | P-anchor a ->
+      | PatAnchor a ->
         emit (ANCHOR a)
-      | P-satisfy f ->
-        emit (PRED f)
-      | P-regexp re ->
-        emit (REGEXP re) in
+      | PatSatisfy f ->
+        emit (PRED f) in
       let () = loop p in
       (!acc, !cnt) in
     let (chunk, _) = codegen p in
@@ -318,6 +303,9 @@ end = struct
     let re-hex-digit = hex-digit in
     let re-char = char in
     let re-satisfy = satisfy in
+    let re-many = many in
+    let re-some = some in
+    let re-opt = opt in
     open Parser in
     open StringParser in
     let meta = satisfy is-meta-char in
@@ -357,11 +345,11 @@ end = struct
         ] in
       let quant = primary >>= (fun x -> choice [
         string `*?` >> ret (many-ng x);
-        string `+?` >> ret (many1-ng x);
+        string `+?` >> ret (some-ng x);
         string `??` >> ret (opt-ng x);
-        string `*` >> ret (P-many x);
-        string `+` >> ret (P-many1 x);
-        string `?` >> ret (opt x);
+        string `*` >> ret (re-many x);
+        string `+` >> ret (re-some x);
+        string `?` >> ret (re-opt x);
         ret x;
       ]) in
       let seq = quant |> some |> map re-sequence in
@@ -385,7 +373,6 @@ end = struct
           | JMP i -> `JMP `# ^ (String.of-int i)
           | SPLIT (i,j) -> `SPLIT `# ^ (String.of-int i) ^ #` `# ^ (String.of-int j)
           | SAVE i -> `SAVE `# ^ (String.of-int i)
-%          | REF i -> `REF `# ^ (String.of-int i)
           | ANCHOR a ->
             `ANCHOR `# ^ (match a with
             | BOF -> `BOF`
@@ -393,26 +380,25 @@ end = struct
             | BOL -> `BOL`
             | EOL -> `EOL`
             | NOWHERE -> `NOWHERE`)
-          | PRED f -> `PRED <function>`
-          | REGEXP re -> `REGEXP <re>` in
+          | PRED f -> `PRED <function>` in
         let () = Debug.log (String.of-int i ^ `: `# ^ inst) in
         loop (i + 1) xs in
     loop 0 (Array.to-list iseq)
 
   let-rec print re = match re with
-  | P-alt (re1, re2) -> `(` ^ print re1 ^ `)|(` ^ print re2 ^ `)`
-  | P-seq (re1, re2) -> `(` ^ print re1 ^ `)(` ^ print re2 ^ `)`
-  | P-any -> `.`
-  | P-empty -> ` `
-  | P-string s -> s
-  | P-char c -> String.of-char c
-  | P-many re -> `(` ^ print re ^ `)*`
-  | P-many1 re -> `(` ^ print re ^ `)+`
-  | P-opt re -> `(` ^ print re ^ `)?`
-  | P-many-ng re -> `(` ^ print re ^ `)*?`
-  | P-many1-ng re -> `(` ^ print re ^ `)+?`
-  | P-opt-ng re -> `(` ^ print re ^ `)??`
-  | P-group re -> `\(` ^ print re ^ `\)`
-  | P-anchor (NOWHERE) -> ` `
+  | PatAlt (re1, re2) -> `(` ^ print re1 ^ `)|(` ^ print re2 ^ `)`
+  | PatSeq (re1, re2) -> `(` ^ print re1 ^ `)(` ^ print re2 ^ `)`
+  | PatAny -> `.`
+  | PatEmpty -> ` `
+  | PatString s -> s
+  | PatChar c -> String.of-char c
+  | PatMany re -> `(` ^ print re ^ `)*`
+  | PatSome re -> `(` ^ print re ^ `)+`
+  | PatOpt re -> `(` ^ print re ^ `)?`
+  | PatManyNg re -> `(` ^ print re ^ `)*?`
+  | PatSomeNg re -> `(` ^ print re ^ `)+?`
+  | PatOptNg re -> `(` ^ print re ^ `)??`
+  | PatGroup re -> `\(` ^ print re ^ `\)`
+  | PatAnchor (NOWHERE) -> ` `
   | _ -> `□`
 end
