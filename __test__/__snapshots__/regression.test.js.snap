@@ -187,6 +187,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] foobar[0m
 [32m[debug.log] ==== Float ====[0m
 [32m[debug.log] 3.14159265359[0m
+[32m[debug.log] 2.71828182846[0m
 [32m[debug.log] inf == inf = true[0m
 [32m[debug.log] inf == -inf = false[0m
 [32m[debug.log] inf == -nan = false[0m
