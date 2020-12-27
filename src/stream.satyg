@@ -350,14 +350,7 @@ end = struct
     s |> enumerate |> find (Fn.compose f Pair.snd) |> Option.map Pair.fst
 
   let of-string s =
-    let len = String.length s in
-    let step i =
-      if i == len then
-        Option.none
-      else
-        Option.some (Char.at i s, i + 1)
-    in
-      0 |> unfold step
+    of-list (String.to-list s)
 
   let of-array s =
     let len = Array.length s in

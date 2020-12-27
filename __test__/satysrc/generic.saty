@@ -35,7 +35,6 @@
 @import: ../../src/bool
 
 open Fn in
-open RegExp in
 
 let () = Debug.log `==== Ref ====` in
 let r = Ref.make 1 in
@@ -90,6 +89,7 @@ let () = Debug.log (String.of-int (Array.get 0 a)) in
 let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
 
 let () = Debug.log `==== RegExp ====` in
+open RegExp in
 %let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
 let print-result r =
   r |> List.iter (fun s -> (
@@ -104,16 +104,11 @@ let char-b = char (Char.make `b`) in
 let char-c = char (Char.make `c`) in
 % (a+)(b+)
 let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in % true
-let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
 let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in % true
 % (a+|(c))(b+)
 let re1 = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
-let (iseq1, _) = compile re1 in
-let () = print-iseq iseq1 in
 let ss = exec re1 `aabbb` |> print-result in
 let re3 = many (many char-a) in
-let (iseq3, _) = compile (seq (many-ng any) (group re3)) in
-let () = print-iseq iseq3 in
 let () = `aaaaa` |> test re3 |> String.of-bool |> Debug.log in
 let re4 = seq (group (seq any (char (Char.make `e`)))) eof in
 let () = `the apple` |> exec re4 |> print-result in
@@ -122,23 +117,7 @@ let () = `the apple
 apple
 leapple` |> exec re6 |> print-result in
 let () = exec spaces #`  asdf`# |> print-result in
-% % backreference
-% let re2 = seq (group (alt (string `cat`) (string `dog`))) (ref 1) in
-% let () = `dogdog` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `dogcat` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `catcat` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `aaadogdogbbb` |> test re2 |> String.of-bool |> Debug.log in
-% % aaaba vs (a*)a*b\1
-% let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
-% let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
-let () = RegExp.of-string `a` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `.` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `((a))` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a*?)` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a(c))(b)` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a+|(c))(b+)` |> RegExp.print |> Debug.log in
 let () = `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`) |> String.of-bool |> Debug.log in
-let () = RegExp.of-string `\n\r\t\$\(\)\*\?` |> RegExp.print |> Debug.log in
 let _ = RegExp.of-string `^\s\d$` in
 % let _ = RegExp.of-string `[]` in
 let _ = RegExp.of-string `[a-z]` in
@@ -148,6 +127,24 @@ let _ = `0a` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log i
 let _ = `0xaZb` |> test (RegExp.of-string `^0[xX][A-Fa-f0-9]+$`) |> String.of-bool |> Debug.log in
 let _ = `][][` |> test (RegExp.of-string `[][]+`) |> String.of-bool |> Debug.log in
 let _ = `][]-[` |> test (RegExp.of-string `[][-]+`) |> String.of-bool |> Debug.log in
+let input = ` I do not know why but it seems code2 is slow if it contains a long line.
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo` in
+let pat = `wk` in
+let () = Debug.print `testing long input` in
+let () = Debug.print (String.of-bool (RegExp.test (RegExp.of-string pat) input)) in
 
 let () = Debug.log `==== Parser ====` in
 let () =

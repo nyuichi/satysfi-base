@@ -74,62 +74,25 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 9[0m
 [32m[debug.log] ==== RegExp ====[0m
 [32m[debug.log] true[0m
-[32m[debug.log] 0: SPLIT 1 3[0m
-[32m[debug.log] 1: CHAR a[0m
-[32m[debug.log] 2: JMP 2[0m
-[32m[debug.log] 3: CHAR b[0m
-[32m[debug.log] 4: MATCH[0m
 [32m[debug.log] true[0m
-[32m[debug.log] 0: SAVE 0[0m
-[32m[debug.log] 1: SPLIT 1 4[0m
-[32m[debug.log] 2: CHAR a[0m
-[32m[debug.log] 3: SPLIT -1 1[0m
-[32m[debug.log] 4: JMP 4[0m
-[32m[debug.log] 5: SAVE 2[0m
-[32m[debug.log] 6: CHAR c[0m
-[32m[debug.log] 7: SAVE 3[0m
-[32m[debug.log] 8: SAVE 1[0m
-[32m[debug.log] 9: SAVE 4[0m
-[32m[debug.log] 10: CHAR b[0m
-[32m[debug.log] 11: SPLIT -1 1[0m
-[32m[debug.log] 12: SAVE 5[0m
-[32m[debug.log] 13: MATCH[0m
 [32m[debug.log] Some(0, \\"aabbb\\")[0m
 [32m[debug.log] Some(0, \\"aa\\")[0m
 [32m[debug.log] None[0m
 [32m[debug.log] Some(2, \\"bbb\\")[0m
-[32m[debug.log] 0: SPLIT 3 1[0m
-[32m[debug.log] 1: ANY[0m
-[32m[debug.log] 2: JMP -2[0m
-[32m[debug.log] 3: SAVE 0[0m
-[32m[debug.log] 4: SPLIT 1 5[0m
-[32m[debug.log] 5: SPLIT 1 3[0m
-[32m[debug.log] 6: CHAR a[0m
-[32m[debug.log] 7: JMP -2[0m
-[32m[debug.log] 8: JMP -4[0m
-[32m[debug.log] 9: SAVE 1[0m
-[32m[debug.log] 10: MATCH[0m
 [32m[debug.log] true[0m
 [32m[debug.log] Some(7, \\"le\\")[0m
 [32m[debug.log] Some(7, \\"le\\")[0m
 [32m[debug.log] Some(10, \\"apple\\")[0m
 [32m[debug.log] Some(0, \\"  \\")[0m
-[32m[debug.log] ()|((a)())[0m
-[32m[debug.log] ()|((.)())[0m
-[32m[debug.log] ()|((\\\\(()|((\\\\(()|((a)())\\\\))())\\\\))())[0m
-[32m[debug.log] ()|((\\\\(()|(((a)*?)())\\\\))())[0m
-[32m[debug.log] ()|((\\\\(()|((a)((\\\\(()|((c)())\\\\))()))\\\\))((\\\\(()|((b)())\\\\))()))[0m
-[32m[debug.log] ()|((\\\\((()|(((a)+)()))|((\\\\(()|((c)())\\\\))())\\\\))((\\\\(()|(((b)+)())\\\\))()))[0m
 [32m[debug.log] true[0m
-[32m[debug.log] ()|((
-)((
-)((	)(($)((()(())((*)((?)()))))))))[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
 [32m[debug.log] false[0m
 [32m[debug.log] false[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
+testing long input
+false
 [32m[debug.log] ==== Parser ====[0m
 [32m[debug.log] aaa[0m
 [32m[debug.log] 3[0m

@@ -33,6 +33,11 @@ module Ref : sig
 
   %% [Ref.dec r] decreases the value in [r] by one.
   val dec : int ref -> unit
+
+  val push : 'a -> ('a list) ref -> unit
+
+  val pop : ('a list) ref -> 'a
+
 end = struct
 %  type 'a t = 'a ref
 
@@ -64,4 +69,11 @@ end = struct
   let dec r =
     r |> update (fun x -> x - 1)
 
+  let push x r =
+    r |> update (fun l -> x :: l)
+
+  let pop r =
+    let (x :: xs) = r |> get in
+    let () = r |> set xs in
+    x
 end

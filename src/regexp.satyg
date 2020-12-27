@@ -8,6 +8,7 @@
 @import: list-ext
 @import: char
 @import: parser
+@import: ref
 
 module RegExp : sig
   type t
@@ -61,84 +62,199 @@ module RegExp : sig
   % deprecated
   val many1 : t -> t % use `some` instead
   val many1-ng : t -> t % use `some-ng` instead
-
-  % for debug
-  type vm-inst
-  val compile : t -> vm-inst Array.t * int
-  val print-iseq : vm-inst Array.t -> unit
-  val print : t -> string
 end = struct
+
+  type char-class =
+  | Single of Char.t
+  | Any
+  | Pred of Char.t -> bool
 
   type anchor = BOF | EOF | BOL | EOL | NOWHERE
 
-  type vm-inst =
-  | MATCH
-  | CHAR of Char.t
-  | JMP of int
-  | SPLIT of int * int
-  | ANY
-  | STRING of string
-  | SAVE of int
-  | ANCHOR of anchor
-  | PRED of Char.t -> bool
+  type label =
+  | Char of char-class
+  | Anchor of anchor
+  | Save of int
+  | Epsilon
 
-  let run iseq ngroup s =
-    let len = String.length s in
-    let dp = Array.length iseq |> Array.init (fun _ -> (len + 1 |> Array.make None)) in
-    let memoize2 f i j =
-      let dpi = dp |> Array.get i in
-      match dpi |> Array.get j with
-      | Some r -> r
+  %
+  %     label[0]
+  %  s ----------> next[0]
+  %  |
+  %  |  label[1]
+  %  +-----------> next[1]
+  %  |
+  %       ...
+  %
+  type state = State of (|
+    accept : bool ref;
+    next : ((label * state) list) ref;
+    mark : int ref; % mark == current-id means there is already a thread running this state
+  |)
+
+  type thread = (|
+    state : state;
+    trace : (int * int) list; % save id and char position in input
+  |)
+
+  type re = (|
+    init : state;
+    ngroup : int;
+    states : state list;
+  |)
+
+  % monadic combinators for ('a 'e result) list
+  let sequence =
+    let f m ms =
+      m |> Result.and-then (fun x -> (
+        ms |> Result.and-then (fun xs -> (
+          Result.ret (x :: xs)
+        ))
+      )) in
+    List.fold-right f (Result.ret [])
+  let map-m f xs = sequence (List.map f xs)
+  let ret x = Result.ret (List.ret x)
+  let and-then f x =
+    x |> Result.and-then (fun l -> (
+      l |> map-m f |> Result.map List.concat
+    ))
+
+  let current-id = Ref.make 0 % number of non-epsilon steps ever done; used to avoid spawning duplicate threads
+  let current-pos = Ref.make 0
+  let current-stream = Ref.make (Stream.nil ())
+  let current-input = Ref.make ` `
+
+  let is-spawned (State s) =
+    Ref.get s#mark == Ref.get current-id
+  let mark-spawned (State s) =
+    s#mark |> Ref.set (Ref.get current-id)
+
+  % spawns a new thread unless there already exists a thread running the same state
+  let spawn state trace =
+    if is-spawned state then
+      Result.ok []
+    else
+      let () = mark-spawned state in
+      Result.ok (List.ret (| state = state; trace = trace |))
+
+  let next-threads = Ref.make []
+  let match-trace = Ref.make []
+
+  % returns Ok([]) if it didn't match and spawned some threads
+  % returns Err(trace) if it matched
+  let-rec step-1 thread =
+    let (State state) = thread#state in
+    if Ref.get state#accept then
+      Result.err thread#trace
+    else
+      Result.ok (Ref.get state#next) |> and-then (fun (label, state) -> (
+        match label with
+        | Epsilon ->
+          spawn state thread#trace
+            |> and-then step-1
+        | Save(i) ->
+          let trace = (i, Ref.get current-pos) :: thread#trace in
+          spawn state trace
+            |> and-then step-1
+        | Anchor(anthor) ->
+          let hit =
+            let pos = Ref.get current-pos in
+            let input = Ref.get current-input in
+            match anthor with
+            | BOF -> pos == 0
+            | EOF -> pos == String.length input
+            | BOL -> (pos == 0) |||- (fun () -> Eq.equal Char.eq (Char.at (pos - 1) input) Char.newline)
+            | EOL -> (pos == String.length input) |||- (fun () -> Eq.equal Char.eq (Char.at pos input) Char.newline)
+            | NOWHERE -> false in
+          if hit then
+            spawn state thread#trace
+              |> and-then step-1
+          else
+            Result.ok []
+        | Char(class) ->
+          (match Stream.head (Ref.get current-stream) with
+          | None ->
+            Result.ok []
+          | Some(c) ->
+            let hit =
+              match class with
+              | Single(char) -> Char.(c == char)
+              | Any -> true
+              | Pred(f) -> f c in
+            if hit then
+              spawn state thread#trace
+                |> and-then (fun thread -> (
+                  let () = next-threads |> Ref.push thread in
+                  Result.ok []
+                ))
+            else
+              Result.ok []
+          )
+      ))
+
+  % returns (threads, Some(trace)) if NFA reached an accepting state and there are threads that are not exhausted.
+  let step-all threads =
+    let () = next-threads |> Ref.set [] in
+    let () = match-trace |> Ref.set [] in
+    let res = Result.ok threads |> and-then step-1 in
+    let next-threads = Ref.get next-threads in
+    let trace =
+      match res with
+      | Ok(_) ->
+        Option.none
+      | Err(trace) ->
+        Option.some trace in
+    (next-threads, trace)
+
+  let clear-marks re =
+    re#states |> List.iter (fun (State s) -> (
+      s#mark |> Ref.set (-1)
+    ))
+
+  % returns the initial thread
+  let spawn-init re =
+    let () = clear-marks re in
+    let init = State (|
+      accept = Ref.make false;
+      next = Ref.make [(Epsilon, re#init)];
+      mark = Ref.make (-1);
+    |) in
+    (| state = init; trace = [] |)
+
+  % returns Some(trace) or None
+  let run re input =
+    let () = current-id |> Ref.set 0 in
+    let () = current-pos |> Ref.set 0 in
+    let () = current-stream |> Ref.set (Stream.of-string input) in
+    let () = current-input |> Ref.set input in
+    let input-length = String.length input in
+    let current-answer = Ref.make Option.none in
+    [spawn-init re] |> Fn.fix (fun loop threads -> (
+      let (next-threads, trace) = step-all threads in
+      let () = match trace with
+      | Some(trace) ->
+        current-answer |> Ref.set (Option.some trace)
       | None ->
-        let () = dpi |> Array.set j (Some true) in   % avoid infinite loop e.g. (a*)*
-        let r = f i j in
-        let () = dpi |> Array.set j (Some r) in
-        r in
-    let trace = 2 * ngroup |> Array.make None in
-    let-rec loop pc sp =
-      let main pc sp =
-        match iseq |> Array.get pc with
-        | MATCH -> true
-        | CHAR c -> (sp < len) &&&- (fun () -> Eq.equal Char.eq c (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1))
-        | JMP l -> loop (pc + l) sp
-        | SPLIT (l1, l2) -> (loop (pc + l1) sp) |||- (fun () -> loop (pc + l2) sp)
-        | ANY -> if sp < len then loop (pc + 1) (sp + 1) else false
-        | STRING c ->
-          let l = String.length c in
-          (sp + l <= len) &&&- (fun () -> Eq.equal String.eq c (s |> String.sub sp l)) &&&- (fun () -> loop (pc + 1) (sp + l))
-        | SAVE i ->
-          let old = trace |> Array.get i in
-          let () = trace |> Array.set i (Some sp) in
-          if loop (pc + 1) sp then true else
-          let () = trace |> Array.set i old in
-          false
-        | ANCHOR a ->
-            (match a with
-              | BOF -> sp == 0
-              | EOF -> sp == String.length s
-              | BOL -> (sp == 0) |||- (fun () -> Eq.equal Char.eq (Char.at (sp - 1) s) Char.newline)
-              | EOL -> (sp == String.length s) |||- (fun () -> Eq.equal Char.eq (Char.at sp s) Char.newline)
-              | NOWHERE -> false)
-            &&&- (fun () -> loop (pc + 1) sp)
-        | PRED f ->
-            (sp < len) &&&- (fun () -> f (Char.at sp s)) &&&- (fun () -> loop (pc + 1) (sp + 1)) in
-      memoize2 main pc sp in
-    let r = loop 0 0 in
-    (r, trace)
+        () in
+      if Ref.get current-pos == input-length || List.null next-threads then
+        Ref.get current-answer
+      else
+        let () = current-id |> Ref.inc in
+        let () = current-pos |> Ref.inc in
+        let () = current-stream |> Ref.update (fun s -> Option.unwrap (Stream.tail s)) in
+        loop next-threads
+    ))
 
   type pattern =
   | PatAlt of pattern * pattern
   | PatSeq of pattern * pattern
   | PatAny
   | PatEmpty
-  | PatString of string
   | PatChar of Char.t
   | PatMany of pattern
-  | PatSome of pattern
-  | PatOpt of pattern
+  | PatSome of pattern % this cannot be replaced with PatMany because `(a)+` is not equal to `(a)(a)*`.
   | PatManyNg of pattern
   | PatSomeNg of pattern
-  | PatOptNg of pattern
   | PatGroup of pattern
   | PatAnchor of anchor
   | PatSatisfy of Char.t -> bool
@@ -149,14 +265,13 @@ end = struct
   let seq p1 p2 = PatSeq(p1, p2)
   let any = PatAny
   let empty = PatEmpty
-  let string c = PatString(c)
   let char c = PatChar(c)
   let many p = PatMany(p)
   let some p = PatSome(p)
-  let opt p = PatOpt(p)
+  let opt p = alt p empty
   let many-ng p = PatManyNg(p)
   let some-ng p = PatSomeNg(p)
-  let opt-ng p = PatOptNg(p)
+  let opt-ng p = alt empty p
   let group p = PatGroup(p)
   let bof = PatAnchor(BOF)
   let eof = PatAnchor(EOF)
@@ -175,109 +290,135 @@ end = struct
   let between op cl p = seq op (seq p cl)
   let choice ts = List.fold-left alt fail ts
   let sequence ts = List.fold-right seq empty ts
+  let string s = String.to-list s |> List.map char |> sequence
 
   let many1 = some
   let many1-ng = some-ng
 
   let compile p =
-    let-mutable ngroup <- 0 in
+    let ngroup = Ref.make 0 in
+    let states = Ref.make [] in
+    let make-state accept next =
+      let s = State (|
+        accept = Ref.make accept;
+        next = Ref.make next;
+        mark = Ref.make (-1);
+      |) in
+      let () = states |> Ref.update (fun l -> (s :: l)) in
+      s in
+    let set-accept b (State s) =
+      s#accept |> Ref.set b in
+    let add-next label new (State s) =
+      s#next |> Ref.update (fun l -> List.snoc (label, new) l) in
     let-rec codegen p =
-      let-mutable acc <- [] in
-      let-mutable cnt <- 0 in
-      let emit inst =
-        let () = acc <- inst :: !acc in
-        let () = cnt <- !cnt + 1 in
-        () in
-      let emit-chunk chunk =
-        chunk |> List.fold-right (fun inst () -> emit inst) () in
-      let-rec loop p = match p with
-      | PatAlt (p1, p2) ->
-        let (chunk1, len1) = codegen p1 in
-        let (chunk2, len2) = codegen p2 in
-        let () = emit (SPLIT (1, len1 + 2)) in
-        let () = emit-chunk chunk1 in
-        let () = emit (JMP (len2 + 1)) in
-        let () = emit-chunk chunk2 in
-        ()
-      | PatSeq (p1, p2) ->
-        let () = loop p1 in
-        let () = loop p2 in
-        ()
-      | PatAny ->
-        emit ANY
-      | PatEmpty ->
-        ()
-      | PatString c ->
-        emit (STRING c)
-      | PatChar c ->
-        emit (CHAR c)
-      | PatMany p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (1, len + 2)) in
-        let () = emit-chunk chunk in
-        let () = emit (JMP (- len - 1)) in
-        ()
-      | PatSome p ->
-        let c1 = !cnt in
-        let () = loop p in
-        let len = !cnt - c1 in
-        let () = emit (SPLIT (-len, 1)) in
-        ()
-      | PatOpt p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (1, len + 1)) in
-        let () = emit-chunk chunk in
-        ()
-      | PatManyNg p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (len + 2, 1)) in
-        let () = emit-chunk chunk in
-        let () = emit (JMP (- len - 1)) in
-        ()
-      | PatSomeNg p ->
-        let c1 = !cnt in
-        let () = loop p in
-        let len = !cnt - c1 in
-        let () = emit (SPLIT (1, -len)) in
-        ()
-      | PatOptNg p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (len + 1, 1)) in
-        let () = emit-chunk chunk in
-        ()
-      | PatGroup p ->
-        let i = !ngroup in
-        let () = ngroup <- !ngroup + 1 in
-        let () = emit (SAVE (2 * i)) in
-        let () = loop p in
-        let () = emit (SAVE (2 * i + 1)) in
-        ()
-      | PatAnchor a ->
-        emit (ANCHOR a)
-      | PatSatisfy f ->
-        emit (PRED f) in
-      let () = loop p in
-      (!acc, !cnt) in
-    let (chunk, _) = codegen p in
-    let iseq = MATCH :: chunk |> List.reverse |> Array.of-list in
-    (iseq, !ngroup)
+      p |> Fn.fix (fun rec p -> (
+        match p with
+        | PatAlt(p1, p2) ->
+          let (init1, fin1) = rec p1 in
+          let (init2, fin2) = rec p2 in
+          let fin = make-state true [] in
+          let () = fin1 |> add-next Epsilon fin in
+          let () = fin2 |> add-next Epsilon fin in
+          let () = fin1 |> set-accept false in
+          let () = fin2 |> set-accept false in
+          let init = make-state false [(Epsilon, init1); (Epsilon, init2)] in
+          (init, fin)
+        | PatSeq(p1, p2) ->
+          let (init1, fin1) = rec p1 in
+          let (init2, fin2) = rec p2 in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatAny ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Any), fin)] in
+          (init, fin)
+        | PatChar(c) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Single(c)), fin)] in
+          (init, fin)
+        | PatSatisfy(f) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Pred(f)), fin)] in
+          (init, fin)
+        | PatAnchor(anchor) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Anchor(anchor), fin)] in
+          (init, fin)
+        | PatEmpty ->
+          let s = make-state true [] in
+          (s, s)
+        | PatMany(p) ->
+          let (init1, fin1) = rec p in
+          let fin2 = make-state true [] in
+          let init2 = make-state false [(Epsilon, init1); (Epsilon, fin2)] in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+        | PatManyNg(p) ->
+          let (init1, fin1) = rec p in
+          let fin2 = make-state true [] in
+          let init2 = make-state false [(Epsilon, fin2); (Epsilon, init1)] in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+        | PatSome(p) ->
+          let n = Ref.get ngroup in
+          let (init1, fin1) = rec p in
+          let () = ngroup |> Ref.set n in
+          let (init2, fin2) = rec (PatMany(p)) in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatSomeNg(p) ->
+          let n = Ref.get ngroup in
+          let (init1, fin1) = rec p in
+          let () = ngroup |> Ref.set n in
+          let (init2, fin2) = rec (PatManyNg(p)) in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatGroup(p) ->
+          let n = ngroup |> Ref.get in
+          let () = ngroup |> Ref.inc in
+          let (init1, fin1) = rec p in
+          let init2 = make-state false [(Save(2 * n), init1)] in
+          let fin2 = make-state true [] in
+          let () = fin1 |> add-next (Save(2 * n + 1)) fin2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+      )) in
+    let (init, _) = codegen p in
+    (| init = init; ngroup = Ref.get ngroup; states = Ref.get states; |)
 
-  let test p s =
-    let (iseq, ngroup) = compile (seq (many-ng any) (group p)) in
-    let (r, _) = run iseq ngroup s in
-    r
+  let test p input =
+    let re = compile (seq (many-ng any) (group p)) in
+    Option.is-some (run re input)
 
-  let exec p s =
-    let (iseq, ngroup) = compile (seq (many-ng any) (group p)) in
-    let (_, trace) = run iseq ngroup s in
-    let-rec subs i =
-      if i == ngroup then []
-      else match trace |> Array.get (2 * i + 1) with
-      | None -> None :: subs (i + 1)
-      | Some(e) ->
-        let (Some st) = trace |> Array.get (2 * i) in
-        Some (st, s |> String.sub st (e - st)) :: subs (i + 1) in
-    subs 0
+  let exec p input =
+    let re = compile (seq (many-ng any) (group p)) in
+    let array = Array.make Option.none (re#ngroup * 2) in
+    match run re input with
+    | Some(trace) ->
+      let () = trace |> List.iter (fun (i, pos) -> (
+        array |> Array.set i (Option.some pos)
+      )) in
+      let submatches = 0 |> Fn.fix (fun loop i -> (
+        if i == re#ngroup then
+          []
+        else
+          let submatch =
+            match array |> Array.get (2 * i + 1) with
+            | None ->
+              Option.none
+            | Some(e) ->
+              let s = array |> Array.get (2 * i) |> Option.unwrap in
+              Option.some (s, input |> String.sub s (e - s)) in
+          submatch :: loop (i + 1)
+      )) in
+      submatches
+    | None ->
+      Array.to-list array |> List.map (fun _ -> Option.none)
 
 % char-class
 %  = char-component+
@@ -359,46 +500,4 @@ end = struct
     in s |> run (expr << eof) |> Result.unwrap-or-else (fun _ ->
       panic (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
     )
-
-  let print-iseq iseq =
-    let-rec loop i xs =
-      match xs with
-      | [] -> ()
-      | x :: xs ->
-        let inst = match x with
-          | MATCH -> `MATCH`
-          | ANY -> `ANY`
-          | STRING s -> `STRING `# ^ s
-          | CHAR c -> `CHAR `# ^ String.of-char c
-          | JMP i -> `JMP `# ^ (String.of-int i)
-          | SPLIT (i,j) -> `SPLIT `# ^ (String.of-int i) ^ #` `# ^ (String.of-int j)
-          | SAVE i -> `SAVE `# ^ (String.of-int i)
-          | ANCHOR a ->
-            `ANCHOR `# ^ (match a with
-            | BOF -> `BOF`
-            | EOF -> `EOF`
-            | BOL -> `BOL`
-            | EOL -> `EOL`
-            | NOWHERE -> `NOWHERE`)
-          | PRED f -> `PRED <function>` in
-        let () = Debug.log (String.of-int i ^ `: `# ^ inst) in
-        loop (i + 1) xs in
-    loop 0 (Array.to-list iseq)
-
-  let-rec print re = match re with
-  | PatAlt (re1, re2) -> `(` ^ print re1 ^ `)|(` ^ print re2 ^ `)`
-  | PatSeq (re1, re2) -> `(` ^ print re1 ^ `)(` ^ print re2 ^ `)`
-  | PatAny -> `.`
-  | PatEmpty -> ` `
-  | PatString s -> s
-  | PatChar c -> String.of-char c
-  | PatMany re -> `(` ^ print re ^ `)*`
-  | PatSome re -> `(` ^ print re ^ `)+`
-  | PatOpt re -> `(` ^ print re ^ `)?`
-  | PatManyNg re -> `(` ^ print re ^ `)*?`
-  | PatSomeNg re -> `(` ^ print re ^ `)+?`
-  | PatOptNg re -> `(` ^ print re ^ `)??`
-  | PatGroup re -> `\(` ^ print re ^ `\)`
-  | PatAnchor (NOWHERE) -> ` `
-  | _ -> `□`
 end
