@@ -14,6 +14,56 @@
 module RegExp : sig
   type t
 
+  % perl-like representation of regexp
+  %
+  % = Supported Syntax =
+  %
+  % CHARACTERS
+  %   .       any character _including_ newline
+  %   \n      newline
+  %   \r      return
+  %   \t      tab
+  %   \s      space
+  %   \d      digit
+  %   \h      hex digit
+  %   \*      literal `*`; works also for any of $^[](){}*+?\|
+  %
+  % SUBMATCHING
+  %   (x)     capturing group
+  %
+  % QUANTIFIERS
+  %   x*      zero or more of x
+  %   x+      one or more of x
+  %   x?      zero or one of x
+  %   x*?     zero or more of x (non-greedy)
+  %   x+?     one or more of x (non-greedy)
+  %   x??     zero or one of x (non-greedy)
+  %
+  % CONCATENATION AND ALTERNATION
+  %   xy      x followed by y
+  %   x|y     x or y (x is prioritized)
+  %
+  % CHAR CLASSES
+  %   [abc]   'a', 'b', or 'c'
+  %   [^abc]  any character except 'a', 'b', or 'c'
+  %   [a-z]   any character between 'a' and 'z'
+  %   [A-Z]   any character between 'A' and 'Z'
+  %   [A-F]   any character between 'A' and 'F'
+  %   [a-f]   any character between 'a' and 'f'
+  %   [0-9]   any character between '0' and '9'
+  %   [0-7]   any character between '0' and '7'
+  %   []ab]   ']', 'a', or 'b'
+  %   [ab-]   'a', 'b', or '-'
+  %
+  % ANCHORS
+  %   ^       beginning of line
+  %   $       end of line
+  %
+  val of-string : string -> t
+
+  val test : t -> string -> bool
+  val exec : t -> string -> ((int * string) option) list
+
   % concatenation and alternation
   val empty : t
   val seq : t -> t -> t
@@ -53,12 +103,6 @@ module RegExp : sig
   val string : string -> t
   val spaces : t
   val between : t -> t -> t -> t
-
-  % perl-like representation of regexp
-  val of-string : string -> t
-
-  val test : t -> string -> bool
-  val exec : t -> string -> ((int * string) option) list
 
   % deprecated
   val many1 : t -> t % use `some` instead
