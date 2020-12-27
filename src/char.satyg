@@ -9,9 +9,6 @@ module Char : sig
 
   val equal : t -> t -> bool
   val eq : (t Eq.t) implicit
-
-  val (==) : t -> t -> bool
-
   val of-codepoint : int -> t
   val to-codepoint : t -> int
   val newline : t
@@ -50,7 +47,6 @@ end = struct
   let is-hex-digit = char-pred `[0-9A-Fa-f]`
   let is-space = char-pred (`[` ^ string-unexplode [9;10;11;12;13;32] ^ `]`)  % see https://stackoverflow.com/questions/39813584/how-to-split-on-whitespaces-in-ocaml
 
-  let (==) = Eq.equal eq
 
   let to-codepoint c =
     match string-explode c with

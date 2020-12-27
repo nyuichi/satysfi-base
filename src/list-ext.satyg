@@ -51,9 +51,6 @@ module List : sig
   val max : ('a Ord.t) implicit -> 'a list -> 'a option
   val min : ('a Ord.t) implicit -> 'a list -> 'a option
   val fold : 'b -> ('a -> 'b -> 'b) -> 'a list -> 'b
-  val ret : 'a -> 'a list
-  val and-then : ('a -> 'b list) -> 'a list -> 'b list
-  val snoc : 'a -> 'a list -> 'a list
 
   % unstable API (may subject to change in the future)
   val fold-left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
@@ -552,10 +549,4 @@ end = struct
 
   let fold x f l =
     fold-left (Fn.flip f) x l
-
-  let ret x = [x]
-
-  let and-then f x = concat (map f x)
-
-  let snoc x xs = append xs [x]
 end

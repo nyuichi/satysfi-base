@@ -9,6 +9,7 @@
 @import: char
 @import: parser
 @import: ref
+@import: eq
 
 module RegExp : sig
   type t
@@ -64,6 +65,10 @@ module RegExp : sig
   val many1-ng : t -> t % use `some-ng` instead
 end = struct
 
+  let snoc x xs = List.append xs [x]
+  let list-ret x = [x]
+  let push x r = r |> Ref.update (fun l -> x :: l)
+
   type char-class =
   | Single of Char.t
   | Any
@@ -113,7 +118,7 @@ end = struct
       )) in
     List.fold-right f (Result.ret [])
   let map-m f xs = sequence (List.map f xs)
-  let ret x = Result.ret (List.ret x)
+  let ret x = Result.ret (list-ret x)
   let and-then f x =
     x |> Result.and-then (fun l -> (
       l |> map-m f |> Result.map List.concat
@@ -135,7 +140,7 @@ end = struct
       Result.ok []
     else
       let () = mark-spawned state in
-      Result.ok (List.ret (| state = state; trace = trace |))
+      ret (| state = state; trace = trace |)
 
   let next-threads = Ref.make []
   let match-trace = Ref.make []
@@ -178,13 +183,13 @@ end = struct
           | Some(c) ->
             let hit =
               match class with
-              | Single(char) -> Char.(c == char)
+              | Single(char) -> Eq.equal Char.eq c char
               | Any -> true
               | Pred(f) -> f c in
             if hit then
               spawn state thread#trace
                 |> and-then (fun thread -> (
-                  let () = next-threads |> Ref.push thread in
+                  let () = next-threads |> push thread in
                   Result.ok []
                 ))
             else
@@ -309,7 +314,7 @@ end = struct
     let set-accept b (State s) =
       s#accept |> Ref.set b in
     let add-next label new (State s) =
-      s#next |> Ref.update (fun l -> List.snoc (label, new) l) in
+      s#next |> Ref.update (fun l -> snoc (label, new) l) in
     let-rec codegen p =
       p |> Fn.fix (fun rec p -> (
         match p with
