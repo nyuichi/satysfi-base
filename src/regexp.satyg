@@ -1,4 +1,4 @@
-% based on https://swtch.com/~rsc/regexp/regexp2.html
+% based on https://swtch.com/~rsc/regexp/regexp1.html
 @stage: persistent
 @import: base
 @import: string
