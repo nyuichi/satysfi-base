@@ -34,6 +34,7 @@
 @import: ../../src/cross-ref
 @import: ../../src/bool
 @import: ../../src/tree-set
+@import: ../../src/tree-map
 
 open Fn in
 
@@ -402,5 +403,13 @@ let () = TreeSet.size t |> String.of-int |> Debug.log in
 let () = Debug.log `check get:` in
 let () = s |> TreeSet.get Int.ord 20 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
 let () = s |> TreeSet.get Int.ord 23 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
+
+let () = Debug.log `==== TreeMap ====` in
+let m = TreeMap.of-list String.ord [(`apple`, 1); (`orange`, 3); (`pear`, 2)] in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
+let m = m |> TreeMap.insert String.ord `pear` 4 in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
 
 finish

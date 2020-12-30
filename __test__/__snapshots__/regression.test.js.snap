@@ -364,5 +364,10 @@ false
 [32m[debug.log] check get:[0m
 [32m[debug.log] 20[0m
 [32m[debug.log] -1[0m
+[32m[debug.log] ==== TreeMap ====[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
 "
 `;
