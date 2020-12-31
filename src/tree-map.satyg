@@ -8,31 +8,31 @@
 @import: tuple
 
 module TreeMap : sig
-  % Immutable map.
+  %% Immutable map.
   type 'k 'v t
 
-  % Creates an empty map.
+  %% Creates an empty map.
   val empty : 'k 'v t
 
-  % Returns the number of elements in the given map.
+  %% Returns the number of elements in the given map.
   val size : 'k 'v t -> int
 
-  % Returns [true] if the given map is empty.
+  %% Returns [true] if the given map is empty.
   val is-empty : 'k 'v t -> bool
 
-  % Returns [true] if the given map contains a binding to the given key.
+  %% Returns [true] if the given map contains a binding to the given key.
   val contains : ('k Ord.t) implicit -> 'k -> 'k 'v t -> bool
 
-  % [get ord k m] returns the value bound to [k].
+  %% [get ord k m] returns the value bound to [k].
   val get : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'v option
 
-  % Binds key to the value.
+  %% Binds key to the value.
   val insert : ('k Ord.t) implicit -> 'k -> 'v -> 'k 'v t -> 'k 'v t
 
-  % Removes a binding from the given map.
+  %% Removes a binding from the given map.
   val remove : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
 
-  % Constructs a map from a list. If the list contains two equal keys, the preceding one is preferred.
+  %% Constructs a map from a list. If the list contains two equal keys, the preceding one is preferred.
   val of-list : ('k Ord.t) implicit -> ('k * 'v) list -> 'k 'v t
 
   val to-list : 'k 'v t -> ('k * 'v) list

@@ -7,35 +7,35 @@
 @import: stream
 
 module TreeSet : sig
-  % Immutable set.
+  %% Immutable set.
   type 'a t
 
-  % Creates an empty set.
+  %% Creates an empty set.
   val empty : 'a t
 
-  % Returns the number of elements in the given set.
+  %% Returns the number of elements in the given set.
   val size : 'a t -> int
 
-  % Returns [true] if the given set is empty.
+  %% Returns [true] if the given set is empty.
   val is-empty : 'a t -> bool
 
-  % [x |> mem ord s] returns [true] if [s] contains [x].
+  %% [x |> mem ord s] returns [true] if [s] contains [x].
   val mem : ('a Ord.t) implicit -> 'a t -> 'a -> bool
 
-  % [contains ord x s] is the same as [mem ord s x].
+  %% [contains ord x s] is the same as [mem ord s x].
   val contains : ('a Ord.t) implicit -> 'a -> 'a t -> bool
 
-  % [get ord x s] Returns an element that is equal to [x] with respect to [ord].
+  %% [get ord x s] Returns an element that is equal to [x] with respect to [ord].
   val get : ('a Ord.t) implicit -> 'a -> 'a t -> 'a option
 
-  % Adds a value to the given set. If the set contains a value that is equal to the new value,
-  % the old value is replaced with the new value. If you need to get the old value, query [get] first.
+  %% Adds a value to the given set. If the set contains a value that is equal to the new value,
+  %% the old value is replaced with the new value. If you need to get the old value, query [get] first.
   val insert : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
 
-  % Removes a value from the given set.
+  %% Removes a value from the given set.
   val remove : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
 
-  % Constructs a set from a list. If the list contains two equal values, the preceding one is preferred.
+  %% Constructs a set from a list. If the list contains two equal values, the preceding one is preferred.
   val of-list : ('a Ord.t) implicit -> 'a list -> 'a t
 
   val to-list : 'a t -> 'a list
