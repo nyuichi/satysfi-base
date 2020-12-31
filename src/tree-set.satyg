@@ -111,7 +111,7 @@ end = struct
       let lv = l#value in
       let ll = l#left in
       let lr = l#right in
-      if height ll > height lr then
+      if height ll >= height lr then
         %        v              lv
         %      /   \           /  \
         %     lv    r   ->   ll     v
@@ -136,7 +136,7 @@ end = struct
       let rv = r#value in
       let rl = r#left in
       let rr = r#right in
-      if height rr > height rl then
+      if height rr >= height rl then
         %        v             rv
         %      /   \          /   \
         %     l    rv   ->   v     rr
