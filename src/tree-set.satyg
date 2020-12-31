@@ -218,13 +218,20 @@ end = struct
   let of-list ord list =
     list |> List.fold-right (fun x s -> (s |> insert ord x)) empty
   
-  let to-stream s =
-    s |> Stream.unfold (fun (Tree(t)) -> (
-      match pop t#root with
-      | None -> None
-      | Some((v, node)) ->
-        let next = Tree (| root = node; size = t#size - 1 |) in
-        Some((v, next))
+  % BFS-order
+  let to-stream (Tree(t)) =
+    [t#root] |> Stream.unfold (fun ns -> (
+      ns |> Fn.fix (fun loop ns -> (
+        match ns with
+        | [] -> None
+        | ((Node(n)) :: ns) ->
+          (match n with
+          | None ->
+            loop ns
+          | Some(n) ->
+            let next = List.append ns [n#left; n#right] in
+            Some((n#value, next)))
+      ))
     ))
 
   let to-list s = (Fn.compose Stream.to-list to-stream) s
