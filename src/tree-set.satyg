@@ -106,7 +106,7 @@ end = struct
     let hr = height r in
     if Int.(abs (hl - hr) < 2) then
       make-node l r v
-    else if hl >= hr + 1 then
+    else if hl > hr + 1 then
       let (Node(Some(l))) = l in
       let lv = l#value in
       let ll = l#left in
@@ -136,7 +136,7 @@ end = struct
       let rv = r#value in
       let rl = r#left in
       let rr = r#right in
-      if height rr >= height rl then
+      if height rr > height rl then
         %        v             rv
         %      /   \          /   \
         %     l    rv   ->   v     rr
