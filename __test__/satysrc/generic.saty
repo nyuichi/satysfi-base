@@ -33,6 +33,8 @@
 @import: ../../src/pager
 @import: ../../src/cross-ref
 @import: ../../src/bool
+@import: ../../src/tree-set
+@import: ../../src/tree-map
 
 open Fn in
 
@@ -341,5 +343,80 @@ let () = 0 |> Fn.fix (fun loop n -> (
     loop (n + 1)
 ))
 in
+
+let () = Debug.log `==== TreeSet ====` in
+% REMARK:
+% This test relies on the fact that the order of elements of a result from TreeSet.to-list is
+% level-order (BFS). If the implementation is changed, the following tests have to be updated.
+let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> String.concat |> Debug.log in
+let s = TreeSet.empty in
+let () = p s in
+let s = TreeSet.of-list Int.ord [3;2;3;1] in
+let () = p s in
+let () = Debug.log `check rotations:` in
+% right left rotation
+let s = [1;3;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right left rotation
+let s = [3;1;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% left rotation
+let s = [3;2;1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right rotation
+let s = [1;2;3] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+%     16
+%  8      24
+% 4 12  20  28
+let s = [16;8;24;4;12;20;28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right rotation
+let t = [3;2;1;0;-1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% left rotation
+let t = [29;30;31;32;33] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% right left rotation
+let t = [9;15;10;11] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% left right rotation
+let t = [23;17;22;19] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+let () = Debug.log `check size after insertion:` in
+let () = TreeSet.size TreeSet.empty |> String.of-int |> Debug.log in
+let () = TreeSet.size s |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 16 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 24 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 20 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let () = Debug.log `check remove:` in
+let t = TreeSet.remove Int.ord 16 s in
+let () = p t in
+let t = TreeSet.remove Int.ord 28 t in
+let () = p t in
+let t = TreeSet.remove Int.ord 24 t in
+let () = p t in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = TreeSet.remove Int.ord 10 t in
+let () = p t in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+% See https://github.com/nyuichi/satysfi-base/pull/140#discussion_r550355160
+let t = [9;4;11;2;6;10;13;1;3;5;8;12;0;7] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let t = TreeSet.remove Int.ord 13 t in
+let () = p t in
+let () = Debug.log `check get:` in
+let () = s |> TreeSet.get Int.ord 20 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
+let () = s |> TreeSet.get Int.ord 23 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
+
+let () = Debug.log `==== TreeMap ====` in
+let m = TreeMap.of-list String.ord [(`apple`, 1); (`orange`, 3); (`pear`, 2)] in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
+let m = m |> TreeMap.insert String.ord `pear` 4 in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
 
 finish

@@ -1,0 +1,75 @@
+@stage: persistent
+@import: base
+@import: ord
+@import: tree-set
+@import: option-ext
+@import: int
+@import: stream
+@import: tuple
+
+module TreeMap : sig
+  %% Immutable map.
+  type 'k 'v t
+
+  %% Creates an empty map.
+  val empty : 'k 'v t
+
+  %% Returns the number of elements in the given map.
+  val size : 'k 'v t -> int
+
+  %% Returns [true] if the given map is empty.
+  val is-empty : 'k 'v t -> bool
+
+  %% Returns [true] if the given map contains a binding to the given key.
+  val contains : ('k Ord.t) implicit -> 'k -> 'k 'v t -> bool
+
+  %% [get ord k m] returns the value bound to [k].
+  val get : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'v option
+
+  %% Binds key to the value.
+  val insert : ('k Ord.t) implicit -> 'k -> 'v -> 'k 'v t -> 'k 'v t
+
+  %% Removes a binding from the given map.
+  val remove : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
+
+  %% Constructs a map from a list. If the list contains two equal keys, the preceding one is preferred.
+  val of-list : ('k Ord.t) implicit -> ('k * 'v) list -> 'k 'v t
+
+  val to-list : 'k 'v t -> ('k * 'v) list
+
+  val to-stream : 'k 'v t -> ('k * 'v) Stream.t
+end = struct
+
+  type 'k 'v u = ('k * ('v option)) TreeSet.t
+  type 'k 'v t = 'k 'v u
+
+  let empty = TreeSet.empty
+
+  let size = TreeSet.size
+
+  let is-empty = TreeSet.is-empty
+
+  let key-ord ord = Ord.make (fun (k1, _) (k2, _) -> Ord.compare ord k1 k2)
+
+  let get ord key map =
+    map |> TreeSet.get (key-ord ord) (key, None) |> Option.map (Fn.compose Option.unwrap Pair.snd)
+
+  let contains ord key map =
+    Option.is-some (get ord key map)
+
+  let insert ord key value map =
+    map |> TreeSet.insert (key-ord ord) (key, Some(value))
+
+  let remove ord key map =
+    map |> TreeSet.remove (key-ord ord) (key, None)
+
+  let of-list ord list =
+    list |> List.map (fun (k, v) -> (k, Some(v))) |> TreeSet.of-list (key-ord ord)
+
+  let to-stream map =
+    map |> TreeSet.to-stream |> Stream.map (fun (k, v) -> (k, Option.unwrap v))
+
+  let to-list map =
+    map |> to-stream |> Stream.to-list
+
+end
