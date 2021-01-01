@@ -345,6 +345,9 @@ let () = 0 |> Fn.fix (fun loop n -> (
 in
 
 let () = Debug.log `==== TreeSet ====` in
+% REMARK:
+% This test relies on the fact that the order of elements of a result from TreeSet.to-list is
+% level-order (BFS). If the implementation is changed, the following tests have to be updated.
 let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> String.concat |> Debug.log in
 let s = TreeSet.empty in
 let () = p s in
