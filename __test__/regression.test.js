@@ -1,8 +1,26 @@
+const fs = require("fs");
 const shell = require("shelljs");
+const tmp = require("tmp");
 const { toMatchPdfSnapshot } = require("jest-pdf-snapshot");
 expect.extend({ toMatchPdfSnapshot });
 
 shell.config.fatal = true;
+
+function compileSatysfi(src) {
+  const tmpFile = tmp.fileSync();
+
+  const { code: exitCode } = shell.exec(`satysfi ${src} -o ${tmpFile.name}`, {
+    silent: true,
+  });
+
+  const pdfBuffer = fs.readFileSync(tmpFile.name);
+  tmpFile.removeCallback();
+
+  return {
+    exitCode,
+    pdfBuffer
+  };
+}
 
 shell.cd("__test__");
 
@@ -25,12 +43,10 @@ test("Check compiler outputs", () => {
 });
 
 test("SATySFi-iT", () => {
-  const filePath = `satysrc/satysfi-it.saty`;
-  const code = shell.exec(`satysfi ${filePath} -o test.pdf`, { silent: true })
-    .code;
+  const result = compileSatysfi("satysrc/satysfi-it.saty");
 
-  expect(code).toBe(0);
-  expect("test.pdf").toMatchPdfSnapshot();
+  expect(result.exitCode).toBe(0);
+  expect(result.pdfBuffer).toMatchPdfSnapshot();
 });
 
 describe("Derive", () => {
@@ -46,11 +62,10 @@ describe("Derive", () => {
 
   for (const filename of filenames) {
     test(`renders ${filename}`, () => {
-      const filePath = `satysrc/derive/${filename}.saty -o test.pdf`;
-      const code = shell.exec(`satysfi ${filePath}`, { silent: true }).code;
+      const result = compileSatysfi(`satysrc/derive/${filename}.saty`);
 
-      expect(code).toBe(0);
-      expect("test.pdf").toMatchPdfSnapshot();
+      expect(result.exitCode).toBe(0);
+      expect(result.pdfBuffer).toMatchPdfSnapshot();
     });
   }
 });
