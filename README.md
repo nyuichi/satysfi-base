@@ -33,7 +33,6 @@ Our repository contains:
 
 We also provide some specific packages for typesetting:
 
-- `derive`: display proof trees
 - `code2`: display program sources with syntax highlight
 
 ## Installation

@@ -41,23 +41,3 @@ test('SATySFi-iT', async (done) => {
   expect(image).toMatchImageSnapshot();
   done();
 })
-
-describe('Derive', () => {
-  const filenames = [
-    '01-derive', 
-    '02-assume',
-    '03-by',
-    '04-by-and-byop',
-    '05-from', 
-    '06-dotted-line',
-    '07-customized-config'
-  ];
-
-  for (const filename of filenames) {
-    test(`renders ${filename}`, async (done) => {
-      const image = await compileSatyToImg(`satysrc/derive/${filename}`);
-      expect(image).toMatchImageSnapshot();
-      done();
-    });
-  }
-})
