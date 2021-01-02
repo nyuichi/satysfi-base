@@ -8,7 +8,6 @@ let ( &&& ) b1 b2 = &(if ~b1 then ~b2 else false)
 %% Short-circuit disjunction operator. See also [(&&&)].
 let ( ||| ) b1 b2 = &(if ~b1 then true else ~b2)
 
-
 %% Construct for lazy evaluation.
 %% [make-thunk e] returns a thunk containing expression [e].
 let make-thunk e =

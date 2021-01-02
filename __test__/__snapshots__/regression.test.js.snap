@@ -17,6 +17,10 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] a[0m
 [32m[debug.log] b[0m
 [32m[debug.log] c[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
 [32m[debug.log] ==== List ====[0m
 [32m[debug.log] 12345[0m
 [32m[debug.log] 12345[0m
@@ -70,66 +74,30 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 9[0m
 [32m[debug.log] ==== RegExp ====[0m
 [32m[debug.log] true[0m
-[32m[debug.log] 0: SPLIT 1 3[0m
-[32m[debug.log] 1: CHAR a[0m
-[32m[debug.log] 2: JMP 2[0m
-[32m[debug.log] 3: CHAR b[0m
-[32m[debug.log] 4: MATCH[0m
 [32m[debug.log] true[0m
-[32m[debug.log] 0: SAVE 0[0m
-[32m[debug.log] 1: SPLIT 1 4[0m
-[32m[debug.log] 2: CHAR a[0m
-[32m[debug.log] 3: SPLIT -1 1[0m
-[32m[debug.log] 4: JMP 4[0m
-[32m[debug.log] 5: SAVE 2[0m
-[32m[debug.log] 6: CHAR c[0m
-[32m[debug.log] 7: SAVE 3[0m
-[32m[debug.log] 8: SAVE 1[0m
-[32m[debug.log] 9: SAVE 4[0m
-[32m[debug.log] 10: CHAR b[0m
-[32m[debug.log] 11: SPLIT -1 1[0m
-[32m[debug.log] 12: SAVE 5[0m
-[32m[debug.log] 13: MATCH[0m
 [32m[debug.log] Some(0, \\"aabbb\\")[0m
 [32m[debug.log] Some(0, \\"aa\\")[0m
 [32m[debug.log] None[0m
 [32m[debug.log] Some(2, \\"bbb\\")[0m
-[32m[debug.log] 0: SPLIT 3 1[0m
-[32m[debug.log] 1: ANY[0m
-[32m[debug.log] 2: JMP -2[0m
-[32m[debug.log] 3: SAVE 0[0m
-[32m[debug.log] 4: SPLIT 1 5[0m
-[32m[debug.log] 5: SPLIT 1 3[0m
-[32m[debug.log] 6: CHAR a[0m
-[32m[debug.log] 7: JMP -2[0m
-[32m[debug.log] 8: JMP -4[0m
-[32m[debug.log] 9: SAVE 1[0m
-[32m[debug.log] 10: MATCH[0m
 [32m[debug.log] true[0m
 [32m[debug.log] Some(7, \\"le\\")[0m
 [32m[debug.log] Some(7, \\"le\\")[0m
 [32m[debug.log] Some(10, \\"apple\\")[0m
 [32m[debug.log] Some(0, \\"  \\")[0m
-[32m[debug.log] ()|((a)())[0m
-[32m[debug.log] ()|((.)())[0m
-[32m[debug.log] ()|((\\\\(()|((\\\\(()|((a)())\\\\))())\\\\))())[0m
-[32m[debug.log] ()|((\\\\(()|(((a)*?)())\\\\))())[0m
-[32m[debug.log] ()|((\\\\(()|((a)((\\\\(()|((c)())\\\\))()))\\\\))((\\\\(()|((b)())\\\\))()))[0m
-[32m[debug.log] ()|((\\\\((()|(((a)+)()))|((\\\\(()|((c)())\\\\))())\\\\))((\\\\(()|(((b)+)())\\\\))()))[0m
 [32m[debug.log] true[0m
-[32m[debug.log] ()|((
-)((
-)((	)(($)((()(())((*)((?)()))))))))[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
 [32m[debug.log] false[0m
 [32m[debug.log] false[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
+testing long input
+false
 [32m[debug.log] ==== Parser ====[0m
 [32m[debug.log] aaa[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 10[0m
+[32m[debug.log] bar[0m
 [32m[debug.log] ==== Lexer ====[0m
 [32m[debug.log] (| kind = identifier, data = \\"abc\\" |)[0m
 [32m[debug.log] (| kind = whitespace, data = \\" \\" |)[0m
@@ -183,6 +151,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] foobar[0m
 [32m[debug.log] ==== Float ====[0m
 [32m[debug.log] 3.14159265359[0m
+[32m[debug.log] 2.71828182846[0m
 [32m[debug.log] inf == inf = true[0m
 [32m[debug.log] inf == -inf = false[0m
 [32m[debug.log] inf == -nan = false[0m
@@ -221,6 +190,89 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 1. == 1. = true[0m
 [32m[debug.log] inf[0m
 [32m[debug.log] -inf[0m
+[32m[debug.log] -nan[0m
+[32m[debug.log] 23.1406926328[0m
+[32m[debug.log] 1.14472988585[0m
+[32m[debug.log] 36.4621596072[0m
+[32m[debug.log] 2.51097226443e+17[0m
+[32m[debug.log] 1.41421356237[0m
+[32m[debug.log] 0.497149872694[0m
+[32m[debug.log] 2.22507385851e-308[0m
+[32m[debug.log] 1.11253692925e-308[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] 2.[0m
+[32m[debug.log] 4.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] -2.[0m
+[32m[debug.log] -4.[0m
+[32m[debug.log] -6.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] 2.[0m
+[32m[debug.log] 3.[0m
+[32m[debug.log] 5.[0m
+[32m[debug.log] -3.[0m
+[32m[debug.log] -4.[0m
+[32m[debug.log] -6.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] 3.[0m
+[32m[debug.log] 4.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] -2.[0m
+[32m[debug.log] -3.[0m
+[32m[debug.log] -5.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] 2.[0m
+[32m[debug.log] 3.[0m
+[32m[debug.log] 5.[0m
+[32m[debug.log] -2.[0m
+[32m[debug.log] -3.[0m
+[32m[debug.log] -5.[0m
+[32m[debug.log] 6.[0m
+[32m[debug.log] 9.88131291682e-324[0m
+[32m[debug.log] 4.94065645841e-324[0m
+[32m[debug.log] 0.[0m
+[32m[debug.log] 4.49423283716e+307[0m
+[32m[debug.log] 8.98846567431e+307[0m
+[32m[debug.log] inf[0m
 [32m[debug.log] Some(123.45)[0m
 [32m[debug.log] Some(-123.45)[0m
 [32m[debug.log] Some(123.)[0m
@@ -268,6 +320,53 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 832040[0m
 [32m[debug.log] 0[0m
 [32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] ==== Fn ====[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 1[0m
+[32m[debug.log] 2[0m
+[32m[debug.log] 3[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 5[0m
+[32m[debug.log] 6[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 8[0m
+[32m[debug.log] 9[0m
+[32m[debug.log] done[0m
+[32m[debug.log] ==== TreeSet ====[0m
+[32m[debug.log] [0m
+[32m[debug.log] 2,1,3[0m
+[32m[debug.log] check rotations:[0m
+[32m[debug.log] 2,1,3[0m
+[32m[debug.log] 2,1,3[0m
+[32m[debug.log] 2,1,3[0m
+[32m[debug.log] 2,1,3[0m
+[32m[debug.log] 16,8,24,4,12,20,28[0m
+[32m[debug.log] 3,1,16,0,2,8,24,-1,4,12,20,28[0m
+[32m[debug.log] 29,16,31,8,24,30,32,4,12,20,28,33[0m
+[32m[debug.log] 12,9,16,8,10,15,24,4,11,20,28[0m
+[32m[debug.log] 20,16,23,8,17,22,24,4,12,19,28[0m
+[32m[debug.log] check size after insertion:[0m
+[32m[debug.log] 0[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] 7[0m
+[32m[debug.log] check remove:[0m
+[32m[debug.log] 20,8,24,4,12,28[0m
+[32m[debug.log] 20,8,24,4,12[0m
+[32m[debug.log] 8,4,20,12[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 8,4,20,12[0m
+[32m[debug.log] 4[0m
+[32m[debug.log] 4,2,9,1,3,6,11,0,5,8,10,12,7[0m
+[32m[debug.log] check get:[0m
+[32m[debug.log] 20[0m
+[32m[debug.log] -1[0m
+[32m[debug.log] ==== TreeMap ====[0m
+[32m[debug.log] 3[0m
 [32m[debug.log] 2[0m
 [32m[debug.log] 3[0m
 [32m[debug.log] 4[0m

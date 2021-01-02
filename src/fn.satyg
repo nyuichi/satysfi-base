@@ -1,3 +1,6 @@
+@stage: persistent
+@import: base
+
 %% Right-associative function application operator.
 %% [f x <| g y <| h z] is interpreted as [f x (g y (h z))].
 let (<|) f x = f x
@@ -34,6 +37,19 @@ module Fn : sig
   %% e.g. [String.equal |> on Tuple.fst]
   val on : ('a -> 'b) -> ('b -> 'b -> 'c) -> ('a -> 'a -> 'c)
 
+  %% [fix f] returns the fixed point of [f].
+  %%
+  %% e.g. [
+  %% 0 |> fix (fun loop n ->
+  %%   if n > 10 then
+  %%     Debug.log `finish`
+  %%   else
+  %%     Debug.log (String.of-int n) before
+  %%     loop (n + 1)
+  %% )
+  %% ]
+  val fix : (('a -> 'b) -> 'a -> 'b) -> 'a -> 'b
+
   %% [as-type-of x y] returns [y]. This should be used to help
   %% the type checker to infer the type of [x].
   %%
@@ -49,5 +65,6 @@ end = struct
   let non f a = not (f a)
   let tap f x = ignore (f x) before x
   let on f g a1 a2 = g (f a1) (f a2)
+  let-rec fix f x = f (fix f) x
   let as-type-of x y = y
 end

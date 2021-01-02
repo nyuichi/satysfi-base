@@ -1,3 +1,4 @@
+@stage: persistent
 @import: promise
 @import: base
 @import: option-ext
@@ -73,7 +74,7 @@ end = struct
     Promise.make Nil
 
   let cons x xs =
-    Promise.delay ~(!!(&(Cons (run-thunk x, run-thunk xs))))
+    Promise.delay (fun () -> Cons (run-thunk x, run-thunk xs))
 
   let uncons s =
     match Promise.force s with
@@ -88,12 +89,11 @@ end = struct
 
   let-rec unfold f x =
     Promise.delay-force
-      ~(!!(&(match f x with
-            | None -> nil ()
-            | Some(a, x) ->
-              cons
-                ~(!!(&a))
-                ~(!!(&(unfold f x))))))
+      (fun () -> (
+        match f x with
+        | None -> nil ()
+        | Some(a, x) -> cons (fun () -> a) (fun () -> unfold f x)
+      ))
 
   let map f s =
     let go s =
@@ -129,24 +129,25 @@ end = struct
 
   let-rec take n s =
     Promise.delay-force
-      ~(!!(&(if n == 0 then
-               nil ()
-             else
-               match uncons s with
-               | None -> nil ()
-               | Some(x, xs) ->
-                 cons
-                   ~(!!(&x))
-                   ~(!!(&(take (n - 1) xs))))))
+      (fun () -> (
+        if n == 0 then
+          nil ()
+        else
+          match uncons s with
+          | None -> nil ()
+          | Some(x, xs) -> cons (fun () -> x) (fun () -> take (n - 1) xs)
+      ))
 
   let-rec drop n s =
     Promise.delay-force
-      ~(!!(&(if n == 0 then
-               s
-             else
-               match uncons s with
-               | None -> nil ()
-               | Some(x, xs) -> drop (n - 1) xs)))
+      (fun () -> (
+        if n == 0 then
+          s
+        else
+          match uncons s with
+          | None -> nil ()
+          | Some(x, xs) -> drop (n - 1) xs
+      ))
 
   let-rec to-list s =
     match uncons s with
@@ -167,22 +168,16 @@ end = struct
 
   let fib =
     let-rec fib n m =
-      cons
-        ~(!!(&n))
-        ~(!!(&(fib m (n + m))))
+      cons (fun () -> n) (fun () -> fib m (n + m))
     in fib 1 1
 
   let nat =
     let-rec nat n =
-      cons
-        ~(!!(&n))
-        ~(!!(&(nat (n + 1))))
+      cons (fun () -> n) (fun () -> nat (n + 1))
     in nat 0
 
   let-rec const x =
-    cons
-      ~(!!(&x))
-      ~(!!(&(const x)))
+    cons (fun () -> x) (fun () -> const x)
 
   let null s =
     s |> uncons |> Option.is-none
@@ -226,12 +221,11 @@ end = struct
 
   let-rec chain s2 s1 =
     Promise.delay-force
-      ~(!!(&(match uncons s1 with
-            | None -> s2
-            | Some(x, s1) ->
-              cons
-                ~(!!(&x))
-                ~(!!(&(chain s1 s2))))))
+      (fun () -> (
+        match uncons s1 with
+        | None -> s2
+        | Some(x, s1) -> cons (fun () -> x) (fun () -> chain s1 s2)
+      ))
 
   let append s1 s2 =
     s1 |> chain s2
@@ -254,35 +248,34 @@ end = struct
       | Some(x, _) when not (f x) -> s
       | Some(_, s) -> go s
     in
-      Promise.delay-force ~(!!(&(go s)))
+      Promise.delay-force (fun () -> go s)
 
   let-rec take-while f s =
     Promise.delay-force
-      ~(!!(&(match uncons s with
-            | None -> nil ()
-            | Some(x, s) ->
-              if f x then
-                cons
-                  ~(!!(&x))
-                  ~(!!(&(take-while f s)))
-              else
-                nil ())))
+      (fun () -> (
+        match uncons s with
+        | None -> nil ()
+        | Some(x, s) ->
+            if f x then
+              cons (fun () -> x) (fun () -> take-while f s)
+            else
+              nil ()
+      ))
 
   let map-while f s =
     s |> map f |> take-while Option.is-some |> map Option.unwrap
 
   let-rec flatten s =
     Promise.delay-force
-      ~(!!(&(match uncons s with
-            | None -> nil ()
-            | Some(x, s) ->
-              append
-                x
-                (flatten s))))
+      (fun () -> (
+        match uncons s with
+        | None -> nil ()
+        | Some(x, s) -> append x (flatten s)
+      ))
 
   let flat-map f s =
     s |> map f |> flatten
-  
+
   let tap f s =
     s |> map (fun x -> (f x before x))
 
@@ -357,14 +350,7 @@ end = struct
     s |> enumerate |> find (Fn.compose f Pair.snd) |> Option.map Pair.fst
 
   let of-string s =
-    let len = String.length s in
-    let step i =
-      if i == len then
-        Option.none
-      else
-        Option.some (Char.at i s, i + 1)
-    in
-      0 |> unfold step
+    of-list (String.to-list s)
 
   let of-array s =
     let len = Array.length s in

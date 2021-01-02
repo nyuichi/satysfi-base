@@ -1,5 +1,5 @@
-% based on https://swtch.com/~rsc/regexp/regexp2.html
-
+% based on https://swtch.com/~rsc/regexp/regexp1.html
+@stage: persistent
 @import: base
 @import: string
 @import: array
@@ -8,9 +8,61 @@
 @import: list-ext
 @import: char
 @import: parser
+@import: ref
+@import: eq
 
 module RegExp : sig
   type t
+
+  % perl-like representation of regexp
+  %
+  % = Supported Syntax =
+  %
+  % CHARACTERS
+  %   .       any character _including_ newline
+  %   \n      newline
+  %   \r      return
+  %   \t      tab
+  %   \s      space
+  %   \d      digit
+  %   \h      hex digit
+  %   \*      literal `*`; works also for any of $^[](){}*+?\|
+  %
+  % SUBMATCHING
+  %   (x)     capturing group
+  %
+  % QUANTIFIERS
+  %   x*      zero or more of x
+  %   x+      one or more of x
+  %   x?      zero or one of x
+  %   x*?     zero or more of x (non-greedy)
+  %   x+?     one or more of x (non-greedy)
+  %   x??     zero or one of x (non-greedy)
+  %
+  % CONCATENATION AND ALTERNATION
+  %   xy      x followed by y
+  %   x|y     x or y (x is prioritized)
+  %
+  % CHAR CLASSES
+  %   [abc]   'a', 'b', or 'c'
+  %   [^abc]  any character except 'a', 'b', or 'c'
+  %   [a-z]   any character between 'a' and 'z'
+  %   [A-Z]   any character between 'A' and 'Z'
+  %   [A-F]   any character between 'A' and 'F'
+  %   [a-f]   any character between 'a' and 'f'
+  %   [0-9]   any character between '0' and '9'
+  %   [0-7]   any character between '0' and '7'
+  %   []ab]   ']', 'a', or 'b'
+  %   [ab-]   'a', 'b', or '-'
+  %
+  % ANCHORS
+  %   ^       beginning of line
+  %   $       end of line
+  %
+  val of-string : string -> t
+
+  val test : t -> string -> bool
+  val exec : t -> string -> ((int * string) option) list
 
   % concatenation and alternation
   val empty : t
@@ -22,15 +74,14 @@ module RegExp : sig
 
   % quantifiers
   val many : t -> t
-  val many1 : t -> t
+  val some : t -> t
   val opt : t -> t
   val many-ng : t -> t  % non-greedy Kleene star
-  val many1-ng : t -> t
+  val some-ng : t -> t
   val opt-ng : t -> t
 
   % submatching
   val group : t -> t
-  %val ref : int -> t
 
   % anchors
   val bof : t  % beginning of file
@@ -53,246 +104,370 @@ module RegExp : sig
   val spaces : t
   val between : t -> t -> t -> t
 
-  % perl-like representation of regexp
-  val of-string : string -> t
-
-  val test : t -> string -> bool
-  val exec : t -> string -> ((int * string) option) list
-
-  % for debug
-  type vm-inst
-  val compile : t -> vm-inst Array.t * int
-  val print-iseq : vm-inst Array.t -> unit
-  val print : t -> string
+  % deprecated
+  val many1 : t -> t % use `some` instead
+  val many1-ng : t -> t % use `some-ng` instead
 end = struct
+
+  let snoc x xs = List.append xs [x]
+  let list-ret x = [x]
+  let push x r = r |> Ref.update (fun l -> x :: l)
+
+  type char-class =
+  | Single of Char.t
+  | Any
+  | Pred of Char.t -> bool
 
   type anchor = BOF | EOF | BOL | EOL | NOWHERE
 
-  type vm-inst =
-  | MATCH
-  | CHAR of Char.t
-  | JMP of int
-  | SPLIT of int * int
-  | ANY
-  | STRING of string
-  | SAVE of int
-%  | REF of int   % backreference
-  | ANCHOR of anchor
-  | PRED of Char.t -> bool
-  | REGEXP of regexp  % tests a character using built-in regexp; mainly for performance
+  type label =
+  | Char of char-class
+  | Anchor of anchor
+  | Save of int
+  | Epsilon
 
-  let run iseq ngroup s =
-    let len = String.length s in
-    let dp = Array.length iseq |> Array.init (fun _ -> (len + 1 |> Array.make None)) in
-    let memoize2 f i j =
-      let dpi = dp |> Array.get i in
-      match dpi |> Array.get j with
-      | Some r -> r
+  %
+  %     label[0]
+  %  s ----------> next[0]
+  %  |
+  %  |  label[1]
+  %  +-----------> next[1]
+  %  |
+  %       ...
+  %
+  type state = State of (|
+    accept : bool ref;
+    next : ((label * state) list) ref;
+    mark : int ref; % mark == current-id means there is already a thread running this state
+  |)
+
+  type thread = (|
+    state : state;
+    trace : (int * int) list; % save id and char position in input
+  |)
+
+  type re = (|
+    init : state;
+    ngroup : int;
+    states : state list;
+  |)
+
+  % monadic combinators for ('a 'e result) list
+  let sequence =
+    let f m ms =
+      m |> Result.and-then (fun x -> (
+        ms |> Result.and-then (fun xs -> (
+          Result.ret (x :: xs)
+        ))
+      )) in
+    List.fold-right f (Result.ret [])
+  let map-m f xs = sequence (List.map f xs)
+  let ret x = Result.ret (list-ret x)
+  let and-then f x =
+    x |> Result.and-then (fun l -> (
+      l |> map-m f |> Result.map List.concat
+    ))
+
+  let current-id = Ref.make 0 % number of non-epsilon steps ever done; used to avoid spawning duplicate threads
+  let current-pos = Ref.make 0
+  let current-stream = Ref.make (Stream.nil ())
+  let current-input = Ref.make ` `
+
+  let is-spawned (State s) =
+    Ref.get s#mark == Ref.get current-id
+  let mark-spawned (State s) =
+    s#mark |> Ref.set (Ref.get current-id)
+
+  % spawns a new thread unless there already exists a thread running the same state
+  let spawn state trace =
+    if is-spawned state then
+      Result.ok []
+    else
+      let () = mark-spawned state in
+      ret (| state = state; trace = trace |)
+
+  let next-threads = Ref.make []
+  let match-trace = Ref.make []
+
+  % returns Ok([]) if it didn't match and spawned some threads
+  % returns Err(trace) if it matched
+  let-rec step-1 thread =
+    let (State state) = thread#state in
+    if Ref.get state#accept then
+      Result.err thread#trace
+    else
+      Result.ok (Ref.get state#next) |> and-then (fun (label, state) -> (
+        match label with
+        | Epsilon ->
+          spawn state thread#trace
+            |> and-then step-1
+        | Save(i) ->
+          let trace = (i, Ref.get current-pos) :: thread#trace in
+          spawn state trace
+            |> and-then step-1
+        | Anchor(anthor) ->
+          let hit =
+            let pos = Ref.get current-pos in
+            let input = Ref.get current-input in
+            match anthor with
+            | BOF -> pos == 0
+            | EOF -> pos == String.length input
+            | BOL -> (pos == 0) |||- (fun () -> Eq.equal Char.eq (Char.at (pos - 1) input) Char.newline)
+            | EOL -> (pos == String.length input) |||- (fun () -> Eq.equal Char.eq (Char.at pos input) Char.newline)
+            | NOWHERE -> false in
+          if hit then
+            spawn state thread#trace
+              |> and-then step-1
+          else
+            Result.ok []
+        | Char(class) ->
+          (match Stream.head (Ref.get current-stream) with
+          | None ->
+            Result.ok []
+          | Some(c) ->
+            let hit =
+              match class with
+              | Single(char) -> Eq.equal Char.eq c char
+              | Any -> true
+              | Pred(f) -> f c in
+            if hit then
+              spawn state thread#trace
+                |> and-then (fun thread -> (
+                  let () = next-threads |> push thread in
+                  Result.ok []
+                ))
+            else
+              Result.ok []
+          )
+      ))
+
+  % returns (threads, Some(trace)) if NFA reached an accepting state and there are threads that are not exhausted.
+  let step-all threads =
+    let () = next-threads |> Ref.set [] in
+    let () = match-trace |> Ref.set [] in
+    let res = Result.ok threads |> and-then step-1 in
+    let next-threads = Ref.get next-threads in
+    let trace =
+      match res with
+      | Ok(_) ->
+        Option.none
+      | Err(trace) ->
+        Option.some trace in
+    (next-threads, trace)
+
+  let clear-marks re =
+    re#states |> List.iter (fun (State s) -> (
+      s#mark |> Ref.set (-1)
+    ))
+
+  % returns the initial thread
+  let spawn-init re =
+    let () = clear-marks re in
+    let init = State (|
+      accept = Ref.make false;
+      next = Ref.make [(Epsilon, re#init)];
+      mark = Ref.make (-1);
+    |) in
+    (| state = init; trace = [] |)
+
+  % returns Some(trace) or None
+  let run re input =
+    let () = current-id |> Ref.set 0 in
+    let () = current-pos |> Ref.set 0 in
+    let () = current-stream |> Ref.set (Stream.of-string input) in
+    let () = current-input |> Ref.set input in
+    let input-length = String.length input in
+    let current-answer = Ref.make Option.none in
+    [spawn-init re] |> Fn.fix (fun loop threads -> (
+      let (next-threads, trace) = step-all threads in
+      let () = match trace with
+      | Some(trace) ->
+        current-answer |> Ref.set (Option.some trace)
       | None ->
-        let () = dpi |> Array.set j (Some true) in   % avoid infinite loop e.g. (a*)*
-        let r = f i j in
-        let () = dpi |> Array.set j (Some r) in
-        r in
-    let trace = 2 * ngroup |> Array.make None in
-    let-rec loop pc sp =
-      let main pc sp =
-        match iseq |> Array.get pc with
-        | MATCH -> true
-        | CHAR c -> ~(&(sp < len) &&& &(Eq.equal Char.eq c (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
-        | JMP l -> loop (pc + l) sp
-        | SPLIT (l1, l2) -> ~(&(loop (pc + l1) sp) ||| &(loop (pc + l2) sp))
-        | ANY -> if sp < len then loop (pc + 1) (sp + 1) else false
-        | STRING c ->
-          let l = String.length c in
-          ~(&(sp + l <= len) &&& &(Eq.equal String.eq c (s |> String.sub sp l)) &&& &(loop (pc + 1) (sp + l)))
-        | SAVE i ->
-          let old = trace |> Array.get i in
-          let () = trace |> Array.set i (Some sp) in
-          if loop (pc + 1) sp then true else
-          let () = trace |> Array.set i old in
-          false
-        % % The current implementation of REF instruction does not work well with memoize2.
-        % % I leave this for future refactoring.
-        % | REF i ->
-        %   (match trace |> Array.get (2 * i + 1) with
-        %   | None -> panic `unbound backreference`
-        %   | Some(j) -> let (Some st) = trace |> Array.get (2 * i) in
-        %     let c = s |> String.sub st (j - st) in
-        %     let l = String.length c in
-        %     if sp + l <= len then if String.equal c (s |> String.sub sp l) then loop (pc + 1) (sp + l) else false else false)
-        | ANCHOR a ->
-          ~(&(match a with
-              | BOF -> sp == 0
-              | EOF -> sp == String.length s
-              | BOL -> ~(&(sp == 0) ||| &(Eq.equal Char.eq (Char.at (sp - 1) s) Char.newline))
-              | EOL -> ~(&(sp == String.length s) ||| &(Eq.equal Char.eq (Char.at sp s) Char.newline))
-              | NOWHERE -> false)
-            &&& &(loop (pc + 1) sp))
-        | PRED f ->
-          ~(&(sp < len) &&& &(f (Char.at sp s)) &&& &(loop (pc + 1) (sp + 1)))
-        | REGEXP re -> ~(&(sp < len) &&& &(string-match re (s |> String.sub sp 1)) &&& &(loop (pc + 1) (sp + 1))) in
-      memoize2 main pc sp in
-    let r = loop 0 0 in
-    (r, trace)
+        () in
+      if Ref.get current-pos == input-length || List.null next-threads then
+        Ref.get current-answer
+      else
+        let () = current-id |> Ref.inc in
+        let () = current-pos |> Ref.inc in
+        let () = current-stream |> Ref.update (fun s -> Option.unwrap (Stream.tail s)) in
+        loop next-threads
+    ))
 
   type pattern =
-  | P-alt of pattern * pattern
-  | P-seq of pattern * pattern
-  | P-any
-  | P-empty
-  | P-string of string
-  | P-char of Char.t
-  | P-many of pattern
-  | P-many1 of pattern
-  | P-opt of pattern
-  | P-many-ng of pattern
-  | P-many1-ng of pattern
-  | P-opt-ng of pattern
-  | P-group of pattern
-%  | P-ref of int
-  | P-anchor of anchor
-  | P-satisfy of Char.t -> bool
-  | P-regexp of regexp
+  | PatAlt of pattern * pattern
+  | PatSeq of pattern * pattern
+  | PatAny
+  | PatEmpty
+  | PatChar of Char.t
+  | PatMany of pattern
+  | PatSome of pattern % this cannot be replaced with PatMany because `(a)+` is not equal to `(a)(a)*`.
+  | PatManyNg of pattern
+  | PatSomeNg of pattern
+  | PatGroup of pattern
+  | PatAnchor of anchor
+  | PatSatisfy of Char.t -> bool
 
   type t = pattern
 
-  let alt p1 p2 = P-alt (p1, p2)
-  let seq p1 p2 = P-seq (p1, p2)
-  let any = P-any
-  let empty = P-empty
-  let string c = P-string c
-  let char c = P-char c
-  let many p = P-many p
-  let many1 p = P-many1 p
-  let opt p = P-opt p
-  let many-ng p = P-many-ng p
-  let many1-ng p = P-many1-ng p
-  let opt-ng p = P-opt-ng p
-  let group p = P-group p
-%  let ref i = P-ref i
-  let bof = P-anchor (BOF)
-  let eof = P-anchor (EOF)
-  let bol = P-anchor (BOL)
-  let eol = P-anchor (EOL)
-  let fail = P-anchor (NOWHERE)
-  let satisfy f = P-satisfy f
+  let alt p1 p2 = PatAlt(p1, p2)
+  let seq p1 p2 = PatSeq(p1, p2)
+  let any = PatAny
+  let empty = PatEmpty
+  let char c = PatChar(c)
+  let many p = PatMany(p)
+  let some p = PatSome(p)
+  let opt p = alt p empty
+  let many-ng p = PatManyNg(p)
+  let some-ng p = PatSomeNg(p)
+  let opt-ng p = alt empty p
+  let group p = PatGroup(p)
+  let bof = PatAnchor(BOF)
+  let eof = PatAnchor(EOF)
+  let bol = PatAnchor(BOL)
+  let eol = PatAnchor(EOL)
+  let fail = PatAnchor(NOWHERE)
+  let satisfy f = PatSatisfy(f)
 
-  let oneof s = % TODO: use regexp
-    let s = String.to-list s in
-    satisfy (fun c -> (Option.is-some (List.find (Eq.equal Char.eq c) s)))
-  let alpha = P-satisfy Char.is-alpha
-  let digit = P-satisfy Char.is-digit
-  let hex-digit = P-satisfy Char.is-hex-digit
-  let space = P-satisfy Char.is-space
-  let spaces = many1 space
+  let oneof s = satisfy (Char.mem s)
+  let alpha = satisfy Char.is-alpha
+  let digit = satisfy Char.is-digit
+  let hex-digit = satisfy Char.is-hex-digit
+  let space = satisfy Char.is-space
+  let spaces = some space
 
   let between op cl p = seq op (seq p cl)
   let choice ts = List.fold-left alt fail ts
   let sequence ts = List.fold-right seq empty ts
+  let string s = String.to-list s |> List.map char |> sequence
+
+  let many1 = some
+  let many1-ng = some-ng
 
   let compile p =
-    let-mutable ngroup <- 0 in
+    let ngroup = Ref.make 0 in
+    let states = Ref.make [] in
+    let make-state accept next =
+      let s = State (|
+        accept = Ref.make accept;
+        next = Ref.make next;
+        mark = Ref.make (-1);
+      |) in
+      let () = states |> Ref.update (fun l -> (s :: l)) in
+      s in
+    let set-accept b (State s) =
+      s#accept |> Ref.set b in
+    let add-next label new (State s) =
+      s#next |> Ref.update (fun l -> snoc (label, new) l) in
     let-rec codegen p =
-      let-mutable acc <- [] in
-      let-mutable cnt <- 0 in
-      let emit inst =
-        let () = acc <- inst :: !acc in
-        let () = cnt <- !cnt + 1 in
-        () in
-      let emit-chunk chunk =
-        chunk |> List.fold-right (fun inst () -> emit inst) () in
-      let-rec loop p = match p with
-      | P-alt (p1, p2) ->
-        let (chunk1, len1) = codegen p1 in
-        let (chunk2, len2) = codegen p2 in
-        let () = emit (SPLIT (1, len1 + 2)) in
-        let () = emit-chunk chunk1 in
-        let () = emit (JMP (len2 + 1)) in
-        let () = emit-chunk chunk2 in
-        ()
-      | P-seq (p1, p2) ->
-        let () = loop p1 in
-        let () = loop p2 in
-        ()
-      | P-any ->
-        emit ANY
-      | P-empty ->
-        ()
-      | P-string c ->
-        emit (STRING c)
-      | P-char c ->
-        emit (CHAR c)
-      | P-many p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (1, len + 2)) in
-        let () = emit-chunk chunk in
-        let () = emit (JMP (- len - 1)) in
-        ()
-      | P-many1 p ->
-        let c1 = !cnt in
-        let () = loop p in
-        let len = !cnt - c1 in
-        let () = emit (SPLIT (-len, 1)) in
-        ()
-      | P-opt p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (1, len + 1)) in
-        let () = emit-chunk chunk in
-        ()
-      | P-many-ng p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (len + 2, 1)) in
-        let () = emit-chunk chunk in
-        let () = emit (JMP (- len - 1)) in
-        ()
-      | P-many1-ng p ->
-        let c1 = !cnt in
-        let () = loop p in
-        let len = !cnt - c1 in
-        let () = emit (SPLIT (1, -len)) in
-        ()
-      | P-opt-ng p ->
-        let (chunk, len) = codegen p in
-        let () = emit (SPLIT (len + 1, 1)) in
-        let () = emit-chunk chunk in
-        ()
-      | P-group p ->
-        let i = !ngroup in
-        let () = ngroup <- !ngroup + 1 in
-        let () = emit (SAVE (2 * i)) in
-        let () = loop p in
-        let () = emit (SAVE (2 * i + 1)) in
-        ()
-%      | P-ref i ->
-%        emit (REF i)
-      | P-anchor a ->
-        emit (ANCHOR a)
-      | P-satisfy f ->
-        emit (PRED f)
-      | P-regexp re ->
-        emit (REGEXP re) in
-      let () = loop p in
-      (!acc, !cnt) in
-    let (chunk, _) = codegen p in
-    let iseq = MATCH :: chunk |> List.reverse |> Array.of-list in
-    (iseq, !ngroup)
+      p |> Fn.fix (fun rec p -> (
+        match p with
+        | PatAlt(p1, p2) ->
+          let (init1, fin1) = rec p1 in
+          let (init2, fin2) = rec p2 in
+          let fin = make-state true [] in
+          let () = fin1 |> add-next Epsilon fin in
+          let () = fin2 |> add-next Epsilon fin in
+          let () = fin1 |> set-accept false in
+          let () = fin2 |> set-accept false in
+          let init = make-state false [(Epsilon, init1); (Epsilon, init2)] in
+          (init, fin)
+        | PatSeq(p1, p2) ->
+          let (init1, fin1) = rec p1 in
+          let (init2, fin2) = rec p2 in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatAny ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Any), fin)] in
+          (init, fin)
+        | PatChar(c) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Single(c)), fin)] in
+          (init, fin)
+        | PatSatisfy(f) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Char(Pred(f)), fin)] in
+          (init, fin)
+        | PatAnchor(anchor) ->
+          let fin = make-state true [] in
+          let init = make-state false [(Anchor(anchor), fin)] in
+          (init, fin)
+        | PatEmpty ->
+          let s = make-state true [] in
+          (s, s)
+        | PatMany(p) ->
+          let (init1, fin1) = rec p in
+          let fin2 = make-state true [] in
+          let init2 = make-state false [(Epsilon, init1); (Epsilon, fin2)] in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+        | PatManyNg(p) ->
+          let (init1, fin1) = rec p in
+          let fin2 = make-state true [] in
+          let init2 = make-state false [(Epsilon, fin2); (Epsilon, init1)] in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+        | PatSome(p) ->
+          let n = Ref.get ngroup in
+          let (init1, fin1) = rec p in
+          let () = ngroup |> Ref.set n in
+          let (init2, fin2) = rec (PatMany(p)) in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatSomeNg(p) ->
+          let n = Ref.get ngroup in
+          let (init1, fin1) = rec p in
+          let () = ngroup |> Ref.set n in
+          let (init2, fin2) = rec (PatManyNg(p)) in
+          let () = fin1 |> add-next Epsilon init2 in
+          let () = fin1 |> set-accept false in
+          (init1, fin2)
+        | PatGroup(p) ->
+          let n = ngroup |> Ref.get in
+          let () = ngroup |> Ref.inc in
+          let (init1, fin1) = rec p in
+          let init2 = make-state false [(Save(2 * n), init1)] in
+          let fin2 = make-state true [] in
+          let () = fin1 |> add-next (Save(2 * n + 1)) fin2 in
+          let () = fin1 |> set-accept false in
+          (init2, fin2)
+      )) in
+    let (init, _) = codegen p in
+    (| init = init; ngroup = Ref.get ngroup; states = Ref.get states; |)
 
-  let test p s =
-    let (iseq, ngroup) = compile (seq (many-ng any) (group p)) in
-    let (r, _) = run iseq ngroup s in
-    r
+  let test p input =
+    let re = compile (seq (many-ng any) (group p)) in
+    Option.is-some (run re input)
 
-  let exec p s =
-    let (iseq, ngroup) = compile (seq (many-ng any) (group p)) in
-    let (_, trace) = run iseq ngroup s in
-    let-rec subs i =
-      if i == ngroup then []
-      else match trace |> Array.get (2 * i + 1) with
-      | None -> None :: subs (i + 1)
-      | Some(e) ->
-        let (Some st) = trace |> Array.get (2 * i) in
-        Some (st, s |> String.sub st (e - st)) :: subs (i + 1) in
-    subs 0
+  let exec p input =
+    let re = compile (seq (many-ng any) (group p)) in
+    let array = Array.make Option.none (re#ngroup * 2) in
+    match run re input with
+    | Some(trace) ->
+      let () = trace |> List.iter (fun (i, pos) -> (
+        array |> Array.set i (Option.some pos)
+      )) in
+      let submatches = 0 |> Fn.fix (fun loop i -> (
+        if i == re#ngroup then
+          []
+        else
+          let submatch =
+            match array |> Array.get (2 * i + 1) with
+            | None ->
+              Option.none
+            | Some(e) ->
+              let s = array |> Array.get (2 * i) |> Option.unwrap in
+              Option.some (s, input |> String.sub s (e - s)) in
+          submatch :: loop (i + 1)
+      )) in
+      submatches
+    | None ->
+      Array.to-list array |> List.map (fun _ -> Option.none)
 
 % char-class
 %  = char-component+
@@ -318,6 +493,9 @@ end = struct
     let re-hex-digit = hex-digit in
     let re-char = char in
     let re-satisfy = satisfy in
+    let re-many = many in
+    let re-some = some in
+    let re-opt = opt in
     open Parser in
     open StringParser in
     let meta = satisfy is-meta-char in
@@ -357,11 +535,11 @@ end = struct
         ] in
       let quant = primary >>= (fun x -> choice [
         string `*?` >> ret (many-ng x);
-        string `+?` >> ret (many1-ng x);
+        string `+?` >> ret (some-ng x);
         string `??` >> ret (opt-ng x);
-        string `*` >> ret (P-many x);
-        string `+` >> ret (P-many1 x);
-        string `?` >> ret (opt x);
+        string `*` >> ret (re-many x);
+        string `+` >> ret (re-some x);
+        string `?` >> ret (re-opt x);
         ret x;
       ]) in
       let seq = quant |> some |> map re-sequence in
@@ -371,48 +549,4 @@ end = struct
     in s |> run (expr << eof) |> Result.unwrap-or-else (fun _ ->
       panic (`RegExp.of-string: invalid string: "` ^ s ^ `"`)
     )
-
-  let print-iseq iseq =
-    let-rec loop i xs =
-      match xs with
-      | [] -> ()
-      | x :: xs ->
-        let inst = match x with
-          | MATCH -> `MATCH`
-          | ANY -> `ANY`
-          | STRING s -> `STRING `# ^ s
-          | CHAR c -> `CHAR `# ^ String.of-char c
-          | JMP i -> `JMP `# ^ (String.of-int i)
-          | SPLIT (i,j) -> `SPLIT `# ^ (String.of-int i) ^ #` `# ^ (String.of-int j)
-          | SAVE i -> `SAVE `# ^ (String.of-int i)
-%          | REF i -> `REF `# ^ (String.of-int i)
-          | ANCHOR a ->
-            `ANCHOR `# ^ (match a with
-            | BOF -> `BOF`
-            | EOF -> `EOF`
-            | BOL -> `BOL`
-            | EOL -> `EOL`
-            | NOWHERE -> `NOWHERE`)
-          | PRED f -> `PRED <function>`
-          | REGEXP re -> `REGEXP <re>` in
-        let () = Debug.log (String.of-int i ^ `: `# ^ inst) in
-        loop (i + 1) xs in
-    loop 0 (Array.to-list iseq)
-
-  let-rec print re = match re with
-  | P-alt (re1, re2) -> `(` ^ print re1 ^ `)|(` ^ print re2 ^ `)`
-  | P-seq (re1, re2) -> `(` ^ print re1 ^ `)(` ^ print re2 ^ `)`
-  | P-any -> `.`
-  | P-empty -> ` `
-  | P-string s -> s
-  | P-char c -> String.of-char c
-  | P-many re -> `(` ^ print re ^ `)*`
-  | P-many1 re -> `(` ^ print re ^ `)+`
-  | P-opt re -> `(` ^ print re ^ `)?`
-  | P-many-ng re -> `(` ^ print re ^ `)*?`
-  | P-many1-ng re -> `(` ^ print re ^ `)+?`
-  | P-opt-ng re -> `(` ^ print re ^ `)??`
-  | P-group re -> `\(` ^ print re ^ `\)`
-  | P-anchor (NOWHERE) -> ` `
-  | _ -> `□`
 end

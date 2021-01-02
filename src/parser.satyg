@@ -1,3 +1,4 @@
+@stage: persistent
 @import: list-ext
 @import: option-ext
 @import: string
@@ -175,8 +176,9 @@ end = struct
   let alt p1 p2 s =
     match p1 s with
     | (None, Virgin, e1) ->
-      let (o, c, e2) = p2 s in
-      (o, c, List.append e2 e1)
+      (match p2 s with
+      | (None, c, e2) -> (Option.none, c, List.append e2 e1)
+      | r -> r)
     | r -> r
 
   let (<|>) = alt
@@ -278,7 +280,7 @@ end = struct
 
   let fix f =
     let stash = Ref.make empty in
-    let main = delay (Promise.delay ~(!!(&(!stash)))) in
+    let main = delay (Promise.delay (fun () -> (!stash))) in
     let () = stash |> Ref.set (f main) in
     main
 

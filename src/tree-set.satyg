@@ -1,0 +1,238 @@
+@stage: persistent
+@import: base
+@import: ord
+@import: fn
+@import: option-ext
+@import: int
+@import: stream
+
+module TreeSet : sig
+  %% Immutable set.
+  type 'a t
+
+  %% Creates an empty set.
+  val empty : 'a t
+
+  %% Returns the number of elements in the given set.
+  val size : 'a t -> int
+
+  %% Returns [true] if the given set is empty.
+  val is-empty : 'a t -> bool
+
+  %% [x |> mem ord s] returns [true] if [s] contains [x].
+  val mem : ('a Ord.t) implicit -> 'a t -> 'a -> bool
+
+  %% [contains ord x s] is the same as [mem ord s x].
+  val contains : ('a Ord.t) implicit -> 'a -> 'a t -> bool
+
+  %% [get ord x s] Returns an element that is equal to [x] with respect to [ord].
+  val get : ('a Ord.t) implicit -> 'a -> 'a t -> 'a option
+
+  %% Adds a value to the given set. If the set contains a value that is equal to the new value,
+  %% the old value is replaced with the new value. If you need to get the old value, query [get] first.
+  val insert : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
+
+  %% Removes a value from the given set.
+  val remove : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
+
+  %% Constructs a set from a list. If the list contains two equal values, the preceding one is preferred.
+  val of-list : ('a Ord.t) implicit -> 'a list -> 'a t
+
+  val to-list : 'a t -> 'a list
+
+  val to-stream : 'a t -> 'a Stream.t
+end = struct
+
+  % AVL-tree's invariant:
+  % (INV) for each node n, |height(n#left) - height(n#right)| < 2
+
+  % AVL tree
+  type 'a node = Node of ((|
+    height : int;
+    value : 'a;
+    left : 'a node;
+    right : 'a node;
+  |)) option
+
+  type 'a t = Tree of (|
+    root : 'a node;
+    size : int;
+  |)
+
+  let empty-node = Node(None)
+
+  let empty = Tree (|
+    root = empty-node;
+    size = 0;
+  |)
+
+  let size (Tree t) = t#size
+
+  let is-empty-node (Node(n)) = Option.is-none n
+
+  let is-empty t = size t == 0
+
+  let get ord x (Tree t) =
+    t#root |> Fn.fix (fun rec (Node(node)) -> (
+      match node with
+      | None -> None
+      | Some(node) ->
+        (match Ord.compare ord x node#value with
+        | Eq -> Some(node#value)
+        | Lt -> rec node#left
+        | Gt -> rec node#right)
+    ))
+
+  let mem ord s x = Option.is-some (get ord x s)
+
+  let contains ord x s = mem ord s x
+
+  let height (Node n) =
+    match n with
+    | None -> 0
+    | Some(node) -> node#height
+
+  let make-node left right value =
+    Node (Some (|
+      height = 1 + Int.max (height left) (height right);
+      left = left;
+      right = right;
+      value = value;
+    |))
+
+  % If both l and r satisfy (INV) and |height(l) - height(r)| <= 2, so does [balance l r v].
+  let balance l r v =
+    let hl = height l in
+    let hr = height r in
+    if Int.(abs (hl - hr) < 2) then
+      make-node l r v
+    else if hl > hr + 1 then
+      let (Node(Some(l))) = l in
+      let lv = l#value in
+      let ll = l#left in
+      let lr = l#right in
+      if height ll >= height lr then
+        %        v              lv
+        %      /   \           /  \
+        %     lv    r   ->   ll     v
+        %    /  \                 /   \
+        %   ll  lr               lr    r
+        make-node ll (make-node lr r v) lv
+      else
+        let (Node(Some(lr))) = lr in
+        let lrv = lr#value in
+        let lrl = lr#left in
+        let lrr = lr#right in
+        %        v                 v               lrv
+        %      /   \             /   \            /    \
+        %     lv    r   ->     lrv    r   ->    lv      v
+        %    /  \             /   \            /  \    /  \
+        %   ll  lrv          lv   lrr         ll  lrl lrr  r
+        %      /   \        /  \
+        %    lrl   lrr     ll  lrl
+        make-node (make-node ll lrl lv) (make-node lrr r v) lrv
+    else
+      let (Node(Some(r))) = r in
+      let rv = r#value in
+      let rl = r#left in
+      let rr = r#right in
+      if height rr >= height rl then
+        %        v             rv
+        %      /   \          /   \
+        %     l    rv   ->   v     rr
+        %         /  \      /  \
+        %        rl  rr    l   rl
+        make-node (make-node l rl v) rr rv
+      else
+        let (Node(Some(rl))) = rl in
+        let rlv = rl#value in
+        let rll = rl#left in
+        let rlr = rl#right in
+        %        v              v               rlv
+        %      /   \          /   \            /   \
+        %     l    rv   ->   l    rlv   ->    v     rv
+        %         /  \           /   \       / \    / \
+        %       rlv  rr         rll  rv     l  rll rlr rr
+        %      /   \                /  \
+        %    rll   rlr            rlr   rr
+        make-node (make-node l rll v) (make-node rlr rr rv) rlv
+
+  let insert ord x (Tree t) =
+    let found = Ref.make false in
+    let root = t#root |> Fn.fix (fun rec (Node(node)) -> (
+      match node with
+      | None -> make-node empty-node empty-node x
+      | Some(node) ->
+        (match Ord.compare ord x node#value with
+        | Lt -> balance (rec node#left) node#right node#value
+        | Gt -> balance node#left (rec node#right) node#value
+        | Eq ->
+          let () = found |> Ref.set true in
+          make-node node#left node#right x)
+    )) in
+    let size =
+      if Ref.get found then
+        t#size
+      else
+        t#size + 1 in
+    Tree (| root = root; size = size |)
+
+  % pop the minimum value from the tree
+  let-rec pop (Node(n)) =
+    match n with
+    | None -> Option.none
+    | Some(n) ->
+      if is-empty-node (n#left) then
+        Option.some (n#value, n#right)
+      else
+        pop n#left |> Option.map (fun (v, l) -> (
+          (v, balance l n#right n#value)
+        ))
+
+  let remove ord x (Tree t) =
+    let found = Ref.make false in
+    let root = t#root |> Fn.fix (fun rec (Node(node)) -> (
+      match node with
+      | None -> empty-node
+      | Some(node) ->
+        (match Ord.compare ord x node#value with
+        | Lt -> balance (rec node#left) node#right node#value
+        | Gt -> balance node#left (rec node#right) node#value
+        | Eq ->
+          let () = found |> Ref.set true in
+          if is-empty-node node#left then
+            node#right
+          else if is-empty-node node#right then
+            node#left
+          else
+            let (Some((v, r))) = pop node#right in
+            balance node#left r v)
+    )) in
+    let size =
+      if Ref.get found then
+        t#size - 1
+      else
+        t#size in
+    Tree (| root = root; size = size |)
+
+  let of-list ord list =
+    list |> List.fold-right (fun x s -> (s |> insert ord x)) empty
+  
+  % BFS-order
+  let to-stream (Tree(t)) =
+    [t#root] |> Stream.unfold (fun ns -> (
+      ns |> Fn.fix (fun loop ns -> (
+        match ns with
+        | [] -> None
+        | ((Node(n)) :: ns) ->
+          (match n with
+          | None ->
+            loop ns
+          | Some(n) ->
+            let next = List.append ns [n#left; n#right] in
+            Some((n#value, next)))
+      ))
+    ))
+
+  let to-list s = (Fn.compose Stream.to-list to-stream) s
+end

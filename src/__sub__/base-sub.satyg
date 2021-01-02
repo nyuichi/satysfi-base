@@ -1,3 +1,5 @@
+@stage: persistent
+
 module BaseSub :sig
 
   val finish : string

@@ -1,9 +1,9 @@
-@require: zrbase/zp0
 @import: eq
 @import: ord
 @import: string
 @import: char
 @import: int
+@import: list-ext
 
 module Float : sig
   val inf : float
@@ -13,6 +13,11 @@ module Float : sig
   val is-zero : float -> bool
   val is-inf : float -> bool
   val is-nan : float -> bool
+  val is-subnormal : float -> bool
+  val is-normal : float -> bool
+  val signbit : float -> bool
+  val ldexp : int -> float -> float
+  val frexp : float -> float * int
 
   val (<) : float -> float -> bool
   val (>) : float -> float -> bool
@@ -42,7 +47,7 @@ module Float : sig
   val ceil : float -> float
   val floor : float -> float
   val round : float -> float
-%  val truncate : float -> float
+  val truncate : float -> float
 
   val sin : float -> float
   val cos : float -> float
@@ -57,6 +62,7 @@ module Float : sig
   val log10 : float -> float
 
   val pi : float
+  val e : float
 end = struct
   let neg f = (0.0 -. 1.0) *. f % `0.0 -. f` does not work properly when f == 0.0
 
@@ -65,6 +71,23 @@ end = struct
   let ninf = neg inf
 
   let to-length f = 1pt *' f % never introduces inexactness
+
+  let exp2i i =
+    if i < -1074 then
+      0.0
+    else if i > 1023 then
+      inf
+    else
+      % binary method
+      let-rec aux i e acc =
+        if i == 0 then
+          acc
+        else
+          aux (i / 2) (e *. e) (if i mod 2 == 1 then acc *. e else acc) in
+      if i >= 0 then
+        aux i 2.0 1.0
+      else
+        aux (-i) 0.5 1.0
 
   let (<) f g = to-length f <' to-length g
   let (>) f g = g < f
@@ -82,9 +105,13 @@ end = struct
       (is-inf f && is-inf g && f *. g > 0.0)
     else
       is-zero (f -. g)
-
   let (<=) f g = f < g || f == g
   let (>=) f g = g <= f
+
+  let is-finite f = not (is-nan f || is-inf f)
+  let min-normal = exp2i(-1022)
+  let is-subnormal f = is-finite f && not (is-zero f) && f < min-normal
+  let is-normal f = is-finite f && not (is-zero f) && f >= min-normal
 
   let ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
   let eq = Ord.derive-eq ord
@@ -131,12 +158,127 @@ end = struct
       | _ -> None
   let to-string = show-float
 
-  let pow y x = ZP0.pow x y % x^y == (x |> pow y)
+  let signbit f =
+    if is-nan f then
+      false
+    else if is-zero f then
+      (1.0 /. f) < 0.0
+    else
+      (f < 0.0)
 
-  let ceil = ZP0.ceil
-  let floor = ZP0.floor
-  let round f = of-int (to-int f)
-%  let truncate = ZP0.truncate
+  let get-exp-fixture = [1024; 512; 256; 128; 64; 32; 16; 8; 4; 2; 1]
+
+  let get-exp f =
+    if not (is-finite f) then
+      2047
+    else if is-zero f || is-subnormal f then
+      0
+    else
+      let f = abs f in
+      % exponent ranges over [1,2046]
+      % exp = exponent - 1023
+      get-exp-fixture |> List.fold 0 (fun inc exponent -> (
+        if f >= exp2i (exponent + inc - 1023) then
+          exponent + inc
+        else
+          exponent
+      ))
+
+  let-rec frexp f = % never invokes rounding
+    if is-nan f || is-inf f then
+      (f, 1023)
+    else if is-zero f then
+      (f, 0)
+    else if f < 0.0 then
+      let (f, exp) = frexp (neg f) in
+      (neg f, exp)
+    else if is-subnormal f then
+      let-rec aux f e = % adjust subnormal numbers
+        if f >= 0.5 then
+          (f, e)
+        else
+          aux (f *. 2.0) (e - 1)
+      in
+      aux f 0
+    else
+      let exp = get-exp f - 1023 in
+      (f *. exp2i (- exp), exp)
+
+  let-rec ldexp exp f =
+    open Int in
+    if is-nan f || is-inf f || is-zero f || exp == 0 then
+      f
+    else if exp >= 0 then
+      if exp <= 1023 then
+        f *. exp2i exp
+      else
+        ldexp (exp - 1023) (f *. exp2i 1023)
+    else
+      if exp >= -1074 then
+        f *. exp2i exp
+      else
+        let (f, e) = frexp f in
+        f *. exp2i (e + exp)
+
+  % round towards zero
+  let-rec truncate f =
+    if not (is-finite f) then
+      f
+    else if is-zero f then
+      f
+    else
+      let (_, e) = frexp f in
+      if Int.(e >= 52) then
+        f
+      else
+        of-int (to-int f)
+
+  % round towards nearest; halfway cases rounded away from zero
+  let-rec round f =
+    if not (is-finite f) then
+      f
+    else if is-zero f then
+      f
+    else
+      let g = truncate f in
+      if f > 0.0 then
+        if (f -. g) >= 0.5 then
+          g +. 1.0
+        else
+          g
+      else
+        if (g -. f) >= 0.5 then
+          g -. 1.0
+        else
+          g
+
+  let ceil f =
+    if not (is-finite f) then
+      f
+    else if is-zero f then
+      f
+    else if f < 0.0 then
+      truncate f
+    else
+      let g = truncate f in
+      if g == f then
+        g
+      else
+        g +. 1.0
+
+  let floor f =
+    if not (is-finite f) then
+      f
+    else if is-zero f then
+      f
+    else if f > 0.0 then
+      truncate f
+    else
+      let g = truncate f in
+      if g == f then
+        g
+      else
+        g -. 1.0
 
   let sin = sin
   let cos = cos
@@ -145,10 +287,14 @@ end = struct
   let acos = acos
   let atan = atan
   let atan2 = atan2
-  let sqrt = ZP0.sqrt
-  let exp = ZP0.exp
-  let log = ZP0.log
-  let log10 = ZP0.log10
+  let exp = exp
+  let log = log
+  let log10- = log 10.0
+  let log10 x = log x /. log10-
+
+  let pow y x = exp (y *. log x) % x^y == (x |> pow y)
+  let sqrt = pow 0.5
 
   let pi = atan2 0.0 (neg 1.0)
+  let e = exp 1.0
 end

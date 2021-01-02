@@ -1,3 +1,4 @@
+@stage: 1
 @require: standalone
 
 module BaseSub :sig

@@ -1,5 +1,8 @@
 @require: stdjareport
 @require: list
+@import: ../../src/base
+@import: ../../src/base0
+@import: ../../src/base1
 @import: ../../src/ref
 @import: ../../src/string
 @import: ../../src/debug
@@ -30,9 +33,10 @@
 @import: ../../src/pager
 @import: ../../src/cross-ref
 @import: ../../src/bool
+@import: ../../src/tree-set
+@import: ../../src/tree-map
 
 open Fn in
-open RegExp in
 
 let () = Debug.log `==== Ref ====` in
 let r = Ref.make 1 in
@@ -52,6 +56,10 @@ let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
 let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
+let () = String.(`a` < `b`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`ab` < `ba`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`aab` < `aba`) |> Bool.to-string |> Debug.log in % true
+let () = String.(`bbb` < `bbba`) |> Bool.to-string |> Debug.log in % true
 
 let () = Debug.log `==== List ====` in
 let lst = [1;3;2;4;5] in
@@ -83,6 +91,7 @@ let () = Debug.log (String.of-int (Array.get 0 a)) in
 let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
 
 let () = Debug.log `==== RegExp ====` in
+open RegExp in
 %let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
 let print-result r =
   r |> List.iter (fun s -> (
@@ -97,16 +106,11 @@ let char-b = char (Char.make `b`) in
 let char-c = char (Char.make `c`) in
 % (a+)(b+)
 let () = test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in % true
-let () = let (iseq, _) = compile (alt char-a char-b) in print-iseq iseq in
 let () = `aabbb` |> test (alt char-a char-b) |> String.of-bool |> Debug.log in % true
 % (a+|(c))(b+)
 let re1 = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
-let (iseq1, _) = compile re1 in
-let () = print-iseq iseq1 in
 let ss = exec re1 `aabbb` |> print-result in
 let re3 = many (many char-a) in
-let (iseq3, _) = compile (seq (many-ng any) (group re3)) in
-let () = print-iseq iseq3 in
 let () = `aaaaa` |> test re3 |> String.of-bool |> Debug.log in
 let re4 = seq (group (seq any (char (Char.make `e`)))) eof in
 let () = `the apple` |> exec re4 |> print-result in
@@ -115,23 +119,7 @@ let () = `the apple
 apple
 leapple` |> exec re6 |> print-result in
 let () = exec spaces #`  asdf`# |> print-result in
-% % backreference
-% let re2 = seq (group (alt (string `cat`) (string `dog`))) (ref 1) in
-% let () = `dogdog` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `dogcat` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `catcat` |> test re2 |> String.of-bool |> Debug.log in
-% let () = `aaadogdogbbb` |> test re2 |> String.of-bool |> Debug.log in
-% % aaaba vs (a*)a*b\1
-% let re5 = sequence [group (many char-a); many char-a; char `b`; ref 1] in
-% let () = test re5 `aaaba` |> String.of-bool |> Debug.log in
-let () = RegExp.of-string `a` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `.` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `((a))` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a*?)` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a(c))(b)` |> RegExp.print |> Debug.log in
-let () = RegExp.of-string `(a+|(c))(b+)` |> RegExp.print |> Debug.log in
 let () = `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`) |> String.of-bool |> Debug.log in
-let () = RegExp.of-string `\n\r\t\$\(\)\*\?` |> RegExp.print |> Debug.log in
 let _ = RegExp.of-string `^\s\d$` in
 % let _ = RegExp.of-string `[]` in
 let _ = RegExp.of-string `[a-z]` in
@@ -141,6 +129,24 @@ let _ = `0a` |> test (RegExp.of-string `0[xX]`) |> String.of-bool |> Debug.log i
 let _ = `0xaZb` |> test (RegExp.of-string `^0[xX][A-Fa-f0-9]+$`) |> String.of-bool |> Debug.log in
 let _ = `][][` |> test (RegExp.of-string `[][]+`) |> String.of-bool |> Debug.log in
 let _ = `][]-[` |> test (RegExp.of-string `[][-]+`) |> String.of-bool |> Debug.log in
+let input = ` I do not know why but it seems code2 is slow if it contains a long line.
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo` in
+let pat = `wk` in
+let () = Debug.print `testing long input` in
+let () = Debug.print (String.of-bool (RegExp.test (RegExp.of-string pat) input)) in
 
 let () = Debug.log `==== Parser ====` in
 let () =
@@ -165,6 +171,20 @@ let () =
   in
     `12/2/2` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore before
     `1+2*4-12/2/2+4` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
+
+let () =
+  open Parser in
+  open StringParser in
+  let p =
+        (label `expected 'foo'` (string `foo`))
+    <|> (string `bar`)
+  in
+  `bar` |> run p |> Result.map Debug.log |> Result.map-err (fun errs -> (
+    match errs with
+    | []       -> Debug.log `(something is wrong)`
+    | err :: _ -> Debug.log err#desc
+  )) |> Fn.ignore
+in
 
 let () = Debug.log `==== Lexer ====` in
 let rules = [
@@ -240,18 +260,42 @@ let _ = Promise.force p in
 let _ = Promise.force p in
 
 let () = Debug.log `==== Float ====` in
-let _ =
-  open Float in
-  let _ = pi |> String.of-float |> Debug.log in
-  let l = [inf; ninf; nan; 0.0; neg 0.0; 1.0] in
-  l |> List.iter (fun a ->
-    l |> List.iter (fun b ->
-      Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
-    )
-  ) in
-  let () = Debug.log (String.of-float (1.0 /. 0.0)) in
-  let () = Debug.log (String.of-float (1.0 /. Float.neg 0.0))
-in
+let p f = f |> String.of-float |> Debug.log in
+let () = p Float.pi in
+let () = p Float.e in
+let l = [Float.inf; Float.ninf; Float.nan; 0.0; Float.neg 0.0; 1.0] in
+let _ = l |> List.iter (fun a ->
+  l |> List.iter (fun b ->
+    Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
+  )
+) in
+let () = p (1.0 /. 0.0) in
+let () = p (1.0 /. Float.neg 0.0) in
+let () = p (0.0 /. 0.0) in
+let () = p (Float.exp Float.pi) in
+let () = p (Float.log Float.pi) in
+let () = p (Float.pi |> Float.pow Float.pi) in
+let () = p (2.1 |> Float.pow 54.0) in
+let () = p (Float.sqrt 2.0) in
+let () = p (Float.log10 Float.pi) in
+let dbl-min = Stream.nat |> Stream.take 1022 |> Fn.flip Stream.fold 1.0 (fun f _ -> f /. 2.0) in
+let () = p dbl-min in
+let half-dbl-min = dbl-min /. 2.0 in
+let () = p half-dbl-min in
+let l = l |> List.append [dbl-min; half-dbl-min] in
+let p-bool b = b |> String.of-bool |> Debug.log in
+let () = l |> List.iter (fun f -> p-bool (Float.is-zero f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-inf f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-nan f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-normal f)) in
+let () = l |> List.iter (fun f -> p-bool (Float.is-subnormal f)) in
+let l = [2.3; 3.8; 5.5; Float.neg 2.3; Float.neg 3.8; Float.neg 5.5; 6.0] in
+let () = l |> List.iter (fun a -> (p (Float.round a))) in
+let () = l |> List.iter (fun a -> (p (Float.floor a))) in
+let () = l |> List.iter (fun a -> (p (Float.ceil a))) in
+let () = l |> List.iter (fun a -> (p (Float.truncate a))) in
+% virtually testing exp2i
+let () = [-1073; -1074; -1075; 1022; 1023; 1024] |> List.iter (fun a -> (p (1.0 |> Float.ldexp a))) in
 let p-opt o =
   let s =
     match o with
@@ -289,5 +333,90 @@ let () = Debug.log `==== Stream ====` in
 let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
 let () = Stream.nat |> Stream.take 5 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x)
 in
+
+let () = Debug.log `==== Fn ====` in
+let () = 0 |> Fn.fix (fun loop n -> (
+  if n >= 10 then
+    Debug.log `done`
+  else
+    Debug.log (String.of-int n) before
+    loop (n + 1)
+))
+in
+
+let () = Debug.log `==== TreeSet ====` in
+% REMARK:
+% This test relies on the fact that the order of elements of a result from TreeSet.to-list is
+% level-order (BFS). If the implementation is changed, the following tests have to be updated.
+let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> String.concat |> Debug.log in
+let s = TreeSet.empty in
+let () = p s in
+let s = TreeSet.of-list Int.ord [3;2;3;1] in
+let () = p s in
+let () = Debug.log `check rotations:` in
+% right left rotation
+let s = [1;3;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right left rotation
+let s = [3;1;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% left rotation
+let s = [3;2;1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right rotation
+let s = [1;2;3] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+%     16
+%  8      24
+% 4 12  20  28
+let s = [16;8;24;4;12;20;28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let () = p s in
+% right rotation
+let t = [3;2;1;0;-1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% left rotation
+let t = [29;30;31;32;33] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% right left rotation
+let t = [9;15;10;11] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+% left right rotation
+let t = [23;17;22;19] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let () = p t in
+let () = Debug.log `check size after insertion:` in
+let () = TreeSet.size TreeSet.empty |> String.of-int |> Debug.log in
+let () = TreeSet.size s |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 16 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 24 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = s |> TreeSet.insert Int.ord 20 in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let () = Debug.log `check remove:` in
+let t = TreeSet.remove Int.ord 16 s in
+let () = p t in
+let t = TreeSet.remove Int.ord 28 t in
+let () = p t in
+let t = TreeSet.remove Int.ord 24 t in
+let () = p t in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+let t = TreeSet.remove Int.ord 10 t in
+let () = p t in
+let () = TreeSet.size t |> String.of-int |> Debug.log in
+% See https://github.com/nyuichi/satysfi-base/pull/140#discussion_r550355160
+let t = [9;4;11;2;6;10;13;1;3;5;8;12;0;7] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let t = TreeSet.remove Int.ord 13 t in
+let () = p t in
+let () = Debug.log `check get:` in
+let () = s |> TreeSet.get Int.ord 20 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
+let () = s |> TreeSet.get Int.ord 23 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
+
+let () = Debug.log `==== TreeMap ====` in
+let m = TreeMap.of-list String.ord [(`apple`, 1); (`orange`, 3); (`pear`, 2)] in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
+let m = m |> TreeMap.insert String.ord `pear` 4 in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
+let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
 
 finish
