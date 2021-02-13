@@ -6,6 +6,29 @@
 
 type ordering = Lt | Gt | Eq
 
+module Ordering : sig
+
+  val equal : ordering -> ordering -> bool
+  val eq : ordering Eq.t
+
+end = struct
+
+  let equal a b =
+    match a with
+    | Lt -> (match b with
+      | Lt -> true
+      | _ -> false)
+    | Gt -> (match b with
+      | Gt -> true
+      | _ -> false)
+    | Eq -> (match b with
+      | Eq -> true
+      | _ -> false)
+
+  let eq = Eq.make equal
+
+end
+
 module Ord : sig
   type 'a t
   val make : ('a -> 'a -> ordering) -> 'a t
