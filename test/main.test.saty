@@ -1,10 +1,10 @@
 @require: test/test
 @require: test/expect
 
-@import: ../../src/eq
-@import: ../../src/list-ext
-@import: ../../src/ref
-@import: ../../src/string
+@import: ../src/eq
+@import: ../src/list-ext
+@import: ../src/ref
+@import: ../src/string
 
 open Test in
 describe `base` [
