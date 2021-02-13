@@ -6,96 +6,12 @@
 @import: ../src/ref
 @import: ../src/string
 
+@import: ref.test
+@import: string.test
+
 open Test in
 describe `base` [
-  describe `Ref module` [
-    it `make 1 contains 1` (fun () -> (
-      (Ref.make 1 |> Ref.get) == 1
-      |> Expect.is-true
-    ));
-    it `set overrides the value of ref` (fun () -> (
-      let r = Ref.make 1 in
-      let () = r |> Ref.set 2 in
-      (r |> Ref.get) == 2
-      |> Expect.is-true
-    ));
-    it `swap two refs` (fun () -> (
-      let r1 = Ref.make 1 in
-      let r2 = Ref.make 2 in
-      let () = Ref.swap r1 r2 in
-      (Ref.get r1 == 2) && (Ref.get r2 == 1)
-      |> Expect.is-true
-    ));
-    it `set temporarily value of ref` (fun () -> (
-      let r = Ref.make 1 in
-      let r-tmp-value = r |> Ref.set-temporarily 2 (fun _ -> (Ref.get r)) in
-      let r-value = Ref.get r in
-      (r-tmp-value == 2) && (r-value == 1)
-      |> Expect.is-true
-    ))
-  ];
-  describe `String module` [
-    it `check equality of strings` (fun () -> (
-      Eq.equal String.eq `abc` `abc`
-      && not Eq.equal String.eq `abc` `abd`
-      |> Expect.is-true
-    ));
-    it `concatenate strings` (fun () -> (
-      String.concat [`a`; `b`; `c`]
-      |> string-same `abc`
-      |> Expect.is-true
-    ));
-    it `check emptiness of string` (fun () -> (
-      String.is-empty ` `
-      && (not String.is-empty `hi`)
-      |> Expect.is-true
-    ));
-    it `split string with a given delimiter` (fun () -> (
-      let delimiter = Char.make `;` in
-      `spam;ham;eggs;`
-      |> String.split-by delimiter
-      |> Eq.equal (List.eq String.eq) [`spam`; `ham`; `eggs`; ` `]
-      |> Expect.is-true
-    ));
-    it `convert a string to a list of characters` (fun () -> (
-      let expected = [
-        Char.make `a`;
-        Char.make `b`;
-        Char.make `c`;
-      ] in
-      String.to-list `abc`
-      |> Eq.equal (List.eq Char.eq) expected
-      |> Expect.is-true
-    ));
-    it `compare strings with lexicographical order` (fun () -> (
-      let subject = Ord.compare String.ord in
-      [
-        subject `a` `a`;
-        subject `a` `b`;
-        subject `ab` `ba`;
-        subject `aab` `aba`;
-        subject `bbb` `bbba`;
-      ] |> Eq.equal (List.eq Ordering.eq) [
-        Eq; Lt; Lt; Lt; Lt;
-      ] |> Expect.is-true
-    ));
-    % TODO
-    % * sub
-    % * of-bool
-    % * of-int
-    % * of-float
-    % * of-codepoints
-    % * of-char
-    % * of-length
-    % * append
-    % * starts-with
-    % * ends-with
-    % * of-list
-    % * pow
-    % * split
-    % * split-by-first
-    % * lines
-    % * index
-  ]
+  ref-test-cases;
+  string-test-cases;
 ]
 |> run
