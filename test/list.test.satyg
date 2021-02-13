@@ -1,0 +1,79 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/int
+@import: ../src/list-ext
+
+let list-test-cases = open Test in
+  describe `List module` [
+    it `sort with bubblesort` (fun () -> (
+      let l = [5;1;3;2;4] in
+      l |> List.bubblesort Int.ord
+      |> Eq.equal (List.eq Int.eq) [1;2;3;4;5]
+      |> Expect.is-true
+    ));
+    it `sort with insertsort` (fun () -> (
+      let l = [5;1;3;2;4] in
+      l |> List.insertsort Int.ord
+      |> Eq.equal (List.eq Int.eq) [1;2;3;4;5]
+      |> Expect.is-true
+    ));
+    it `sort with mergesort` (fun () -> (
+      let l = [5;1;3;2;4] in
+      l |> List.mergesort Int.ord
+      |> Eq.equal (List.eq Int.eq) [1;2;3;4;5]
+      |> Expect.is-true
+    ));
+  % TODO
+  % * eq
+  % * null
+  % * nil
+  % * cons
+  % * uncons
+  % * map
+  % * mapi
+  % * iter
+  % * iteri
+  % * filter
+  % * reverse
+  % * append
+  % * concat
+  % * length
+  % * nth
+  % * intersperse
+  % * find
+  % * apply
+  % * take
+  % * drop
+  % * take-while
+  % * drop-while
+  % * split-at
+  % * span
+  % * break
+  % * head
+  % * tail
+  % * last
+  % * init
+  % * reverse-append
+  % * reverse-map
+  % * all
+  % * any
+  % * zip
+  % * unzip
+  % * find
+  % * partition
+  % * iterate
+  % * repeat
+  % * cycle-
+  % * acons
+  % * max
+  % * min
+  % * fold
+  % % unstable API (may subject to change in the future)
+  % * fold-left
+  % * fold-lefti
+  % * fold-right
+  % * fold-left-adjacent
+  % * map-adjacent
+  % * mapi-adjacent
+  ]
