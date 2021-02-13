@@ -3,6 +3,33 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  unit-test:
+    name: unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: amutake/satysfi:opam-slim
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install Satyrographos dependencies
+        run: |
+          export HOME=/root
+          eval $(opam env)
+          opam update
+          opam pin add --verbose --yes "."
+          satyrographos install -l base
+      - name: Run tests
+        run: |
+          export HOME=/root
+          eval $(opam env)
+          cd test && sh run-test.sh -v
+      - if: always()
+        name: Install Apt dependencies
+        run: apt-get update && apt-get install -y xz-utils liblzma-dev
+      - name: Upload artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: satysfi-test-report
+          path: test/report.txt
   regression-test:
     name: Regression tests
     runs-on: ubuntu-latest
