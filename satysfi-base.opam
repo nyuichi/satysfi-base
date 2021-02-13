@@ -22,6 +22,7 @@ depends: [
   "satysfi-dist"
   "satyrographos" {>= "0.0.2.6" & < "0.0.3"}
   "satysfi-fonts-dejavu" {>= "2.37"}
+  "satysfi-test" {>= "0.0.1" & < "0.0.2"}
 ]
 build: [ ]
 install: [
