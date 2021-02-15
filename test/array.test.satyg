@@ -1,0 +1,64 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/array
+@import: ../src/eq
+@import: ../src/fn
+@import: ../src/int
+
+let array-test-cases = open Test in
+  % Note: We want (Array.eq : Array.t Eq.t)
+  let int-array-eq a b =
+    Eq.equal (List.eq Int.eq) (Array.to-list a) (Array.to-list b) in
+  describe `Array module` [
+    it `make array and get contents and length` (fun () -> (
+      let a = Array.make 3 2 in
+      (Array.get 0 a == 3)
+      && (Array.get 1 a == 3)
+      && (Array.length a == 2)
+      |> Expect.is-true
+    ));
+    it `initialize array with index` (fun () -> (
+      let actual = Array.init (fun x -> x + 1) 10 in
+      actual
+      |> Array.to-list
+      |> Eq.equal (List.eq Int.eq) [1;2;3;4;5;6;7;8;9;10]
+      |> Expect.is-true
+    ));
+    it `overwrite value by index` (fun () -> (
+      let actual = Array.init Fn.id 10 in
+      let is = [0;1;2;3;4;5;6;7;8;9] in
+      let () = is |> List.iter (fun i -> (Array.set i (10 - i) actual)) in
+      actual
+      |> Array.to-list
+      |> Eq.equal (List.eq Int.eq) [10;9;8;7;6;5;4;3;2;1]
+      |> Expect.is-true
+    ));
+    it `convert to list` (fun () -> (
+      let a = Array.init Fn.id 10 in
+      let expected = [0;1;2;3;4;5;6;7;8;9] in
+      a
+      |> Array.to-list
+      |> Eq.equal (List.eq Int.eq) expected
+      |> Expect.is-true
+    ));
+    it `convert from list` (fun () -> (
+      let actual = Array.of-list [0;1;2;3;4] in
+      let expected = Array.init Fn.id 5 in
+      actual
+      |> int-array-eq expected
+      |> Expect.is-true
+    ));
+    it `append arrays` (fun () -> (
+      let a = Array.of-list [0;1;2;3;4] in
+      let b = Array.of-list [5;6;7;8;9] in
+      let expected = Array.of-list [0;1;2;3;4;5;6;7;8;9] in
+      Array.append a b
+      |> int-array-eq expected
+      |> Expect.is-true
+    ));
+    % TODO
+    % * concat
+    % * sub
+    % * map
+  ]

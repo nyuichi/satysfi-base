@@ -6,6 +6,7 @@
 @import: ../src/ref
 @import: ../src/string
 
+@import: array.test
 @import: list.test
 @import: ref.test
 @import: string.test
@@ -15,5 +16,6 @@ describe `base` [
   ref-test-cases;
   string-test-cases;
   list-test-cases;
+  array-test-cases;
 ]
 |> run
