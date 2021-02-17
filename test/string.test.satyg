@@ -71,4 +71,3 @@ let string-test-cases = open Test in
     % * lines
     % * index
   ]
-
