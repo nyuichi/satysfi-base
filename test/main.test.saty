@@ -9,6 +9,7 @@
 @import: array.test
 @import: list.test
 @import: ref.test
+@import: regex.test
 @import: string.test
 
 open Test in
@@ -17,5 +18,6 @@ describe `base` [
   string-test-cases;
   list-test-cases;
   array-test-cases;
+  regex-test-cases;
 ]
 |> run
