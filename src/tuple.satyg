@@ -13,7 +13,7 @@ module Pair : sig
   val snd : ('a * 'b) -> 'b
   val swap : ('a * 'b) -> ('b * 'a)
 
-  val eq : 'a Eq.t -> 'b Eq.t -> ('a * 'b) Eq.t
+  val eq : ('a Eq.t) implicit -> ('b Eq.t) implicit -> (('a * 'b) Eq.t) implicit
 end = struct
   let make x y = (x, y)
   let fst (x, _) = x
