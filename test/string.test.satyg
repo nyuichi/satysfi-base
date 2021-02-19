@@ -8,7 +8,7 @@
 @import: ../src/string
 
 let string-test-cases = open Test in
-    describe `String module` [
+  describe `String module` [
     it `check equality of strings` (fun () -> (
       Eq.equal String.eq `abc` `abc`
       && not Eq.equal String.eq `abc` `abd`
