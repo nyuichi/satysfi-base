@@ -7,6 +7,7 @@
 @import: ../src/string
 
 @import: array.test
+@import: int.test
 @import: list.test
 @import: ref.test
 @import: regex.test
@@ -19,5 +20,6 @@ describe `base` [
   list-test-cases;
   array-test-cases;
   regex-test-cases;
+  int-test-cases;
 ]
 |> run
