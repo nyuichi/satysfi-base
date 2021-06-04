@@ -18,7 +18,7 @@ homepage: "https://github.com/nyuichi/satysfi-base"
 bug-reports: "https://github.com/nyuichi/satysfi-base/issues"
 dev-repo: "git+https://github.com/nyuichi/satysfi-base.git"
 depends: [
-  "satysfi" {>= "0.0.5" & < "0.0.6"}
+  "satysfi" {>= "0.0.5" & < "0.0.7"}
   "satysfi-dist"
   "satyrographos" {>= "0.0.2.6" & < "0.0.3"}
   "satysfi-fonts-dejavu" {>= "2.37"}
