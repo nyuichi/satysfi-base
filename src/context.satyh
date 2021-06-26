@@ -8,6 +8,7 @@ module Context : sig
   val set-math-command : [math] inline-cmd -> context -> context
   val get-initial-context : length -> [math] inline-cmd -> context
   val set-hyphen-min : int -> int -> context -> context
+  val get-min-gap-of-lines : context -> length
   val set-min-gap-of-lines : length -> context -> context
   val set-space-ratio : float -> float -> float -> context -> context
   val set-space-ratio-between-scripts : float -> float -> float -> script -> script -> context -> context
@@ -27,6 +28,7 @@ module Context : sig
   val get-language : script -> context -> language
   val set-text-color : color -> context -> context
   val get-text-color : context -> color
+  val get-leading : context -> length
   val set-leading : length -> context -> context
   val get-text-width : context -> length
   val set-manual-rising : length -> context -> context
@@ -67,6 +69,30 @@ end = struct
   let set-word-break-penalty = set-word-break-penalty
   let set-every-word-break = set-every-word-break
   let get-every-word-break = get-every-word-break
+
+  let get-leading ctx =
+      let s = `aa` in
+      % NOTE: font size should be small enough to get correct value
+      let ctx = ctx |> set-font-size 5pt |> set-min-gap-of-lines 0pt in
+      let ib = read-inline ctx (embed-string s) in
+      let ib = ib ++ (discretionary 0 inline-nil inline-nil inline-nil) ++ ib in
+      let (w, h, d) = get-natural-metrics ib in
+      let wid = w *' 0.5 in
+      let ib1 = embed-block-top ctx wid (fun ctx -> line-break false false ctx ib) in
+      let (_, h1, d1) = get-natural-metrics ib1 in
+      let () = display-message (show-float ((h1 +' d1 -' h -' d) /' 1pt)) in
+      h1 +' d1 -' h -' d
+
+  let get-min-gap-of-lines ctx =
+      let s = `aa` in
+      let ctx = ctx |> set-leading 0pt in
+      let ib = read-inline ctx (embed-string s) in
+      let ib = ib ++ (discretionary 0 inline-nil inline-nil inline-nil) ++ ib in
+      let (w, h, d) = get-natural-metrics ib in
+      let wid = w *' 0.5 in
+      let ib1 = embed-block-top ctx wid (fun ctx -> line-break false false ctx ib) in
+      let (_, h1, d1) = get-natural-metrics ib1 in
+      h1 +' d1 -' (h +' d) *' 2.0
 
   let-inline ctx \math m =
     Inline.of-math m ctx
