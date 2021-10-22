@@ -1,0 +1,337 @@
+@stage: persistent
+@import: base
+@import: ord
+@import: eq
+@import: int
+@import: list-ext
+@import: option-ext
+@import: string
+@import: bool
+
+module BigInt : sig
+
+  type t
+  %val make : bool -> int list -> t
+
+  val ord : (t Ord.t) implicit
+  val eq : (t Eq.t) implicit
+
+  val equal : t -> t -> bool
+  val max : t -> t -> t
+  val min : t -> t -> t
+
+  val (<) : t -> t -> bool
+  val (>) : t -> t -> bool
+  val (>=) : t -> t -> bool
+  val (<=) : t -> t -> bool
+  val (==) : t -> t -> bool
+
+  val succ : t -> t
+  val pred : t -> t
+  val neg : t -> t
+  val add : t -> t -> t
+  val sub : t -> t -> t
+  val mul : t -> t -> t
+  val div : t -> t -> t
+  val mod- : t -> t -> t
+  val abs : t -> t
+
+
+  val zero : t
+  val one : t
+  val minus-one : t
+
+  %val of-int : int -> t
+  %val to-int : t -> int
+  val to-string : t -> string
+  val of-string-opt : string -> t option
+  val of-string : string -> t
+
+
+  val carry-and-fix : t -> t
+  val make : bool -> int list -> t
+
+  val div-sub-sub2 : int -> t -> int list -> int list -> int * int list
+
+
+end = struct
+
+  type t = (bool * (int list))
+
+  let make b l = (b, l)
+
+
+  % 繰り上がり処理を行う
+  let carry-and-fix (is-plus, lst) =
+    % 繰り上げ・繰り下げの処理
+    let-rec sub1 stack lst =
+      match lst with
+      | [] -> []
+      | [x] -> x::stack
+      | x::y::zs -> (
+        if Int.(x >= 10) then
+          let k = x / 10 in
+          let new-x = x - (10 * k) in
+          let new-y = y + k in
+          sub1 (new-x::stack) (new-y::zs)
+        else if Int.(x < 0) then
+          let k = (Int.neg x) / 10 + 1 in
+          let new-x = x + (10 * k) in
+          let new-y = y - k in
+          sub1 (new-x::stack) (new-y::zs)
+        else
+          sub1 (x::stack) (y::zs)
+      )
+    in
+    % 一番上の桁が10以上のときに桁数を増やす
+    % 一番上の桁が0未満の時は再度処理を行わせるためにfalseを変えさせる
+    let-rec sub2 lst =
+      match lst with
+      | [] -> (true, [])
+      | x::xs -> (
+        if Int.(x >= 10) then
+          let k = x / 10 in
+          let new-x = x - (10 * k) in
+          sub2 (k::new-x::xs)
+        else if Int.(x < 0) then
+          (false, lst)
+        else
+          (true, lst)
+      )
+    in
+    % 一番上の桁の0を消しつつリストを反転させる
+    let-rec sub3 stack b lst =
+      match lst with
+      | [] -> stack
+      | x::xs -> (
+        if b && Int.(x == 0) then
+          sub3 stack true xs
+        else
+          sub3 (x::stack) false xs
+      )
+    in
+    let (is-ok, new-lst) =
+      lst
+      |> sub1 []
+      |> sub2
+    in
+    match lst |> sub1 [] |> sub2 with
+      | (_, [0]) -> (true, [0])
+      | (true, new-lst) -> (is-plus, sub3 [] true new-lst)
+      | (false, new-lst) -> (
+        let new-lst =
+          new-lst
+          |> List.reverse
+          |> List.map Int.neg
+          |> sub1 []
+        in
+        (not is-plus, sub3 [] true new-lst)
+      )
+
+
+
+  let ord =
+    Ord.make (fun tl tr -> (
+      let-rec sub lstl lstr =
+          match (lstl, lstr) with
+          | ([],[]) -> Eq
+          | (_, []) -> Gt
+          | ([],_) -> Lt
+          | (nl::xl,nr::xr) -> (
+              if Int.(nl < nr) then
+                  Lt
+              else
+                  if Int.(nl > nr) then
+                      Gt
+                  else
+                      sub xl xr
+          )
+      in
+      match (carry-and-fix tl, carry-and-fix tr) with
+      | ((_,[0]), (_,[0])) -> Eq
+      | ((true,_), (false,_)) -> Lt
+      | ((false,_), (true,_)) -> Gt
+      | ((true,lstl), (true,lstr)) ->
+        if Int.(List.length lstl < List.length lstr) then
+          Lt
+        else if Int.(List.length lstl > List.length lstr) then
+          Gt
+        else
+          sub (List.reverse lstl) (List.reverse lstr)
+      | ((false,lstl), (false,lstr)) -> (
+        if Int.(List.length lstl < List.length lstr) then
+          Gt
+        else if Int.(List.length lstl > List.length lstr) then
+          Lt
+        else
+          match sub (List.reverse lstl) (List.reverse lstr) with
+          | Lt -> Gt
+          | Gt -> Lt
+          | Eq -> Eq
+      )
+    ))
+
+
+  let eq = Ord.derive-eq ord
+  let equal = Eq.equal eq
+
+  let max = Ord.max ord
+  let min = Ord.min ord
+  let (<) = Ord.lt ord
+  let (>) = Ord.gt ord
+  let (>=) = Ord.ge ord
+  let (<=) = Ord.le ord
+  let (==) = Ord.eq ord
+
+
+  let zero = (true, [0])
+  let one = (true, [1])
+  let minus-one = (false, [1])
+
+
+  let-rec add-sub op l1 l2 =
+    match (l1, l2) with
+    | ([], []) -> []
+    | (x1::xs1, []) -> (op x1 0) :: (add-sub op xs1 [])
+    | ([], x2::xs2) -> (op 0 x2) :: (add-sub op [] xs2)
+    | (x1::xs1, x2::xs2) -> (op x1 x2) :: (add-sub op xs1 xs2)
+
+
+  let add (b1, lst1) (b2, lst2) =
+    let op =
+      if Bool.equal b1 b2 then
+        (+)
+      else
+        (-)
+    in
+    carry-and-fix (b1 && b2 || ((b1, lst1) > (b2, lst2)), add-sub op lst1 lst2)
+  let sub (b1, lst1) (b2, lst2) =
+    let op =
+      if Bool.equal b1 b2 then
+        (-)
+      else
+        (+)
+    in
+    carry-and-fix (b1 && b2 || ((b1, lst1) > (b2, lst2)), add-sub op lst1 lst2)
+  let succ t = add t one
+  let pred t = sub t one
+  let neg (b,l) = (not b, l)
+
+
+  let-rec add-zero i lst =
+    if Int.(i <= 0) then
+      lst
+    else
+      add-zero (i - 1) (0::lst)
+  let-rec all-sum i lst-lst =
+    let i-opt-lst =
+      lst-lst
+      |> List.map (List.nth i)
+    in
+    let sum =
+      let f sum i-opt =
+        match i-opt with
+        | Some(i) -> sum + i
+        | None -> sum
+      in
+      List.fold-left f 0 i-opt-lst
+    in
+    if Int.(sum == 0) then
+      []
+    else
+      sum :: (all-sum (i + 1) lst-lst)
+
+  let mul-sub stack l1 l2 =
+    l1
+    |> List.map (fun i -> List.map (fun j -> i * j) l2)
+    |> List.mapi add-zero
+    |> all-sum 0
+
+  % 多くのSATySFiプログラムでは数百桁の多倍長整数は扱わないと予想するため、karatsuba法は採用していない
+  let mul (b1, lst1) (b2, lst2) =
+    carry-and-fix (Bool.equal b1 b2, mul-sub [] lst1 lst2)
+
+
+
+  % lst2に0から9までをかけてlst1比較することで商と余りを出す
+  % `div-sub-sub2 0 zero lst1 lst2`の用に使うことを想定している
+  let-rec div-sub-sub2 i num lst1 lst2 =
+    let new-num = add (true, lst2) num in
+    if (true, lst1) < new-num then
+      let (_,blst) = sub (true, lst1) num in
+      (i, blst)
+    else if (true, lst1) == new-num then
+      (i + 1, [0])
+    else
+      div-sub-sub2 (i + 1) new-num lst1 lst2
+
+  % 一つ前の割り算の余りに一桁足して割り算を行う
+  let-rec div-sub-sub stack before-lst1 after-lst1 lst2 =
+    match after-lst1 with
+    | [] -> (
+      (stack, before-lst1)
+    )
+    | x::xs -> (
+      let (a, blst) = div-sub-sub2 0 zero (x::before-lst1) lst2 in
+      div-sub-sub (a::stack) blst xs lst2
+    )
+
+  let div-sub (b1, lst1) (b2, lst2) =
+    if Int.((List.length lst1) < (List.length lst2)) then
+      (zero, (b2, lst2))
+    else
+      let a-is-plus = Bool.equal b1 b2 in
+      let b-is-plus = b1 || b2 in
+      let d = (List.length lst1) - (List.length lst2) in
+      let (left-lst1, right-lst1) = List.split-at d lst1 in
+      let (alst, blst) = div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2 in
+      (carry-and-fix (a-is-plus, alst), carry-and-fix (b-is-plus, blst))
+
+
+  let div t1 t2 =
+    let (a,_) = div-sub t1 t2 in
+    a
+
+  let mod- t1 t2 =
+    let (_,b) = div-sub t1 t2 in
+    b
+
+
+  let abs (_,lst) = (true, lst)
+
+
+  let to-string t =
+    let-rec sub lst str =
+      match lst with
+      | [] -> str
+      | i::is -> sub is ((Int.to-string i)^str)
+    in
+    let (b, lst) = t in
+    if b then
+      sub lst String.empty
+    else
+      `-` ^ (sub lst String.empty)
+
+
+  let of-string-opt str =
+    let clst = string-explode str in
+    let-rec sub clst lst =
+      match clst with
+      | [] -> Some(lst)
+      | x::xs when Int.(0x0029 < x) && Int.(x < 0x003A) -> (
+        let i = x - 0x0030 in
+        sub xs (i::lst)
+      )
+      | _ -> None
+    in
+    match clst with
+    | [] -> Some(zero)
+    | 0x002D::xs -> sub xs [] |> Option.map (fun lst -> (false, lst))
+    | _ -> sub clst [] |> Option.map (fun lst -> (true, lst))
+
+
+  let of-string s =
+    let msg = `BigInt.of-string: invalid string: `# ^ s in
+    s |> of-string-opt |> Option.expect msg
+
+end

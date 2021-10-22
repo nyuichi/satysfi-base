@@ -1,3 +1,4 @@
+@stage: persistent
 @import: eq
 @import: ord
 @import: string
