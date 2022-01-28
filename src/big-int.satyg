@@ -194,7 +194,7 @@ end = struct
       else
         (-)
     in
-    carry-and-fix (b1 && b2 || ((b1, lst1) > (b2, lst2)), add-sub op lst1 lst2)
+    carry-and-fix (b1, add-sub op lst1 lst2)
   let sub (b1, lst1) (b2, lst2) =
     let op =
       if Bool.equal b1 b2 then
@@ -202,10 +202,11 @@ end = struct
       else
         (+)
     in
-    carry-and-fix (b1 && b2 || ((b1, lst1) < (b2, lst2)), add-sub op lst1 lst2)
+    carry-and-fix (b1, add-sub op lst1 lst2)
   let succ t = add t one
   let pred t = sub t one
   let neg (b,l) = (not b, l)
+  let abs (_,lst) = (true, lst)
 
 
   let-rec add-zero i lst =
@@ -285,9 +286,6 @@ end = struct
   let mod- t1 t2 =
     let (_,b) = div-sub t1 t2 in
     b
-
-
-  let abs (_,lst) = (true, lst)
 
 
   let to-string t =
