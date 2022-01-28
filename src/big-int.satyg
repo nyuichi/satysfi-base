@@ -202,7 +202,7 @@ end = struct
       else
         (+)
     in
-    carry-and-fix (b1 && b2 || ((b1, lst1) > (b2, lst2)), add-sub op lst1 lst2)
+    carry-and-fix (b1 && b2 || ((b1, lst1) < (b2, lst2)), add-sub op lst1 lst2)
   let succ t = add t one
   let pred t = sub t one
   let neg (b,l) = (not b, l)
