@@ -373,6 +373,7 @@ false
 [32m[debug.log] ==== BigInt ====[0m
 [32m[debug.log] 42[0m
 [32m[debug.log] -123[0m
+[32m[debug.log] -10[0m
 [32m[debug.log] 0[0m
 [32m[debug.log] 1[0m
 [32m[debug.log] -1[0m
@@ -396,6 +397,8 @@ false
 [32m[debug.log] 2512[0m
 [32m[debug.log] 287[0m
 [32m[debug.log] 4[0m
+[32m[debug.log] 239[0m
+[32m[debug.log] 0[0m
 [32m[debug.log] -287[0m
 [32m[debug.log] 4[0m
 [32m[debug.log] -287[0m
