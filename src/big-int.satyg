@@ -11,7 +11,6 @@
 module BigInt : sig
 
   type t
-  %val make : bool -> int list -> t
 
   val ord : (t Ord.t) implicit
   val eq : (t Eq.t) implicit
@@ -41,18 +40,9 @@ module BigInt : sig
   val one : t
   val minus-one : t
 
-  %val of-int : int -> t
-  %val to-int : t -> int
   val to-string : t -> string
   val of-string-opt : string -> t option
   val of-string : string -> t
-
-
-  val carry-and-fix : t -> t
-  val make : bool -> int list -> t
-
-  val div-sub-sub2 : int -> t -> int list -> int list -> int * int list
-
 
 end = struct
 
@@ -254,7 +244,7 @@ end = struct
 
 
   % lst2に0から9までをかけてlst1比較することで商と余りを出す
-  % `div-sub-sub2 0 zero lst1 lst2`の用に使うことを想定している
+  % `div-sub-sub2 0 zero lst1 lst2`と使うことを想定している
   let-rec div-sub-sub2 i num lst1 lst2 =
     let new-num = add (true, lst2) num in
     if (true, lst1) < new-num then
