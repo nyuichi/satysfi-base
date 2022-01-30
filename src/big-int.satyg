@@ -16,8 +16,6 @@ module BigInt : sig
   val eq : (t Eq.t) implicit
 
   val equal : t -> t -> bool
-  val max : t -> t -> t
-  val min : t -> t -> t
 
   val (<) : t -> t -> bool
   val (>) : t -> t -> bool
@@ -32,8 +30,11 @@ module BigInt : sig
   val sub : t -> t -> t
   val mul : t -> t -> t
   val div : t -> t -> t
-  val mod- : t -> t -> t
   val abs : t -> t
+  val pow : t -> t -> t
+  val max : t -> t -> t
+  val min : t -> t -> t
+  val mod- : t -> t -> t
 
 
   val zero : t
@@ -294,6 +295,18 @@ end = struct
   let mod- t1 t2 =
     let (_,b) = div-sub t1 t2 in
     b
+
+
+  let pow p base = % REQUIRE(p >= 0)
+    let two = (true, [2]) in
+    let-rec aux p pp acc =
+      if p == zero then
+        acc
+      else if (mod- p two) == one then
+        aux (div p two) (mul pp pp) (mul acc pp)
+      else
+        aux (div p two) (mul pp pp) acc
+    in aux p base one
 
 
   let to-string t =

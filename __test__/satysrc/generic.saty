@@ -461,6 +461,8 @@ let () = p (BigInt.div (BigInt.of-string `12345`) (BigInt.of-string `-43`)) in
 let () = p (BigInt.mod- (BigInt.of-string `12345`) (BigInt.of-string `-43`)) in
 let () = p (BigInt.div (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
 let () = p (BigInt.mod- (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
+let () = p (BigInt.of-string `2` |> BigInt.pow (BigInt.of-string `3`)) in
+let () = p (BigInt.of-string `2` |> BigInt.pow (BigInt.of-string `0`)) in
 
 
 let () = p (BigInt.of-int 12345) in
