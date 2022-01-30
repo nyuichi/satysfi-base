@@ -405,5 +405,9 @@ false
 [32m[debug.log] 4[0m
 [32m[debug.log] 287[0m
 [32m[debug.log] -4[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] -12345[0m
+[32m[debug.log] 12345[0m
+[32m[debug.log] -12345[0m
 "
 `;

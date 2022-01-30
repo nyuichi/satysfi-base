@@ -463,4 +463,10 @@ let () = p (BigInt.div (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
 let () = p (BigInt.mod- (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
 
 
+let () = p (BigInt.of-int 12345) in
+let () = p (BigInt.of-int (-12345)) in
+let () = Debug.log (Int.to-string(BigInt.to-int (BigInt.of-int 12345))) in
+let () = Debug.log (Int.to-string(BigInt.to-int (BigInt.of-int (-12345)))) in
+
+
 finish

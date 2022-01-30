@@ -44,8 +44,16 @@ module BigInt : sig
   val of-string-opt : string -> t option
   val of-string : string -> t
 
+  val to-int : t -> int
+  val of-int : int -> t
+
 end = struct
 
+  % 正の数のときにtrueで負の数の時falseとなる
+  % 桁が下の数がリストの先頭にくる
+  % ex:
+  % 123 -> (true, [3; 2; 1])
+  % -456 -> (false, [6; 5; 4])
   type t = (bool * (int list))
 
   let make b l = (b, l)
@@ -321,5 +329,30 @@ end = struct
   let of-string s =
     let msg = `BigInt.of-string: invalid string: `# ^ s in
     s |> of-string-opt |> Option.expect msg
+
+  % Int.max-valueを超えているときの挙動は未定義
+  let to-int (b, lst) =
+    let-rec sub lst n m =
+      match lst with
+      | [] -> m
+      | x::xs -> sub xs (n * 10) (x * n + m)
+    in
+    if b then
+      sub lst 1 0
+    else
+      Int.neg (sub lst 1 0)
+
+
+  let of-int i =
+    let-rec sub n lst =
+      if Int.(n < 10) then
+        n::lst
+      else
+        sub (n / 10) ((n mod 10)::lst)
+    in
+    if Int.(i < 0) then
+      (false, List.reverse (sub (Int.neg i) []))
+    else
+      (true, List.reverse (sub i []))
 
 end
