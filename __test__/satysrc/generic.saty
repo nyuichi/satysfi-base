@@ -436,15 +436,44 @@ let () = BigInt.((BigInt.of-string `42`) >= (BigInt.of-string `136`)) |> Bool.to
 let () = BigInt.((BigInt.of-string `42`) == (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
 let () = BigInt.((BigInt.of-string `-42`) < (BigInt.of-string `-136`)) |> Bool.to-string |> Debug.log in
 
+let ord-to-string o = match o with | Lt -> `Lt` | Gt -> `Gt` | Eq -> `Eq` in
+let p-ord n m =
+  Ord.compare BigInt.ord n m
+  |> ord-to-string
+  |> Debug.log
+in 
+let () = p-ord (BigInt.of-string `123`) (BigInt.of-string `-456`) in
+let () = p-ord (BigInt.of-string `-123`) (BigInt.of-string `456`) in
+let () = p-ord (BigInt.of-string `333`) (BigInt.of-string `333`) in
+let () = p-ord (BigInt.of-string `-333`) (BigInt.of-string `-333`) in
+let () = p-ord (BigInt.of-string `1234`) (BigInt.of-string `432`) in
+let () = p-ord (BigInt.of-string `432`) (BigInt.of-string `1234`) in
+let () = p-ord (BigInt.of-string `-1234`) (BigInt.of-string `-432`) in
+let () = p-ord (BigInt.of-string `-432`) (BigInt.of-string `-1234`) in
+let () = p-ord (BigInt.of-string `332`) (BigInt.of-string `333`) in
+let () = p-ord (BigInt.of-string `333`) (BigInt.of-string `332`) in
+let () = p-ord (BigInt.of-string `-332`) (BigInt.of-string `-333`) in
+let () = p-ord (BigInt.of-string `-333`) (BigInt.of-string `-332`) in
+
+
+
 let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `39`)) in
 let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `-39`)) in
 let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `39`)) in
 let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `-45`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `-45`)) in
 
 let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `39`)) in
 let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `-39`)) in
 let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `39`)) in
 let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `-45`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `-45`)) in
 
 let () = p (BigInt.mul (BigInt.of-string `157`) (BigInt.of-string `16`)) in
 let () = p (BigInt.mul (BigInt.of-string `157`) (BigInt.of-string `-16`)) in

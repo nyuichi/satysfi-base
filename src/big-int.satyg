@@ -57,7 +57,7 @@ end = struct
   % -456 -> (false, [6; 5; 4])
   type t = (bool * (int list))
 
-  let make b l = (b, l)
+  let make is-positive l = (is-positive, l)
 
 
   % 繰り上がり処理を行う
@@ -148,25 +148,14 @@ end = struct
       in
       match (carry-and-fix tl, carry-and-fix tr) with
       | ((_,[0]), (_,[0])) -> Eq
-      | ((true,_), (false,_)) -> Lt
-      | ((false,_), (true,_)) -> Gt
-      | ((true,lstl), (true,lstr)) ->
-        if Int.(List.length lstl < List.length lstr) then
-          Lt
-        else if Int.(List.length lstl > List.length lstr) then
-          Gt
-        else
-          sub (List.reverse lstl) (List.reverse lstr)
+      | ((true,_), (false,_)) -> Gt
+      | ((false,_), (true,_)) -> Lt
+      | ((true,lstl), (true,lstr)) -> sub (List.reverse lstl) (List.reverse lstr)
       | ((false,lstl), (false,lstr)) -> (
-        if Int.(List.length lstl < List.length lstr) then
-          Gt
-        else if Int.(List.length lstl > List.length lstr) then
-          Lt
-        else
-          match sub (List.reverse lstl) (List.reverse lstr) with
-          | Lt -> Gt
-          | Gt -> Lt
-          | Eq -> Eq
+        match sub (List.reverse lstl) (List.reverse lstr) with
+        | Lt -> Gt
+        | Gt -> Lt
+        | Eq -> Eq
       )
     ))
 
@@ -188,6 +177,7 @@ end = struct
   let minus-one = (false, [1])
 
 
+  % 足し算引き算は演算子が違う以外は共通化できる
   let-rec add-sub op l1 l2 =
     match (l1, l2) with
     | ([], []) -> []
@@ -196,22 +186,33 @@ end = struct
     | (x1::xs1, x2::xs2) -> (op x1 x2) :: (add-sub op xs1 xs2)
 
 
-  let add (b1, lst1) (b2, lst2) =
+  let add (is-positive-1, lst1) (is-positive-2, lst2) =
     let op =
-      if Bool.equal b1 b2 then
+      % 正負が同じときは和を求め、違う場合は差を求める
+      if Bool.equal is-positive-1 is-positive-2 then
         (+)
       else
         (-)
     in
-    carry-and-fix (b1, add-sub op lst1 lst2)
-  let sub (b1, lst1) (b2, lst2) =
+    % 足される数の正負がそのまま計算結果の正負と等しくなる
+    % -123 + 234 = 111 となるので一見違うように思えるが、
+    % add-sub関数で計算させるときには絶対値での和差を出すので
+    % add-subの結果は 123 - 234 = -111となり、
+    % 最後は符号を反転させるために false を指定するのが
+    % 正しい操作となる
+    % carry-and-fix関数は符号の補正までしてくれるので、
+    % そこに投げるのが良い
+    carry-and-fix (is-positive-1, add-sub op lst1 lst2)
+
+  let sub (is-positive-1, lst1) (is-positive-2, lst2) =
     let op =
-      if Bool.equal b1 b2 then
+      if Bool.equal is-positive-1 is-positive-2 then
         (-)
       else
         (+)
     in
-    carry-and-fix (b1, add-sub op lst1 lst2)
+    carry-and-fix (is-positive-1, add-sub op lst1 lst2)
+
   let succ t = add t one
   let pred t = sub t one
   let neg (b,l) = (not b, l)
@@ -241,62 +242,88 @@ end = struct
     else
       sum :: (all-sum (i + 1) lst-lst)
 
-  let mul-sub stack l1 l2 =
+  % 例：
+  % 123 * 456
+  % -> [3; 2; 1] * [6; 5; 4]
+  % -> [[18; 15; 12]; [12; 10; 8]; [6; 5; 4]]
+  % -> [[18; 15; 12]; [0; 12; 10; 8]; [0; 0; 6; 5; 4]]
+  % -> [18; 27; 28; 13; 4]
+  % -> [8; 8; 0; 6; 5]
+  % -> 56088
+  let mul-sub l1 l2 =
     l1
+    % まず全桁同士かけ合わせる
     |> List.map (fun i -> List.map (fun j -> i * j) l2)
+    % 桁数の数だけ後ろに0をつけて桁を正しくする
     |> List.mapi add-zero
+    % 全て足す
     |> all-sum 0
 
   % 多くのSATySFiプログラムでは数百桁の多倍長整数は扱わないと予想するため、karatsuba法は採用していない
-  let mul (b1, lst1) (b2, lst2) =
-    carry-and-fix (Bool.equal b1 b2, mul-sub [] lst1 lst2)
+  let mul (is-positive-1, lst1) (is-positive-2, lst2) =
+    carry-and-fix (Bool.equal is-positive-1 is-positive-2, mul-sub lst1 lst2)
 
 
 
   % lst2に0から9までをかけてlst1比較することで商と余りを出す
+  % lst1が割られる数でlst2が割る数
   % `div-sub-sub2 0 zero lst1 lst2`と使うことを想定している
   let-rec div-sub-sub2 i num lst1 lst2 =
     let new-num = add (true, lst2) num in
     if (true, lst1) < new-num then
-      let (_,blst) = sub (true, lst1) num in
-      (i, blst)
+      % 超えた場合は、iより一つ小さい数が商となる
+      let (_,surplus-lst) = sub (true, lst1) num in
+      (i, surplus-lst)
     else if (true, lst1) == new-num then
+      % ちょうど割り切れた場合
       (i + 1, [0])
     else
+      % まだ割られる数が大きいのでiを一つ大きくする
       div-sub-sub2 (i + 1) new-num lst1 lst2
 
-  % 一つ前の割り算の余りに一桁足して割り算を行う
+  % 一つ前の割り算の余りに一つ下に数字を足して割り算を行う
   let-rec div-sub-sub stack before-lst1 after-lst1 lst2 =
     match after-lst1 with
     | [] -> (
       (stack, before-lst1)
     )
     | x::xs -> (
-      let (a, blst) = div-sub-sub2 0 zero (x::before-lst1) lst2 in
-      div-sub-sub (a::stack) blst xs lst2
+      let (answer, surplus-lst) =
+        div-sub-sub2 0 zero (x::before-lst1) lst2
+      in
+      div-sub-sub (answer::stack) surplus-lst xs lst2
     )
 
-  let div-sub (b1, lst1) (b2, lst2) =
+  % 答えと剰余を同時に出す
+  let div-sub (is-positive-1, lst1) (is-positive-2, lst2) =
     if Int.((List.length lst1) < (List.length lst2)) then
-      (zero, (b2, lst2))
+      (zero, (is-positive-2, lst2))
     else
-      let a-is-plus = Bool.equal b1 b2 in
-      let b-is-plus = b1 || b2 in
+      let answer-is-plus =
+        Bool.equal is-positive-1 is-positive-2
+      in
+      let surplus-is-plus = is-positive-1 || is-positive-2 in
       let d = (List.length lst1) - (List.length lst2) in
       let (left-lst1, right-lst1) = List.split-at d lst1 in
-      let (alst, blst) = div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2 in
-      (carry-and-fix (a-is-plus, alst), carry-and-fix (b-is-plus, blst))
+      let (answer-lst, surplus-lst) =
+        div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2
+      in
+      (
+        carry-and-fix (answer-is-plus, answer-lst),
+        carry-and-fix (surplus-is-plus, surplus-lst)
+      )
 
 
   let div t1 t2 =
-    let (a,_) = div-sub t1 t2 in
-    a
+    let (answer,_) = div-sub t1 t2 in
+    answer
 
   let mod- t1 t2 =
-    let (_,b) = div-sub t1 t2 in
-    b
+    let (_,surplus) = div-sub t1 t2 in
+    surplus
 
 
+  % Int.powと実装が同じ
   let pow p base = % REQUIRE(p >= 0)
     let two = (true, [2]) in
     let-rec aux p pp acc =
@@ -327,14 +354,19 @@ end = struct
     let-rec sub clst lst =
       match clst with
       | [] -> Some(lst)
-      | x::xs when Int.(0x0029 < x) && Int.(x < 0x003A) -> (
+        % 0x0030 == `0`
+        % 0x0039 == `9`
+        % 数字の文字コードから0x0030を引くことで、数を表す文字を整数値に直している
+      | x::xs when Int.(0x0030 <= x) && Int.(x <= 0x0039) -> (
         let i = x - 0x0030 in
         sub xs (i::lst)
       )
       | _ -> None
     in
     match clst with
-    | [] -> Some(zero)
+    | [] -> None
+      % 0x002D == `-`
+      % 先頭にマイナス記号があるときには負の値にする必要があるので、それのチェック
     | 0x002D::xs -> sub xs [] |> Option.map (fun lst -> (false, lst))
     | _ -> sub clst [] |> Option.map (fun lst -> (true, lst))
 
@@ -344,19 +376,21 @@ end = struct
     s |> of-string-opt |> Option.expect msg
 
   % Int.max-valueを超えているときの挙動は未定義
-  let to-int (b, lst) =
+  % リストの先頭が1の位
+  let to-int (is-positive, lst) =
     let-rec sub lst n m =
       match lst with
       | [] -> m
       | x::xs -> sub xs (n * 10) (x * n + m)
     in
-    if b then
+    if is-positive then
       sub lst 1 0
     else
       Int.neg (sub lst 1 0)
 
 
   let of-int i =
+    % 10で割ったときの余りを登録していく
     let-rec sub n lst =
       if Int.(n < 10) then
         n::lst
