@@ -134,8 +134,8 @@ end = struct
       let-rec sub lstl lstr =
           match (lstl, lstr) with
           | ([],[]) -> Eq
-          | (_, []) -> Gt
-          | ([],_) -> Lt
+          | (_, []) -> panic `BigInt.ord: invalid data`
+          | ([],_) -> panic `BigInt.ord: invalid data`
           | (nl::xl,nr::xr) -> (
               if Int.(nl < nr) then
                   Lt
@@ -150,12 +150,23 @@ end = struct
       | ((_,[0]), (_,[0])) -> Eq
       | ((true,_), (false,_)) -> Gt
       | ((false,_), (true,_)) -> Lt
-      | ((true,lstl), (true,lstr)) -> sub (List.reverse lstl) (List.reverse lstr)
+      | ((true,lstl), (true,lstr)) ->
+        if Int.(List.length lstl < List.length lstr) then
+          Lt
+        else if Int.(List.length lstl > List.length lstr) then
+          Gt
+        else
+          sub (List.reverse lstl) (List.reverse lstr)
       | ((false,lstl), (false,lstr)) -> (
-        match sub (List.reverse lstl) (List.reverse lstr) with
-        | Lt -> Gt
-        | Gt -> Lt
-        | Eq -> Eq
+        if Int.(List.length lstl < List.length lstr) then
+          Gt
+        else if Int.(List.length lstl > List.length lstr) then
+          Lt
+        else
+          match sub (List.reverse lstl) (List.reverse lstr) with
+          | Lt -> Gt
+          | Gt -> Lt
+          | Eq -> Eq
       )
     ))
 
