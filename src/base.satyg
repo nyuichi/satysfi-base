@@ -1,0 +1,79 @@
+use Util
+use Bool
+use Int
+use Float
+use Char
+use String
+use Token
+use Parser
+use StringParser
+use RegExp
+use Ref
+use List
+use Option
+use Result
+use Either
+use Set
+use Map
+use Void
+use Fn
+use Ord
+use Eq
+use Tuple
+use TreeSet
+use TreeMap
+use Stream
+use Promise
+use Array
+use Random
+use Format
+use Path
+use Graphics
+use Length
+use Inline
+use Block
+use Font
+use CrossRef
+use Page
+use Pager
+
+module Base = struct
+  module Util = Util
+  module Bool = Bool
+  module Int = Int
+  module Float = Float
+  module Char = Char
+  module String = String
+  module Token = Token
+  module Parser = Parser
+  module StringParser = StringParser
+  module RegExp = RegExp
+  module Ref = Ref
+  module List = List
+  module Option = Option
+  module Result = Result
+  module Either = Either
+  module Set = Set
+  module Map = Map
+  module Void = Void
+  module Fn = Fn
+  module Ord = Ord
+  module Eq = Eq
+  module Tuple = Tuple
+  module TreeSet = TreeSet
+  module TreeMap = TreeMap
+  module Stream = Stream
+  module Promise = Promise
+  module Array = Array
+  module Random = Random
+  module Format = Format
+  module Path = Path
+  module Graphics = Graphics
+  module Length = Length
+  module Inline = Inline
+  module Block = Block
+  module Font = Font
+  module CrossRef = CrossRef
+  module Page = Page
+  module Pager = Pager
+end
