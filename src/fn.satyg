@@ -59,7 +59,7 @@ end = struct
   val persistent ~const x _ = x
   val persistent ~ignore _ = ()
   val persistent ~non f a = not (f a)
-  val persistent ~tap f x = ignore (f x) before x
+  val persistent ~tap f x = let () = ignore (f x) in x
   val persistent ~on f g a1 a2 = g (f a1) (f a2)
   val persistent ~rec fix f x = f (fix f) x
   val persistent ~as-type-of x y = y

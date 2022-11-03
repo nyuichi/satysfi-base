@@ -1,3 +1,4 @@
+use open Util
 use Fn
 use Eq
 use Result
@@ -24,20 +25,20 @@ module Option :> sig
   val persistent ~or-else 'a : (unit -> option 'a) -> option 'a -> option 'a
   val persistent ~xor 'a : option 'a -> option 'a -> option 'a
   val persistent ~ok-or 'a 'e : 'e -> option 'a -> result 'a 'e
-  val persistent ~ok-or-else : (unit -> 'e) -> option 'a -> result 'a 'e
-  val persistent ~err-or : 'a -> option 'e -> result 'a 'e
-  val persistent ~err-or-else : (unit -> 'a) -> option 'e -> result 'a 'e
-  val persistent ~transpose : option (result 'a 'e) -> result (option 'a) 'e
-  val persistent ~flatten : option (option 'a) -> option 'a
-  val persistent ~ret : 'a -> option 'a
-  val persistent ~fold-list : list 'a -> ('a -> 'b -> option 'b) -> 'b -> option 'b
-  val persistent ~to-list : option 'a -> list 'a
-  val persistent ~iter : ('a -> unit) -> option 'a -> unit
+  val persistent ~ok-or-else 'a 'e : (unit -> 'e) -> option 'a -> result 'a 'e
+  val persistent ~err-or 'a 'e : 'a -> option 'e -> result 'a 'e
+  val persistent ~err-or-else 'a 'e : (unit -> 'a) -> option 'e -> result 'a 'e
+  val persistent ~transpose 'a 'e : option (result 'a 'e) -> result (option 'a) 'e
+  val persistent ~flatten 'a : option (option 'a) -> option 'a
+  val persistent ~ret 'a : 'a -> option 'a
+  val persistent ~fold-list 'a 'b : list 'a -> ('a -> 'b -> option 'b) -> 'b -> option 'b
+  val persistent ~to-list 'a : option 'a -> list 'a
+  val persistent ~iter 'a : ('a -> unit) -> option 'a -> unit
 
   % deprecated
   val persistent ~(^&&) : option bool -> option bool -> option bool
   val persistent ~(^||) : option bool -> option bool -> option bool
-  val persistent ~(^::) : option 'a -> option (list 'a) -> option (list 'a)
+  val persistent ~(^::) 'a : option 'a -> option (list 'a) -> option (list 'a)
   val persistent ~(^+) : option int -> option int -> option int
   val persistent ~(^-) : option int -> option int -> option int
   val persistent ~(^*) : option int -> option int -> option int
@@ -50,10 +51,10 @@ module Option :> sig
   val persistent ~(^-') : option length -> option length -> option length
   val persistent ~(^*') : option length -> option float -> option length
   val persistent ~(^/') : option length -> option length -> option float
-  val persistent ~from : 'a -> option 'a -> 'a
-  val persistent ~value : 'a -> option 'a -> 'a
-  val persistent ~bind : option 'a -> ('a -> option 'b) -> option 'b  % TODO: swap arguments
-  val persistent ~join : option (option 'a) -> option 'a
+  val persistent ~from 'a : 'a -> option 'a -> 'a
+  val persistent ~value 'a : 'a -> option 'a -> 'a
+  val persistent ~bind 'a 'b : option 'a -> ('a -> option 'b) -> option 'b  % TODO: swap arguments
+  val persistent ~join 'a : option (option 'a) -> option 'a
 end = struct
   val persistent ~none = None
   val persistent ~some x = Some x

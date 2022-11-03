@@ -2,10 +2,10 @@
 
 module UtilSub :> sig
 
-  val finish : document
+%  val finish : document
 
 end = struct
 
-  val finish = standalone '<>
+%  val finish = standalone '<>
 
 end

@@ -1,3 +1,5 @@
+use open Util
+use Fn
 use Ord
 use Eq
 use Option
@@ -39,7 +41,6 @@ module List :> sig
   val persistent ~any 'a : ('a -> bool) -> list 'a -> bool
   val persistent ~zip 'a 'b : list 'a -> list 'b -> list ('a * 'b)
   val persistent ~unzip 'a 'b : list ('a * 'b) -> list 'a * list 'b
-  val persistent ~find 'a : ('a -> bool) -> list 'a -> option 'a
   val persistent ~partition 'a : ('a -> bool) -> list 'a -> list 'a * list 'a
   val persistent ~iterate 'a : int -> ('a -> 'a) -> 'a -> list 'a
   val persistent ~repeat 'a : int -> 'a -> list 'a
@@ -65,8 +66,8 @@ module List :> sig
   val persistent ~takewhile 'a : ('a -> bool) -> list 'a -> list 'a
   val persistent ~dropwhile 'a : ('a -> bool) -> list 'a -> list 'a
   val persistent ~splitat 'a : int -> list 'a -> (list 'a * list 'a)
-  val persistent ~all-and : bool list -> bool
-  val persistent ~or : bool list -> bool
+  val persistent ~all-and : list bool -> bool
+  val persistent ~or : list bool -> bool
   val persistent ~for-all 'a : ('a -> bool) -> list 'a -> bool
   val persistent ~exists 'a : ('a -> bool) -> list 'a -> bool
   val persistent ~for-all2 'a 'b : ('a -> 'b -> bool) -> list 'a -> list 'b -> option bool
@@ -97,10 +98,10 @@ end = struct
     aux 0 f
 
 
-  val persistent ~rec iter xs0 =
+  val persistent ~rec iter f xs0 =
     match xs0 with
     | []      -> ()
-    | x :: xs -> f x before iter f xs
+    | x :: xs -> let () = f x in iter f xs
     end
 
 
@@ -108,7 +109,7 @@ end = struct
     let rec aux i f xs0 =
       match xs0 with
       | []      -> ()
-      | x :: xs -> f i x before aux (i + 1) f xs
+      | x :: xs -> let () = f i x in aux (i + 1) f xs
       end
     in
     aux 0 f
@@ -304,9 +305,9 @@ end = struct
           if f y then
             span-sub (y :: lst1) ys
           else
-            (List.reverse lst1, lst2)
+            (reverse lst1, lst2)
 
-      | _ -> (List.reverse lst1, lst2)
+      | _ -> (reverse lst1, lst2)
       end
     in
       span-sub [] lst
@@ -317,11 +318,11 @@ end = struct
       match lst2 with
       | y :: ys ->
           if f y then
-            (List.reverse lst1, lst2)
+            (reverse lst1, lst2)
           else
             break-sub (y :: lst1) ys
 
-      | [] -> (List.reverse lst1, lst2)
+      | [] -> (reverse lst1, lst2)
       end
     in
       break-sub [] lst
@@ -429,7 +430,7 @@ end = struct
   val persistent ~partition f lst =
     let rec part yes no lst =
       match lst with
-      | []      -> (List.reverse yes, List.reverse no)
+      | []      -> (reverse yes, reverse no)
       | x :: xs -> if f x then part (x :: yes) no xs else part yes (x :: no) xs
       end
     in
@@ -487,7 +488,7 @@ end = struct
     if n == 0 then
       []
     else
-      List.append lst (cycle- (n - 1) lst)
+      append lst (cycle- (n - 1) lst)
 
   val persistent ~make-cycle n lst = cycle- n lst
 

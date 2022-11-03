@@ -1,4 +1,4 @@
-use Util
+use open Util
 use List
 use Char
 use Ord
@@ -132,15 +132,15 @@ end = struct
       let lstr = string-explode sr in
       let rec sub lstl lstr =
           match (lstl, lstr) with
-          | ([],[]) -> Eq
-          | (_, []) -> Gt
-          | ([],_) -> Lt
+          | ([],[]) -> Ord.Eq
+          | (_, []) -> Ord.Gt
+          | ([],_) -> Ord.Lt
           | (nl::xl,nr::xr) ->
               if nl < nr then
-                  Lt
+                  Ord.Lt
               else
                   if nl > nr then
-                      Gt
+                      Ord.Gt
                   else
                       sub xl xr
           end

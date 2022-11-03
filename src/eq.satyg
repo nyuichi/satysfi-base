@@ -1,4 +1,4 @@
-use Util
+use open Util
 
 module Eq :> sig
   type t :: o -> o

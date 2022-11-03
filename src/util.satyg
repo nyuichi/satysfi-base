@@ -75,6 +75,6 @@ module Util = struct
 
   %% [finish] returns an empty document. It is useful when writing a prograam
   %% involving no typesetting logic.
-  val finish = UtilSub.finish
+  % val finish = UtilSub.finish
 
 end

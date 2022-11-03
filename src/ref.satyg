@@ -1,30 +1,30 @@
 module Ref :> sig
   %% [Ref.make x] creates a new mutable cell with default value [x].
-  val persistent ~make : 'a -> ref 'a
+  val persistent ~make 'a : 'a -> ref 'a
 
   %% [Ref.get r] obtains a value stored in cell [r].
   %%
   %% e.g. [r |> Ref.get]
-  val persistent ~get : ref 'a -> 'a
+  val persistent ~get 'a : ref 'a -> 'a
 
   %% [Ref.set x r] stores value [x] in cell [r].
   %%
   %% e.g. [r |> Ref.set 1]
-  val persistent ~set : 'a -> ref 'a -> unit
+  val persistent ~set 'a : 'a -> ref 'a -> unit
 
   %% [Ref.update f r] loads value from cell [r], applies [f] to it,
   %% and replaces the contents of [r] with the result.
   %%
   %% e.g. [r |> update (fun x -> x + 1)]
-  val persistent ~update : ('a -> 'a) -> ref 'a -> unit
+  val persistent ~update 'a : ('a -> 'a) -> ref 'a -> unit
 
   %% [Ref.swap r1 r2] swaps the contents in cells [r1] and [r2].
-  val persistent ~swap : ref 'a -> ref 'a -> unit
+  val persistent ~swap 'a : ref 'a -> ref 'a -> unit
 
   %% [Ref.set-temporarily x thunk r] temporarily sets the value of cell [r]
   %% to [x] and executes [thunk]. After [thunk] returns, the content of [r]
   %% is restored to the value cell [r] contained before running [thunk].
-  val persistent ~set-temporarily : 'a -> (unit -> 'b) -> ref 'a -> 'b
+  val persistent ~set-temporarily 'a 'b : 'a -> (unit -> 'b) -> ref 'a -> 'b
 
   %% [Ref.inc r] increases the value in [r] by one.
   val persistent ~inc : ref int -> unit
@@ -47,7 +47,7 @@ end = struct
 
   val persistent ~swap r1 r2 =
     let v1 = r1 |> get in
-    r1 |> set (r2 |> get) before
+    let () = r1 |> set (r2 |> get) in
     r2 |> set v1
 
   val persistent ~set-temporarily v f r =
