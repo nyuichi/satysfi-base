@@ -1,157 +1,173 @@
-@stage: persistent
-@require: list
-@import: ord
-@import: eq
-@import: option-ext
-@import: ord
+use Ord
+use Eq
+use Option
 
-module List : sig
-  val eq : ('a Eq.t) implicit -> (('a list) Eq.t) implicit
+module List :> sig
+  val persistent ~eq 'a : implicit (Eq.t 'a) -> implicit (Eq.t (list 'a))
 
-  val null : 'a list -> bool
-  val nil : 'a list
-  val cons : 'a -> 'a list -> 'a list
-  val uncons : 'a list -> ('a * 'a list) option
-  val map : ('a -> 'b) -> 'a list -> 'b list
-  val mapi : (int -> 'a -> 'b) -> 'a list -> 'b list
-  val iter : ('a -> unit) -> 'a list -> unit
-  val iteri : (int -> 'a -> unit) -> 'a list -> unit
-  val filter : ('a -> bool) -> 'a list -> 'a list
-  val reverse : 'a list -> 'a list
-  val append : 'a list -> 'a list -> 'a list
-  val concat : ('a list) list -> 'a list
-  val length : 'a list -> int
-  val nth : int -> 'a list -> 'a option
-  val intersperse : 'a -> 'a list -> 'a list
-  val find : ('a -> bool) -> 'a list -> 'a option
-  val apply : 'a -> ('a -> 'b) list -> 'b list
-  val take : int -> 'a list -> 'a list
-  val drop : int -> 'a list -> 'a list
-  val take-while : ('a -> bool) -> 'a list -> 'a list
-  val drop-while : ('a -> bool) -> 'a list -> 'a list
-  val split-at : int -> 'a list -> ('a list * 'a list)
-  val span : ('a -> bool) -> 'a list -> ('a list * 'a list)
-  val break : ('a -> bool) -> 'a list -> ('a list * 'a list)
-  val head : 'a list -> 'a option
-  val tail : 'a list -> ('a list) option
-  val last : 'a list -> 'a option
-  val init : 'a list -> ('a list) option
-  val reverse-append : 'a list -> 'a list -> 'a list
-  val reverse-map : ('a -> 'b) -> 'a list -> 'b list
-  val all : ('a -> bool) -> 'a list -> bool
-  val any : ('a -> bool) -> 'a list -> bool
-  val zip : 'a list -> 'b list -> ('a * 'b) list
-  val unzip : ('a * 'b) list -> 'a list * 'b list
-  val find : ('a -> bool) -> 'a list -> 'a option
-  val partition : ('a -> bool) -> 'a list -> 'a list * 'a list
-  val iterate : int -> ('a -> 'a) -> 'a -> 'a list
-  val repeat : int -> 'a -> 'a list
-  val cycle- : int -> 'a list -> 'a list
-  val acons : 'a -> 'b -> ('a * 'b) list -> ('a * 'b) list
-  val max : ('a Ord.t) implicit -> 'a list -> 'a option
-  val min : ('a Ord.t) implicit -> 'a list -> 'a option
-  val fold : 'b -> ('a -> 'b -> 'b) -> 'a list -> 'b
+  val persistent ~null 'a : list 'a -> bool
+  val persistent ~nil 'a  : list 'a
+  val persistent ~cons 'a : 'a -> list 'a -> list 'a
+  val persistent ~uncons 'a : list 'a -> option ('a * list 'a)
+  val persistent ~map 'a 'b : ('a -> 'b) -> list 'a -> list 'b
+  val persistent ~mapi 'a 'b : (int -> 'a -> 'b) -> list 'a -> list 'b
+  val persistent ~iter 'a : ('a -> unit) -> list 'a -> unit
+  val persistent ~iteri 'a : (int -> 'a -> unit) -> list 'a -> unit
+  val persistent ~filter 'a : ('a -> bool) -> list 'a -> list 'a
+  val persistent ~reverse 'a : list 'a -> list 'a
+  val persistent ~append 'a : list 'a -> list 'a -> list 'a
+  val persistent ~concat 'a : list (list 'a) -> list 'a
+  val persistent ~length 'a : list 'a -> int
+  val persistent ~nth 'a : int -> list 'a -> option 'a
+  val persistent ~intersperse 'a : 'a -> list 'a -> list 'a
+  val persistent ~find 'a : ('a -> bool) -> list 'a -> option 'a
+  val persistent ~apply 'a 'b : 'a -> list ('a -> 'b) -> list 'b
+  val persistent ~take 'a : int -> list 'a -> list 'a
+  val persistent ~drop 'a : int -> list 'a -> list 'a
+  val persistent ~take-while 'a : ('a -> bool) -> list 'a -> list 'a
+  val persistent ~drop-while 'a : ('a -> bool) -> list 'a -> list 'a
+  val persistent ~split-at 'a : int -> list 'a -> (list 'a * list 'a)
+  val persistent ~span 'a : ('a -> bool) -> list 'a -> (list 'a * list 'a)
+  val persistent ~break 'a : ('a -> bool) -> list 'a -> (list 'a * list 'a)
+  val persistent ~head 'a : list 'a -> option 'a
+  val persistent ~tail 'a : list 'a -> option (list 'a)
+  val persistent ~last 'a : list 'a -> option 'a
+  val persistent ~init 'a : list 'a -> option (list 'a)
+  val persistent ~reverse-append 'a : list 'a -> list 'a -> list 'a
+  val persistent ~reverse-map 'a 'b : ('a -> 'b) -> list 'a -> list 'b
+  val persistent ~all 'a : ('a -> bool) -> list 'a -> bool
+  val persistent ~any 'a : ('a -> bool) -> list 'a -> bool
+  val persistent ~zip 'a 'b : list 'a -> list 'b -> list ('a * 'b)
+  val persistent ~unzip 'a 'b : list ('a * 'b) -> list 'a * list 'b
+  val persistent ~find 'a : ('a -> bool) -> list 'a -> option 'a
+  val persistent ~partition 'a : ('a -> bool) -> list 'a -> list 'a * list 'a
+  val persistent ~iterate 'a : int -> ('a -> 'a) -> 'a -> list 'a
+  val persistent ~repeat 'a : int -> 'a -> list 'a
+  val persistent ~cycle- 'a : int -> list 'a -> list 'a
+  val persistent ~acons 'a 'b : 'a -> 'b -> list ('a * 'b) -> list ('a * 'b)
+  val persistent ~max 'a : implicit (Ord.t 'a) -> list 'a -> option 'a
+  val persistent ~min 'a : implicit (Ord.t 'a) -> list 'a -> option 'a
+  val persistent ~fold 'a 'b : 'b -> ('a -> 'b -> 'b) -> list 'a -> 'b
 
   % unstable API (may subject to change in the future)
-  val fold-left : ('a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-  val fold-lefti : (int -> 'a -> 'b -> 'a) -> 'a -> 'b list -> 'a
-  val fold-right : ('a -> 'b -> 'b) -> 'b -> 'a list -> 'b
-  val fold-left-adjacent : ('a -> 'b -> 'b option -> 'b option -> 'a) -> 'a -> 'b list -> 'a
-  val map-adjacent : ('a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
-  val mapi-adjacent : (int -> 'a -> 'a option -> 'a option -> 'b) -> 'a list -> 'b list
-  val bubblesort : ('a Ord.t) implicit -> 'a list -> 'a list
-  val insertsort : ('a Ord.t) implicit -> 'a list -> 'a list
-  val mergesort : ('a Ord.t) implicit -> 'a list -> 'a list
+  val persistent ~fold-left 'a 'b : ('a -> 'b -> 'a) -> 'a -> list 'b -> 'a
+  val persistent ~fold-lefti 'a 'b : (int -> 'a -> 'b -> 'a) -> 'a -> list 'b -> 'a
+  val persistent ~fold-right 'a 'b : ('a -> 'b -> 'b) -> 'b -> list 'a -> 'b
+  val persistent ~fold-left-adjacent 'a 'b : ('a -> 'b -> option 'b -> option 'b -> 'a) -> 'a -> list 'b -> 'a
+  val persistent ~map-adjacent 'a 'b : ('a -> option 'a -> option 'a -> 'b) -> list 'a -> list 'b
+  val persistent ~mapi-adjacent 'a 'b : (int -> 'a -> option 'a -> option 'a -> 'b) -> list 'a -> list 'b
+  val persistent ~bubblesort 'a : implicit (Ord.t 'a) -> list 'a -> list 'a
+  val persistent ~insertsort 'a : implicit (Ord.t 'a) -> list 'a -> list 'a
+  val persistent ~mergesort 'a : implicit (Ord.t 'a) -> list 'a -> list 'a
 
   % deprecated
-  val assoc : ('a -> 'a -> bool) -> 'a -> ('a * 'b) list -> 'b option  % TODO: use Eq
-  val takewhile : ('a -> bool) -> 'a list -> 'a list
-  val dropwhile : ('a -> bool) -> 'a list -> 'a list
-  val splitat : int -> 'a list -> ('a list * 'a list)
-  val all-and : bool list -> bool
-  val or : bool list -> bool
-  val for-all : ('a -> bool) -> 'a list -> bool
-  val exists : ('a -> bool) -> 'a list -> bool
-  val for-all2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
-  val exists2 : ('a -> 'b -> bool) -> 'a list -> 'b list -> bool option
-  val split : ('a * 'b) list -> 'a list * 'b list
-  val combine : 'a list -> 'b list -> (('a * 'b) list) option
-  val show-opt : ('a option) list -> 'a list
-  val make-cycle : int -> 'a list -> 'a list
+  val persistent ~assoc 'a 'b : ('a -> 'a -> bool) -> 'a -> list ('a * 'b) -> option 'b  % TODO: use Eq
+  val persistent ~takewhile 'a : ('a -> bool) -> list 'a -> list 'a
+  val persistent ~dropwhile 'a : ('a -> bool) -> list 'a -> list 'a
+  val persistent ~splitat 'a : int -> list 'a -> (list 'a * list 'a)
+  val persistent ~all-and : bool list -> bool
+  val persistent ~or : bool list -> bool
+  val persistent ~for-all 'a : ('a -> bool) -> list 'a -> bool
+  val persistent ~exists 'a : ('a -> bool) -> list 'a -> bool
+  val persistent ~for-all2 'a 'b : ('a -> 'b -> bool) -> list 'a -> list 'b -> option bool
+  val persistent ~exists2 'a 'b : ('a -> 'b -> bool) -> list 'a -> list 'b -> option bool
+  val persistent ~split 'a 'b : list ('a * 'b) -> list 'a * list 'b
+  val persistent ~combine 'a 'b : list 'a -> list 'b -> option (list ('a * 'b))
+  val persistent ~show-opt 'a : list (option 'a) -> list 'a
+  val persistent ~make-cycle 'a : int -> list 'a -> list 'a
 end = struct
 
-  let nil = []
-  let cons x xs = x :: xs
+  val persistent ~nil = []
+  val persistent ~cons x xs = x :: xs
 
-  let-rec map
-    | f []        = []
-    | f (x :: xs) = (f x) :: map f xs
+  val persistent ~rec map f xs0 =
+    match xs0 with
+    | []      -> []
+    | x :: xs -> f x :: map f xs
+    end
 
 
-  let mapi f =
-    let-rec aux
-      | i f []        = []
-      | i f (x :: xs) = (f i x) :: aux (i + 1) f xs
+  val persistent ~mapi f =
+    let rec aux i f xs0 =
+      match xs0 with
+      | []      -> []
+      | x :: xs -> (f i x) :: aux (i + 1) f xs
+      end
     in
     aux 0 f
 
 
-  let-rec iter
-    | f []        = ()
-    | f (x :: xs) = f x before iter f xs
+  val persistent ~rec iter xs0 =
+    match xs0 with
+    | []      -> ()
+    | x :: xs -> f x before iter f xs
+    end
 
 
-  let iteri f =
-    let-rec aux
-      | i f []        = ()
-      | i f (x :: xs) = f i x before aux (i + 1) f xs
+  val persistent ~iteri f =
+    let rec aux i f xs0 =
+      match xs0 with
+      | []      -> ()
+      | x :: xs -> f i x before aux (i + 1) f xs
+      end
     in
     aux 0 f
 
 
-  let-rec fold-left
-    | f init []        = init
-    | f init (x :: xs) = fold-left f (f init x) xs
+  val persistent ~rec fold-left f init xs0 =
+    match xs0 with
+    | []      -> init
+    | x :: xs -> fold-left f (f init x) xs
+    end
 
 
-  let fold-lefti f =
-    let-rec aux
-      | i f init []        = init
-      | i f init (x :: xs) = aux (i + 1) f (f i init x) xs
+  val persistent ~fold-lefti f =
+    let rec aux i f init xs0 =
+      match xs0 with
+      | []      -> init
+      | x :: xs -> aux (i + 1) f (f i init x) xs
+      end
     in
     aux 0 f
 
 
-  let-rec fold-right
-    | f init []        = init
-    | f init (x :: xs) = f x (fold-right f init xs)
+  val persistent ~rec fold-right f init xs0 =
+    match xs0 with
+    | []      -> init
+    | x :: xs -> f x (fold-right f init xs)
+    end
 
 
-  let-rec filter
-    | _ []        = []
-    | p (x :: xs) = if p x then x :: filter p xs else filter p xs
+  val persistent ~rec filter p xs0 =
+    match xs0 with
+    | []      -> []
+    | x :: xs -> if p x then x :: filter p xs else filter p xs
+    end
 
 
-  let-rec assoc
-    | _ _ []              = None
-    | eq a ((x, y) :: xs) = if eq a x then Some(y) else assoc eq a xs
+  val persistent ~rec assoc eq a pairs =
+    match pairs with
+    | []           -> None
+    | (x, y) :: xs -> if eq a x then Some(y) else assoc eq a xs
+    end
 
 
-  let reverse lst =
+  val persistent ~reverse lst =
     fold-left (fun acc x -> x :: acc) [] lst
 
 
-  let-rec append lst1 lst2 =
+  val persistent ~rec append lst1 lst2 =
     match lst1 with
     | []      -> lst2
     | x :: xs -> x :: append xs lst2
+    end
 
 
-  let concat lst = fold-right append [] lst
+  val persistent ~concat lst = fold-right append [] lst
 
 
-  let fold-left-adjacent f =
-    let-rec aux leftopt init lst =
+  val persistent ~fold-left-adjacent f =
+    let rec aux leftopt init lst =
       match lst with
       | [] ->
           init
@@ -163,17 +179,18 @@ end = struct
       | head :: ((right :: _) as tail) ->
           let initnew = f init head leftopt (Some(right)) in
           aux (Some(head)) initnew tail
+      end
     in
     aux None
 
 
-  let map-adjacent f lst =
+  val persistent ~map-adjacent f lst =
       lst |> fold-left-adjacent (fun acc x leftopt rightopt -> (
         f x leftopt rightopt :: acc
       )) [] |> reverse
 
 
-  let mapi-adjacent f lst =
+  val persistent ~mapi-adjacent f lst =
     let (_, acc) =
       lst |> fold-left-adjacent (fun (i, acc) x leftopt rightopt -> (
         (i + 1, f i x leftopt rightopt :: acc)
@@ -182,348 +199,379 @@ end = struct
       reverse acc
 
 
-  let length lst =
+  val persistent ~length lst =
     fold-right (fun _ i -> i + 1) 0 lst
 
 
-  let nth lst =
-    let-rec aux i n xs =
+  val persistent ~nth lst =
+    let rec aux i n xs =
       match xs with
       | []           -> None
       | head :: tail -> if n == i then Some(head) else aux (i + 1) n tail
+      end
     in
       aux 0 lst
 
-  let eq eq =
-    let-rec aux
-    | [] [] = true
-    | (x::xs) (y::ys) = (Eq.equal eq x y) &&&- (fun () -> aux xs ys)
-    | _ _ = false
+  val persistent ~eq eq =
+    let rec aux xs0 ys0 =
+      match (xs0, ys0) with
+      | ([], []) -> true
+      | (x :: xs, y :: ys) -> (Eq.equal eq x y) &&&- (fun () -> aux xs ys)
+      | _ -> false
+      end
     in Eq.make aux
 
-  let intersperse s xs =
+  val persistent ~intersperse s xs =
     match xs with
     | [] -> []
     | (x :: xs) ->
-      x :: List.concat (xs |> List.map (fun x -> [s; x]))
+      x :: concat (xs |> map (fun x -> [s, x]))
+    end
 
 
-  let-rec apply v lst =
+  val persistent ~rec apply v lst =
     match lst with
     | []      -> []
     | x :: xs -> x v :: apply v xs
+    end
 
 
-  let null lst =
+  val persistent ~null lst =
     match lst with
     | [] -> true
     | _  -> false
+    end
 
 
-  let-rec take i lst =
+  val persistent ~rec take i lst =
     match lst with
     | []      -> []
-    | x :: xs -> (
+    | x :: xs ->
         if i < 0 then
           []
         else
           x :: (take (i - 1) xs)
-    )
+    end
 
 
-  let-rec drop i lst =
+  val persistent ~rec drop i lst =
     if i < 0 then
       lst
     else
       match lst with
       | []      -> []
-      | x :: xs -> (
+      | x :: xs ->
           if i < 1 then
             xs
           else
             drop (i - 1) xs
-      )
+      end
 
 
-  let-rec take-while f lst =
+  val persistent ~rec take-while f lst =
     match lst with
     | []      -> []
-    | x :: xs -> (
+    | x :: xs ->
         if f x then
           x :: take-while f xs
         else
           take-while f xs
-    )
+    end
 
-  let takewhile f lst = take-while f lst
+  val persistent ~takewhile f lst = take-while f lst
 
-  let-rec drop-while f lst =
+  val persistent ~rec drop-while f lst =
     match lst with
     | []      -> []
-    | x :: xs -> (
+    | x :: xs ->
         if f x then
           drop-while f xs
         else
           x :: drop-while f xs
-    )
+    end
 
-  let dropwhile f lst = drop-while f lst
+  val persistent ~dropwhile f lst = drop-while f lst
 
-  let split-at n lst =
+  val persistent ~split-at n lst =
     (take n lst, drop n lst)
 
-  let splitat n lst = split-at n lst
+  val persistent ~splitat n lst = split-at n lst
 
-  let span f lst =
-    let-rec span-sub lst1 lst2 =
+  val persistent ~span f lst =
+    let rec span-sub lst1 lst2 =
       match lst2 with
-      | y :: ys -> (
+      | y :: ys ->
           if f y then
             span-sub (y :: lst1) ys
           else
             (List.reverse lst1, lst2)
-        )
+
       | _ -> (List.reverse lst1, lst2)
+      end
     in
       span-sub [] lst
 
 
-  let break f lst =
-    let-rec break-sub lst1 lst2 =
+  val persistent ~break f lst =
+    let rec break-sub lst1 lst2 =
       match lst2 with
-      | y :: ys -> (
+      | y :: ys ->
           if f y then
             (List.reverse lst1, lst2)
           else
             break-sub (y :: lst1) ys
-        )
+
       | [] -> (List.reverse lst1, lst2)
+      end
     in
       break-sub [] lst
 
 
-  let head lst =
+  val persistent ~head lst =
     match lst with
     | []        -> None
     | head :: _ -> Some(head)
+    end
 
 
-  let tail lst =
+  val persistent ~tail lst =
     match lst with
     | []        -> None
     | _ :: tail -> Some(tail)
+    end
 
 
-  let-rec last lst =
+  val persistent ~rec last lst =
     match lst with
     | []      -> None
     | x :: [] -> Some(x)
     | _ :: xs -> last xs
+    end
 
 
-  let-rec init lst =
+  val persistent ~rec init lst =
     match lst with
     | []      -> None
     | x :: [] -> Some([])
     | x :: xs -> Option.(Some(x) ^:: (init xs))
+    end
 
 
-  let-rec reverse-append lst1 lst2 =
+  val persistent ~rec reverse-append lst1 lst2 =
     match lst1 with
     | []      -> lst2
     | x :: xs -> reverse-append xs (x :: lst2)
+    end
 
 
-  let reverse-map f lst =
-    let-rec rmap-f accu lst =
+  val persistent ~reverse-map f lst =
+    let rec rmap-f accu lst =
       match lst with
       | []        -> accu
       | (x :: xs) -> rmap-f (f x :: accu) xs
+      end
     in
       rmap-f [] lst
 
-  let-rec all-and lst =
+  val persistent ~rec all-and lst =
     match lst with
     | []      -> true
     | x :: xs -> x && all-and xs
+    end
 
 
-  let-rec or lst =
+  val persistent ~rec or lst =
     match lst with
     | []      -> false
     | x :: xs -> x || or xs
+    end
 
 
-  let-rec all f lst =
+  val persistent ~rec all f lst =
     match lst with
     | []      -> true
     | x :: xs -> f x && all f xs
+    end
 
-  let for-all f lst = all f lst
+  val persistent ~for-all f lst = all f lst
 
-  let-rec any f lst =
+  val persistent ~rec any f lst =
     match lst with
     | []      -> false
     | x :: xs -> f x || any f xs
+    end
 
-  let exists f lst = any f lst
+  val persistent ~exists f lst = any f lst
 
-  let-rec for-all2 f lst1 lst2 =
+  val persistent ~rec for-all2 f lst1 lst2 =
     match (lst1, lst2) with
     |  ([], [])              -> Some(true)
     | (x1 :: xs1, x2 :: xs2) -> Option.(Some(f x1 x2) ^&& for-all2 f xs1 xs2)
     | (_, _)                 -> None
+    end
 
 
-  let-rec exists2 f lst1 lst2 =
+  val persistent ~rec exists2 f lst1 lst2 =
     match (lst1, lst2) with
     | ([], [])               -> Some(false)
     | (x1 :: xs1, x2 :: xs2) -> Option.(Some(f x1 x2) ^|| (exists2 f xs1 xs2))
     | (_, _)                 -> None
+    end
 
 
-  let-rec find f lst =
+  val persistent ~rec find f lst =
     match lst with
     | []      -> None
     | x :: xs -> if f x then Some(x) else find f xs
+    end
 
 
-  let partition f lst =
-    let-rec part yes no lst =
-    match lst with
+  val persistent ~partition f lst =
+    let rec part yes no lst =
+      match lst with
       | []      -> (List.reverse yes, List.reverse no)
       | x :: xs -> if f x then part (x :: yes) no xs else part yes (x :: no) xs
+      end
     in
       part [] [] lst
 
 
-  let-rec unzip lst =
+  val persistent ~rec unzip lst =
     match lst with
     | []       -> ([], [])
     | (x, y) :: xs -> let (rx, ry) = unzip xs in (x :: rx, y :: ry)
+    end
 
-  let split lst = unzip lst
+  val persistent ~split lst = unzip lst
 
-  let-rec zip lst1 lst2 =
+  val persistent ~rec zip lst1 lst2 =
     match (lst1, lst2) with
     | (x1 :: xs1, x2 :: xs2) -> (x1, x2) :: (zip xs1 xs2)
     | (_, _)                 -> []
+    end
 
 
-  let-rec combine lst1 lst2 =
+  val persistent ~rec combine lst1 lst2 =
     match (lst1, lst2) with
     | ([], [])               -> Some([])
     | (x1 :: xs1, x2 :: xs2) -> Option.(Some((x1, x2)) ^:: (combine xs1 xs2))
     | (_, _)                 -> None
+    end
 
 
-  let-rec show-opt lst =
+  val persistent ~rec show-opt lst =
     match lst with
     | []      -> []
-    | x :: xs -> (
+    | x :: xs ->
       match x with
       | Some(x) -> x :: show-opt xs
       | None    -> show-opt xs
-    )
+      end
+    end
 
 
-  let-rec iterate n f initial =
+  val persistent ~rec iterate n f initial =
     if n == 0 then
       []
     else
       f initial :: iterate (n - 1) f (f initial)
 
-  let-rec repeat n initial =
+  val persistent ~rec repeat n initial =
     if n == 0 then
       []
     else
       initial :: repeat (n - 1) initial
 
 
-  let-rec cycle- n lst =
+  val persistent ~rec cycle- n lst =
     if n == 0 then
       []
     else
       List.append lst (cycle- (n - 1) lst)
 
-  let make-cycle n lst = cycle- n lst
+  val persistent ~make-cycle n lst = cycle- n lst
 
-  let-rec max ord lst =
+  val persistent ~rec max ord lst =
     match lst with
     | []           -> None
     | x :: []      -> Some(x)
-    | x :: y :: zs -> (
+    | x :: y :: zs ->
       if Ord.lt ord x y then
         max ord (y :: zs)
       else
         max ord (x :: zs)
-    )
+    end
 
 
-  let-rec min ord lst =
+  val persistent ~rec min ord lst =
     match lst with
     | []           -> None
     | x :: []      -> Some(x)
-    | x :: y :: zs -> (
+    | x :: y :: zs ->
       if Ord.gt ord x y then
         min ord (y :: zs)
       else
         min ord (x :: zs)
-    )
+    end
 
 
-  let-rec bubblesort ord lst =
-    let-rec last lst =
+  val persistent ~rec bubblesort ord lst =
+    let rec last lst =
       match lst with
-        | [] -> panic `List.bubblesort: empty list`
-        | x :: [] -> x
-        | _ :: xs -> last xs
+      | [] -> panic `List.bubblesort: empty list`
+      | x :: [] -> x
+      | _ :: xs -> last xs
+      end
     in
-    let-rec init lst =
+    let rec init lst =
       match lst with
-        | [] -> panic `List.bubblesort: empty list`
-        | _ :: [] -> []
-        | x :: xs -> x :: (init xs)
+      | [] -> panic `List.bubblesort: empty list`
+      | _ :: [] -> []
+      | x :: xs -> x :: (init xs)
+      end
     in
-    let-rec bs-sub lst =
+    let rec bs-sub lst =
       match lst with
-        | (x :: y :: zs) -> (
-            if Ord.le ord x y then
-              y :: bs-sub (x :: zs)
-            else
-              x :: bs-sub (y :: zs)
-          )
-        | _ -> lst
-    in
-      match lst with
-        | []      -> []
-        | x :: [] -> [x]
-        | _ -> (
-            let a = bs-sub lst in
-            let x = last a in
-            let xs = init a in
-              match xs with
-                | [] -> x :: []
-                | _  -> x :: (bubblesort ord xs)
-        )
+      | (x :: y :: zs) ->
+          if Ord.le ord x y then
+            y :: bs-sub (x :: zs)
+          else
+            x :: bs-sub (y :: zs)
 
-  let-rec insertsort ord lst =
-    let-rec is-sub x lst =
+      | _ -> lst
+      end
+    in
+      match lst with
+      | []      -> []
+      | x :: [] -> [x]
+      | _ ->
+          let a = bs-sub lst in
+          let x = last a in
+          let xs = init a in
+          match xs with
+          | [] -> x :: []
+          | _  -> x :: (bubblesort ord xs)
+          end
+     end
+
+  val persistent ~rec insertsort ord lst =
+    let rec is-sub x lst =
       match lst with
       | [] -> [x]
-      | y :: ys -> (
+      | y :: ys ->
           if Ord.le ord x y then
             x :: y :: ys
           else
             y :: is-sub x (ys)
-        )
+      end
     in
       match lst with
       | [] -> []
       | x :: xs -> is-sub x (insertsort ord xs)
+      end
 
-  let-rec mergesort ord lst =
-    let-rec merge lst1 lst2 =
+  val persistent ~rec mergesort ord lst =
+    let rec merge lst1 lst2 =
       match (lst1, lst2) with
       | (lst1, []) -> lst1
       | ([], lst2) -> lst2
@@ -532,6 +580,7 @@ end = struct
           x :: (merge xs lst2)
         else
           y :: (merge lst1 ys)
+      end
     in
     match lst with
     | [] -> []
@@ -539,14 +588,16 @@ end = struct
     | _ ->
       let (ys, zs) = splitat (((length lst) / 2) - 1) lst in
         merge (mergesort ord ys) (mergesort ord zs)
+    end
 
-  let acons k v alist = (k, v) :: alist
+  val persistent ~acons k v alist = (k, v) :: alist
 
-  let uncons xs =
+  val persistent ~uncons xs =
     match xs with
     | [] -> None
     | x :: xs -> Some(x, xs)
+    end
 
-  let fold x f l =
+  val persistent ~fold x f l =
     fold-left (Fn.flip f) x l
 end

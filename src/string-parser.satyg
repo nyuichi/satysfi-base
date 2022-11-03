@@ -1,0 +1,60 @@
+use List
+use Option
+use String
+use Char
+use Stream
+use Token
+use open Parser
+
+module StringParser :> sig
+  val persistent ~run 'a : Parser.t 'a Char.t -> string -> result 'a (list (parse-error Char.t))
+  val persistent ~char : Char.t -> Parser.t Char.t Char.t
+  val persistent ~string : string -> Parser.t string Char.t  % wrapped with `try`
+  val persistent ~satisfy : (Char.t -> bool) -> Parser.t Char.t Char.t
+  val persistent ~digit : Parser.t Char.t Char.t
+  val persistent ~hex-digit : Parser.t Char.t Char.t
+  val persistent ~alpha : Parser.t Char.t Char.t
+  val persistent ~alnum : Parser.t Char.t Char.t
+  val persistent ~space : Parser.t Char.t Char.t
+  val persistent ~spaces : Parser.t string Char.t
+end = struct
+
+  val persistent ~char c =
+    let test t = Char.equal (t |> Token.data) c
+    in satisfy test <&> Token.data
+
+  val persistent ~string str =
+    let rec aux cs0 =
+      match cs0 with
+      | [] -> ret str
+      | c :: cs -> char c >> aux cs
+      end
+    in try (aux (String.to-list str))
+
+  val persistent ~lex-string input =
+    Stream.unfold (fun (cs, pos) -> (
+      match List.uncons cs with
+      | None -> Option.none
+      | Some(c, new-cs) ->
+        let token = Token.make c pos in
+        let new-pos =
+          let line = pos#line + (if Char.equal c Char.newline then 1 else 0) in
+          let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
+          (| line = line, column = column |)
+        in Option.some (token, (new-cs, new-pos))
+      end
+    )) (String.to-list input, Token.initial-position)
+
+  val persistent ~run p input =
+    input |> lex-string |> Parser.run p
+
+  val persistent ~satisfy f =
+    Parser.satisfy (fun t -> f (Token.data t)) <&> Token.data
+
+  val persistent ~digit = satisfy Char.is-digit
+  val persistent ~hex-digit = satisfy Char.is-hex-digit
+  val persistent ~alpha = satisfy Char.is-alpha
+  val persistent ~alnum = satisfy Char.is-alnum
+  val persistent ~space = satisfy Char.is-space
+  val persistent ~spaces = many space |> map String.of-list
+end

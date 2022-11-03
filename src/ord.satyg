@@ -1,64 +1,73 @@
-@stage: persistent
-@import: base
-@import: eq
+use Util
+use Eq
 
 % total order on 'a
 
-type ordering = Lt | Gt | Eq
-
-module Ord : sig
-  type 'a t
-  val make : ('a -> 'a -> ordering) -> 'a t
-  val compare : ('a t) implicit -> 'a -> 'a -> ordering
-  val min : ('a t) implicit -> 'a -> 'a -> 'a
-  val max : ('a t) implicit -> 'a -> 'a -> 'a
-  val eq : ('a t) implicit -> 'a -> 'a -> bool
-  val lt : ('a t) implicit -> 'a -> 'a -> bool
-  val le : ('a t) implicit -> 'a -> 'a -> bool
-  val gt : ('a t) implicit -> 'a -> 'a -> bool
-  val ge : ('a t) implicit -> 'a -> 'a -> bool
-  val derive-eq : ('a t) implicit -> ('a Eq.t) implicit
+module Ord :> sig
+  type ordering = Lt | Gt | Eq
+  type t :: o -> o
+  val persistent ~make 'a : ('a -> 'a -> ordering) -> t 'a
+  val persistent ~compare 'a : implicit (t 'a) -> 'a -> 'a -> ordering
+  val persistent ~min 'a : implicit (t 'a) -> 'a -> 'a -> 'a
+  val persistent ~max 'a : implicit (t 'a) -> 'a -> 'a -> 'a
+  val persistent ~eq 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~lt 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~le 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~gt 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~ge 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~derive-eq 'a : implicit (t 'a) -> implicit (Eq.t 'a)
 end = struct
-  type 'a t = 'a -> 'a -> ordering
+  type ordering = Lt | Gt | Eq
 
-  let make ord = ord
+  type t 'a = 'a -> 'a -> ordering
 
-  let compare ord = ord
+  val persistent ~make ord = ord
 
-  let eq ord a b =
+  val persistent ~compare ord = ord
+
+  val persistent ~eq ord a b =
     match compare ord a b with
     | Eq -> true
     | _ -> false
-  let lt ord a b =
+    end
+
+  val persistent ~lt ord a b =
     match compare ord a b with
     | Lt -> true
     | _ -> false
-  let le ord a b =
+    end
+
+  val persistent ~le ord a b =
     match compare ord a b with
     | Lt -> true
     | Eq -> true
     | _ -> false
-  let gt ord a b =
+    end
+
+  val persistent ~gt ord a b =
     match compare ord a b with
     | Gt -> true
     | _ -> false
-  let ge ord a b =
+    end
+
+  val persistent ~ge ord a b =
     match compare ord a b with
     | Gt -> true
     | Eq -> true
     | _ -> false
+    end
 
-  let min ord a b =
+  val persistent ~min ord a b =
     if le ord a b then
       a
     else
       b
 
-  let max ord a b =
+  val persistent ~max ord a b =
     if ge ord a b then
       a
     else
       b
 
-  let derive-eq ord = Eq.make (eq ord)
+  val persistent ~derive-eq ord = Eq.make (eq ord)
 end

@@ -1,51 +1,53 @@
-@stage: persistent
+module Util = struct
 
-%% Short-circuit conjunction operator.
-%%
-%% e.g. [if (i < String.length s) &&&- (fun () -> Char.equal (Char.at i s) Char.space) then `yes` else `no`]
-%%
-%% Note: this operator is an unstable API and subject to change in the future.
-let ( &&&- ) b1 b2f = if b1 then b2f () else false
+  %% Short-circuit conjunction operator.
+  %%
+  %% e.g. [if (i < String.length s) &&&- (fun () -> Char.equal (Char.at i s) Char.space) then `yes` else `no`]
+  %%
+  %% Note: this operator is an unstable API and subject to change in the future.
+  val persistent ~( &&&- ) b1 b2f = if b1 then b2f () else false
 
-%% Short-circuit disjunction operator. See also [(&&&-)].
-%%
-%% Note: this operator is an unstable API and subject to change in the future.
-let ( |||- ) b1 b2f = if b1 then true else b2f ()
+  %% Short-circuit disjunction operator. See also [(&&&-)].
+  %%
+  %% Note: this operator is an unstable API and subject to change in the future.
+  val persistent ~( |||- ) b1 b2f = if b1 then true else b2f ()
 
-%% [implicit] is used in two ways:
-%% 1. The first way is to declare an argument of a function
-%%    should be a *type class*, whose actual value can be
-%%    inferred only from the type.
-%%
-%%    e.g. [val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a]
-%%
-%% 2. The second way is to declare a value is used to infer
-%%    implicit arguments declared elsewhere. This corresponds
-%%    to *instance* declaration in Haskell.
-%%
-%%    e.g. [val int-ord : (int Ord.t) implicit]
-%%
-%% Also one can combine these two usages in a single declaration.
-%% For example, automatic derivation of type class instances can be
-%% defined as follows:
-%%
-%%   e.g. [val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit]
-%%
-%% Currently [implicit] is only a syntactic marker that tells
-%% human programmers how arguments should be considered.
-type 'a implicit = 'a
+  %% [implicit] is used in two ways:
+  %% 1. The first way is to declare an argument of a function
+  %%    should be a *type class*, whose actual value can be
+  %%    inferred only from the type.
+  %%
+  %%    e.g. [val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a]
+  %%
+  %% 2. The second way is to declare a value is used to infer
+  %%    implicit arguments declared elsewhere. This corresponds
+  %%    to *instance* declaration in Haskell.
+  %%
+  %%    e.g. [val int-ord : (int Ord.t) implicit]
+  %%
+  %% Also one can combine these two usages in a single declaration.
+  %% For example, automatic derivation of type class instances can be
+  %% defined as follows:
+  %%
+  %%   e.g. [val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit]
+  %%
+  %% Currently [implicit] is only a syntactic marker that tells
+  %% human programmers how arguments should be considered.
+  type implicit 'a = 'a
 
-%% [panic msg] exits the execution of program with message [msg].
-%% It should be used when the program encounters an unrecoverable situation.
-let panic = abort-with-message
+  %% [panic msg] exits the execution of program with message [msg].
+  %% It should be used when the program encounters an unrecoverable situation.
+  val persistent ~panic = abort-with-message
 
-%% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
-%% through the 0-stage function [make-thunk] or the unary operator [!!].
-type 'a thunk = unit -> 'a
+  %% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
+  %% through the 0-stage function [make-thunk] or the unary operator [!!].
+  type thunk 'a = unit -> 'a
 
-%% [run-thunk t] evaluates thunk [t] and returns the result.
-let run-thunk t = t ()
+  %% [run-thunk t] evaluates thunk [t] and returns the result.
+  val persistent ~run-thunk t = t ()
 
-type 'ok 'err result =
-| Ok of 'ok
-| Err of 'err
+  type result 'ok 'err =
+    | Ok of 'ok
+    | Err of 'err
+
+end

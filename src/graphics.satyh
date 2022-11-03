@@ -1,17 +1,17 @@
-@require: pervasives
+% use package open Stdlib
 
-module Graphics : sig
-  val of-inline : point -> inline-boxes -> graphics
-  val stroke : length -> color -> path -> graphics
-  val dashed-stroke : length -> (length * length * length) -> color -> path -> graphics
-  val fill : color -> path -> graphics
-  val shift : point -> graphics -> graphics
-  val bbox : graphics -> point * point
+module Graphics :> sig
+  val persistent ~of-inline : point -> inline-boxes -> graphics
+  val persistent ~stroke : length -> color -> path -> graphics
+  val persistent ~dashed-stroke : length -> (length * length * length) -> color -> path -> graphics
+  val persistent ~fill : color -> path -> graphics
+  val persistent ~shift : point -> graphics -> graphics
+  val persistent ~bbox : graphics -> point * point
 end = struct
-  let of-inline = draw-text
-  let shift = shift-graphics
-  let bbox = get-graphics-bbox
-  let stroke = stroke
-  let dashed-stroke = dashed-stroke
-  let fill = fill
+  val persistent ~of-inline = draw-text
+  val persistent ~shift = shift-graphics
+  val persistent ~bbox = get-graphics-bbox
+  val persistent ~stroke = stroke
+  val persistent ~dashed-stroke = dashed-stroke
+  val persistent ~fill = fill
 end

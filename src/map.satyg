@@ -1,7 +1,7 @@
-@import: set
-@require: list
-@import: fn
-@import: tuple
+use Set
+use List
+use Fn
+use Tuple
 
 % immutable map
 %
@@ -9,54 +9,59 @@
 % no two ordered pairs share the same object in their first position.
 % So, technically, what the following module implements is _function_.
 
-module Map : sig
-  type 'k 'v t
-  val empty : 'k 'v t
-  val is-empty : 'k 'v t -> bool
-  val size : 'k 'v t -> int
-  val of- : ('k Eq.t) implicit  -> 'k -> 'k 'v t -> 'v option
-  val bind : 'k -> 'v -> 'k 'v t -> 'k 'v t
-  val unbind : ('k Eq.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
-  val dom : ('k Eq.t) implicit -> 'k 'v t -> 'k list
-  val ran : ('k Eq.t) implicit -> 'k 'v t -> 'v list
-  val of-list : ('k * 'v) list -> 'k 'v t
-  val to-list : ('k Eq.t) implicit -> 'k 'v t -> ('k * 'v) list
+module Map :> sig
+  type t :: o -> o -> o
+  val persistent ~empty 'k 'v : t 'k 'v
+  val persistent ~is-empty 'k 'v : t 'k 'v -> bool
+  val persistent ~size 'k 'v : t 'k 'v -> int
+  val persistent ~of- : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> option 'v
+  val persistent ~bind : 'k -> 'v -> t 'k 'v -> t 'k 'v
+  val persistent ~unbind : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
+  val persistent ~dom : implicit (Eq.t 'k) -> t 'k 'v -> list 'k
+  val persistent ~ran : implicit (Eq.t 'k) -> t 'k 'v -> list 'v
+  val persistent ~of-list : list ('k * 'v) -> t 'k 'v
+  val persistent ~to-list : implicit (Eq.t 'k) -> t 'k 'v -> list ('k * 'v)
 end = struct
-  type 'k 'v u = ('k * 'v) Set.t
-  type 'k 'v t = 'k 'v u
+  type t 'k 'v = Set.t ('k * 'v)
 
-  let size m = Set.size m
+  val persistent ~size m = Set.size m
 
-  let empty = Set.empty
+  val persistent ~empty = Set.empty
 
-  let is-empty m = Set.is-empty m
+  val persistent ~is-empty m = Set.is-empty m
 
-  let key-eq eq =
+  val persistent ~key-eq eq =
     Eq.make (Eq.equal eq |> Fn.on Pair.fst)
 
-  let of- eq k m =
+  val persistent ~of- eq k m =
     match Set.choose m with
     | None -> None
     | Some(_, v) ->
-      (match m |> Set.mem-opt (key-eq eq) (k, v) with
+      match m |> Set.mem-opt (key-eq eq) (k, v) with
       | None -> None
-      | Some(_, v) -> Some(v))
+      | Some(_, v) -> Some(v)
+      end
+    end
 
-  let bind k v m = Set.insert (k, v) m
+  val persistent ~bind k v m = Set.insert (k, v) m
 
-  let unbind eq k m = match Set.choose m with
-  | None -> m
-  | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
+  val persistent ~unbind eq k m =
+    match Set.choose m with
+    | None -> m
+    | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
+    end
 
-  let dom eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.fst
+  val persistent ~dom eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.fst
 
-  let ran eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.snd
+  val persistent ~ran eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.snd
 
-  let of-list alist =
-    let-rec aux
-    | [] = empty
-    | ((k, v) :: alist) = bind k v (aux alist)
+  val persistent ~of-list alist =
+    let rec aux alist =
+      match alist with
+      | [] -> empty
+      | (k, v) :: alist -> bind k v (aux alist)
+      end
     in aux (List.reverse alist)
 
-  let to-list eq m = Set.to-list (key-eq eq) m
+  val persistent ~to-list eq m = Set.to-list (key-eq eq) m
 end

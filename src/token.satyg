@@ -1,0 +1,24 @@
+module Token :> sig
+  type token-position = (|
+    line : int,  % one origin
+    column : int,  % zero origin
+  |)
+  type t :: o -> o
+  %% [make d pos] returns a new token with data [d] and
+  %% position [pos].
+  val persistent ~make 'd : 'd -> token-position -> t 'd
+  val persistent ~data 'd : t 'd -> 'd
+  val persistent ~position 'd : t 'd -> token-position
+  val persistent ~initial-position : token-position
+end = struct
+  type token-position = (|
+    line : int,  % one origin
+    column : int,  % zero origin
+  |)
+  type token 'd = 'd * token-position
+  type t 'd = token 'd
+  val persistent ~make d pos = (d, pos)
+  val persistent ~data (d, _) = d
+  val persistent ~position (_, pos) = pos
+  val persistent ~initial-position = (| line = 1, column = 0 |)
+end

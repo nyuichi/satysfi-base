@@ -1,6 +1,6 @@
-module Void : sig
+module Void :> sig
   %% Type representing nothing. No value has type [Void.t].
-  type t
+  type t :: o
 end = struct
   type t = Void % never be visible from outside
 end

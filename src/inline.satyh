@@ -1,18 +1,17 @@
 % module for inline-boxes
-@require: list
-@require: pervasives
-@import: fn
-@import: base
+use List
+%use package open Stdlib
+use Fn
+use Util
 
-type baseline-spec = Top | Bottom
-
-module Inline : sig
+module Inline :> sig
+  type baseline-spec = Top | Bottom
   val read : inline-text -> context -> inline-boxes
   val of-string : string -> context -> inline-boxes
-  val of-math : math -> context -> inline-boxes
+  val of-math : math-text -> context -> inline-boxes
   val of-image : length -> image -> inline-boxes
-  val of-graphics : length -> length -> length -> (point -> graphics list) -> inline-boxes
-  val of-block : baseline-spec ?-> length -> (context -> block-boxes) -> context -> inline-boxes
+  val of-graphics : length -> length -> length -> (point -> list graphics) -> inline-boxes
+  val of-block : ?(baseline : baseline-spec) length -> (context -> block-boxes) -> context -> inline-boxes
   val of-block-breakable : block-boxes -> context -> inline-boxes
 
   % padding spaces
@@ -42,41 +41,46 @@ module Inline : sig
   val no-break : inline-boxes -> inline-boxes
   val mandatory-break : context -> inline-boxes
 end = struct
-  let read = Fn.flip read-inline
-  let of-string s ctx = read (embed-string s) ctx
-  let of-math m ctx = embed-math ctx m
-  let of-image = Fn.flip use-image-by-width
-  let of-graphics = inline-graphics
+  type baseline-spec = Top | Bottom
+  val read = Fn.flip read-inline
+  val of-string s ctx = read (embed-string s) ctx
+  val of-math m ctx = embed-math ctx m
+  val of-image = Fn.flip use-image-by-width
+  val of-graphics = inline-graphics
 
-  let of-block ?:bl-opt len bbf ctx =
-    let f = match bl-opt with
+  val of-block ?(baseline = bl-opt) len bbf ctx =
+    let f =
+      match bl-opt with
       | Some(Top) -> embed-block-top
       | _ -> embed-block-bottom
+      end
     in f ctx len bbf
 
-  let of-block-breakable = Fn.flip embed-block-breakable
+  val of-block-breakable = Fn.flip embed-block-breakable
 
-  let skip = inline-skip
-  let glue = inline-glue
-  let fil = inline-fil
-  let raise = raise-inline
+  val skip = inline-skip
+  val glue = inline-glue
+  val fil = inline-fil
+  val raise = raise-inline
 
-  let nil = inline-nil
-  let append ib1 ib2 = ib1 ++ ib2
-  let concat ibs = List.fold-right append nil ibs
+  val nil = inline-nil
+  val append ib1 ib2 = ib1 ++ ib2
+  val concat ibs = List.fold-right append nil ibs
 
-  let stack ?:bl-opt ibs =
-    let f = match bl-opt with
+  val stack ?(baseline = bl-opt) ibs =
+    let f =
+      match bl-opt with
       | Some(Top) -> line-stack-top
       | _ -> line-stack-bottom
+      end
     in f ibs
 
-  let natural-metrics = get-natural-metrics
-  let natural-width ib = let (w, _, _) = natural-metrics ib in w
-  let natural-height ib = let (_, h, _) = natural-metrics ib in h
-  let natural-depth ib = let (_, _, d) = natural-metrics ib in d
+  val natural-metrics = get-natural-metrics
+  val natural-width ib = let (w, _, _) = natural-metrics ib in w
+  val natural-height ib = let (_, h, _) = natural-metrics ib in h
+  val natural-depth ib = let (_, _, d) = natural-metrics ib in d
 
-  let to-string = extract-string
+  val to-string = extract-string
 
   % let discretionary = discretionary
   % let script-guard = script-guard
@@ -87,6 +91,6 @@ end = struct
   % inline-frame-hogehoge
   % inline-graphics-outer
 
-  let no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> []) ib
-  let mandatory-break ctx = discretionary 0 (skip (get-text-width ctx *' 2.)) fil nil
+  val no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> []) ib
+  val mandatory-break ctx = discretionary 0 (skip (get-text-width ctx *' 2.)) fil nil
 end

@@ -1,77 +1,76 @@
-@stage: persistent
-@import: base
-@import: string
-@import: char
-@import: list-ext
-@import: option-ext
+use Util
+use String
+use Char
+use List
+use Option
 
-module Int : sig
-  val ord : (int Ord.t) implicit
-  val eq : (int Eq.t) implicit
+module Int :> sig
+  val persistent ~ord : implicit (Ord.t int)
+  val persistent ~eq : implicit (Eq.t int)
 
-  val equal : int -> int -> bool
+  val persistent ~equal : int -> int -> bool
 
-  val bitsize : int
-  val max-value : int
-  val min-value : int
+  val persistent ~bitsize : int
+  val persistent ~max-value : int
+  val persistent ~min-value : int
 
-  val (<) : int -> int -> bool
-  val (>) : int -> int -> bool
-  val (>=) : int -> int -> bool
-  val (<=) : int -> int -> bool
-  val (==) : int -> int -> bool
+  val persistent ~(<) : int -> int -> bool
+  val persistent ~(>) : int -> int -> bool
+  val persistent ~(>=) : int -> int -> bool
+  val persistent ~(<=) : int -> int -> bool
+  val persistent ~(==) : int -> int -> bool
 
-  val succ : int -> int
-  val pred : int -> int
-  val neg : int -> int
-  val add : int -> int -> int
-  val sub : int -> int -> int
-  val mul : int -> int -> int
-  val div : int -> int -> int
-  val abs : int -> int
-  val pow : int -> int -> int
-  val max : int -> int -> int
-  val min : int -> int -> int
-  val sup : int list -> int
-  val inf : int list -> int
+  val persistent ~succ : int -> int
+  val persistent ~pred : int -> int
+  val persistent ~neg : int -> int
+  val persistent ~add : int -> int -> int
+  val persistent ~sub : int -> int -> int
+  val persistent ~mul : int -> int -> int
+  val persistent ~div : int -> int -> int
+  val persistent ~abs : int -> int
+  val persistent ~pow : int -> int -> int
+  val persistent ~max : int -> int -> int
+  val persistent ~min : int -> int -> int
+  val persistent ~sup : int list -> int
+  val persistent ~inf : int list -> int
 
   % bitwise operations
-  val lsl : int -> int -> int
-  val asr : int -> int -> int
-  val lsr : int -> int -> int
-  val lnot : int -> int
-  val land : int -> int -> int
-  val lor : int -> int -> int
-  val lxor : int -> int -> int
+  val persistent ~lsl : int -> int -> int
+  val persistent ~asr : int -> int -> int
+  val persistent ~lsr : int -> int -> int
+  val persistent ~lnot : int -> int
+  val persistent ~land : int -> int -> int
+  val persistent ~lor : int -> int -> int
+  val persistent ~lxor : int -> int -> int
 
-  val of-string : int ?-> string -> int % may throw an error
-  val to-string : int -> string
-  val of-string-opt : int ?-> string -> int option
+  val persistent ~of-string : ?(radix : int) string -> int % may throw an error
+  val persistent ~to-string : int -> string
+  val persistent ~of-string-opt : ?(radix : int) string -> int option
 end = struct
-  let ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
-  let max = Ord.max ord
-  let min = Ord.min ord
+  val persistent ~ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
+  val persistent ~max = Ord.max ord
+  val persistent ~min = Ord.min ord
 
-  let eq = Ord.derive-eq ord
-  let equal = Eq.equal eq
+  val persistent ~eq = Ord.derive-eq ord
+  val persistent ~equal = Eq.equal eq
 
-  let (<) = (<)
-  let (>) = (>)
-  let (>=) = (>=)
-  let (<=) = (<=)
-  let (==) = (==)
+  val persistent ~(<) = (<)
+  val persistent ~(>) = (>)
+  val persistent ~(>=) = (>=)
+  val persistent ~(<=) = (<=)
+  val persistent ~(==) = (==)
 
-  let add i j = i + j
-  let sub i j = i - j
-  let mul i j = i * j
-  let div i j = i / j
+  val persistent ~add i j = i + j
+  val persistent ~sub i j = i - j
+  val persistent ~mul i j = i * j
+  val persistent ~div i j = i / j
 
-  let succ i = i + 1
-  let pred i = i - 1
-  let neg i = -i
-  let abs i = if i < 0 then -i else i
-  let pow p base = % REQUIRE(p >= 0)
-    let-rec aux p pp acc =
+  val persistent ~succ i = i + 1
+  val persistent ~pred i = i - 1
+  val persistent ~neg i = -i
+  val persistent ~abs i = if i < 0 then -i else i
+  val persistent ~pow p base = % REQUIRE(p >= 0)
+    let rec aux p pp acc =
       if p == 0 then
         acc
       else if p mod 2 == 1 then
@@ -79,64 +78,72 @@ end = struct
       else
         aux (p / 2) (pp * pp) acc
     in aux p base 1
-  let bitsize = 63 % assume 64-bit machine
-  let max-value = (2 |> pow (bitsize - 1)) - 1
-  let min-value = max-value + 1
-  let-rec sup
-  | [] = min-value
-  | (x :: xs) = max x (sup xs)
-  let-rec inf
-  | [] = max-value
-  | (x :: xs) = min x (inf xs)
+  val persistent ~bitsize = 63 % assume 64-bit machine
+  val persistent ~max-value = (2 |> pow (bitsize - 1)) - 1
+  val persistent ~min-value = max-value + 1
+  val persistent ~rec sup xs0 =
+    match xs0 with
+    | [] -> min-value
+    | x :: xs -> max x (sup xs)
+    end
+  val persistent ~rec inf xs0 =
+    match xs0 with
+    | [] -> max-value
+    | x :: xs -> min x (inf xs)
+    end
 
-  let lnot i = (-i) - 1
+  val persistent ~lnot i = (-i) - 1
 
-  let-rec lsl shift i = i * pow shift 2
-  let-rec asr shift i =
+  val persistent ~rec lsl shift i = i * pow shift 2
+  val persistent ~rec asr shift i =
     if i >= 0 then
       i / pow shift 2
     else
       lnot (asr shift (lnot i))
 
-  let bitwise-op op i j =
-    let-rec aux n i j =
+  val persistent ~bitwise-op op i j =
+    let rec aux n i j =
       if n == 0 then
         0
       else
         (aux (n - 1) (i |> asr 1) (j |> asr 1)) * 2 + op (abs (i mod 2)) (abs (j mod 2))
     in aux bitsize i j
 
-  let land = bitwise-op (fun i j -> i * j)
-  let lxor = bitwise-op (fun i j -> (i + j) mod 2)
-  let lor = bitwise-op (fun i j -> 1 - (1 - i) * (1 - j))
+  val persistent ~land = bitwise-op (fun i j -> i * j)
+  val persistent ~lxor = bitwise-op (fun i j -> (i + j) mod 2)
+  val persistent ~lor = bitwise-op (fun i j -> 1 - (1 - i) * (1 - j))
 
-  let lsr shift i =
+  val persistent ~lsr shift i =
     if i >= 0 then
       asr shift i
     else
       i |> asr shift |> land ((2 |> pow (bitsize - shift)) - 1)
 
-  let char-to-int c =
+  val persistent ~char-to-int c =
     let digit = `0123456789` in
     let loweralpha = `abcdefghijklmnopqrstuvwxyz` in
     let upperalpha = `ABCDEFGHIJKLMNOPQRSTUVWXYZ` in
     match String.index c digit with
     | Some(i) -> Some(i)
     | None ->
-    (match String.index c upperalpha with
-    | Some(i) -> Some(i + 10)
-    | None ->
-    (match String.index c loweralpha with
-    | Some(i) -> Some(i + 10)
-    | None -> None))
+      match String.index c upperalpha with
+      | Some(i) -> Some(i + 10)
+      | None ->
+        match String.index c loweralpha with
+        | Some(i) -> Some(i + 10)
+        | None -> None
+        end
+      end
+    end
 
 
-  let to-string = arabic
-  let of-string-opt ?:radix-opt s =
+  val persistent ~to-string = arabic
+  val persistent ~of-string-opt ?(radix = radix-opt) s =
     let radix =
       match radix-opt with
       | None -> 10
       | Some(i) -> i
+      end
     in
     let cs = String.to-list s in
     match cs with
@@ -146,24 +153,28 @@ end = struct
       let num-opt = cs |> List.fold-left (fun acc-opt c -> (
         match acc-opt with
         | None -> Option.none
-        | Some(acc) -> (
+        | Some(acc) ->
           match char-to-int c with
           | None -> Option.none
           | Some(i) ->
-          if i < radix then
-            Option.some (acc * radix + i)
-          else
-            Option.none
-        ))) (Option.some 0) in
+            if i < radix then
+              Option.some (acc * radix + i)
+            else
+              Option.none
+          end
+        end)) (Option.some 0) in
       match num-opt with
       | None -> Option.none
       | Some(num) -> Option.some (sign * num)
+      end
+    end
 
-  let of-string ?:radix-opt s =
+  val persistent ~of-string ?(radix = radix-opt) s =
     let msg = `Int.of-string: invalid string: `# ^ s in
     match radix-opt with
     | None -> of-string-opt s |> Option.expect msg
-    | Some(radix) -> of-string-opt ?:(radix) s |> Option.expect msg
+    | Some(radix) -> of-string-opt ?(radix = radix) s |> Option.expect msg
+    end
 
 
 end

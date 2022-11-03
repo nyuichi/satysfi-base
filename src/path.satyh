@@ -1,6 +1,6 @@
-@require: pervasives
+% use package open Stdlib
 
-module Path : sig
+module Path :> sig
   val start : point -> pre-path
   val line-to : point -> pre-path -> pre-path
   val bezier-to : point -> point -> point -> pre-path -> pre-path
@@ -12,18 +12,18 @@ module Path : sig
   val shift : point -> path -> path
   val ellipse : point -> length -> length -> path
 end = struct
-  let start = start-path
-  let line-to = line-to
-  let bezier-to = bezier-to
-  let terminate = terminate-path
-  let close-with-line = close-with-line
-  let close-with-bezier = close-with-bezier
-  let bbox = get-path-bbox
-  let unite = unite-path
-  let shift = shift-path
+  val start = start-path
+  val line-to = line-to
+  val bezier-to = bezier-to
+  val terminate = terminate-path
+  val close-with-line = close-with-line
+  val close-with-bezier = close-with-bezier
+  val bbox = get-path-bbox
+  val unite = unite-path
+  val shift = shift-path
 
 
-  let ellipse center x-len y-len =
+  val ellipse center x-len y-len =
     let sqrt2 = 1.4142135623 in
     let n = ((sqrt2 -. 1.0) *. 4.0) /. 3.0 in
     let minus len = len *' (float (-1)) in

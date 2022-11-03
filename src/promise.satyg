@@ -1,30 +1,30 @@
-@stage: persistent
-@import: base
-@import: ref
+use open Util
+use Ref
 
-module Promise : sig
-  type 'a t
-  val make : 'a -> 'a t
-  val delay : 'a thunk -> 'a t
-  val delay-force : ('a t) thunk -> 'a t
-  val force : 'a t -> 'a
+module Promise :> sig
+  type t :: o -> o
+  val persistent ~make 'a : 'a -> t 'a
+  val persistent ~delay 'a : thunk 'a -> t 'a
+  val persistent ~delay-force 'a : thunk (t 'a) -> t 'a
+  val persistent ~force 'a : t 'a -> 'a
 end = struct
 
-  type 'a state =
-  | Value of 'a
-  | Thunk of ('a t) thunk
-  and 'a t = (('a state) ref) ref
+  type state 'a =
+    | Value of 'a
+    | Thunk of thunk (t 'a)
+  and t 'a =
+    ref (ref (state 'a))
 
-  let make v =
+  val persistent ~make v =
     Ref.make (Ref.make (Value v))
 
-  let delay-force e =
+  val persistent ~delay-force e =
     Ref.make (Ref.make (Thunk e))
 
-  let delay e =
+  val persistent ~delay e =
     delay-force (fun () -> make (run-thunk e))
 
-  let-rec force p =
+  val persistent ~rec force p =
     match p |> Ref.get |> Ref.get with
     | Value v -> v
     | Thunk f ->
@@ -35,5 +35,7 @@ end = struct
         let () = Ref.get p |> Ref.set (Ref.get (Ref.get q)) in
         let () = q |> Ref.set (Ref.get p) in
         force p
+      end
+    end
 
 end
