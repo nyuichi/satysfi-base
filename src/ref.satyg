@@ -1,67 +1,65 @@
-@stage: persistent
-
-module Ref : sig
+module Ref :> sig
   %% [Ref.make x] creates a new mutable cell with default value [x].
-  val make : 'a -> 'a ref
+  val persistent ~make : 'a -> ref 'a
 
   %% [Ref.get r] obtains a value stored in cell [r].
   %%
   %% e.g. [r |> Ref.get]
-  val get : 'a ref -> 'a
+  val persistent ~get : ref 'a -> 'a
 
   %% [Ref.set x r] stores value [x] in cell [r].
   %%
   %% e.g. [r |> Ref.set 1]
-  val set : 'a -> 'a ref -> unit
+  val persistent ~set : 'a -> ref 'a -> unit
 
   %% [Ref.update f r] loads value from cell [r], applies [f] to it,
   %% and replaces the contents of [r] with the result.
   %%
   %% e.g. [r |> update (fun x -> x + 1)]
-  val update : ('a -> 'a) -> 'a ref -> unit
+  val persistent ~update : ('a -> 'a) -> ref 'a -> unit
 
   %% [Ref.swap r1 r2] swaps the contents in cells [r1] and [r2].
-  val swap : 'a ref -> 'a ref -> unit
+  val persistent ~swap : ref 'a -> ref 'a -> unit
 
   %% [Ref.set-temporarily x thunk r] temporarily sets the value of cell [r]
   %% to [x] and executes [thunk]. After [thunk] returns, the content of [r]
   %% is restored to the value cell [r] contained before running [thunk].
-  val set-temporarily : 'a -> (unit -> 'b) -> 'a ref -> 'b
+  val persistent ~set-temporarily : 'a -> (unit -> 'b) -> ref 'a -> 'b
 
   %% [Ref.inc r] increases the value in [r] by one.
-  val inc : int ref -> unit
+  val persistent ~inc : ref int -> unit
 
   %% [Ref.dec r] decreases the value in [r] by one.
-  val dec : int ref -> unit
+  val persistent ~dec : ref int -> unit
 end = struct
-%  type 'a t = 'a ref
+%  type t 'a = ref 'a
 
-  let make v =
-    let-mutable x <- v in
+  val persistent ~make v =
+    let mutable x <- v in
     x
 
-  let get r = !r
-  let set v r = r <- v
+  val persistent ~get r = !r
+  val persistent ~set v r = r <- v
 
-  let update f r =
+  val persistent ~update f r =
     let v = r |> get in
     r |> set (f v)
 
-  let swap r1 r2 =
+  val persistent ~swap r1 r2 =
     let v1 = r1 |> get in
     r1 |> set (r2 |> get) before
     r2 |> set v1
 
-  let set-temporarily v f r =
+  val persistent ~set-temporarily v f r =
     let v-orig = r |> get in
     let () = r |> set v in
     let ret = f () in
     let () = r |> set v-orig in
     ret
 
-  let inc r =
+  val persistent ~inc r =
     r |> update (fun x -> x + 1)
-  let dec r =
+  val persistent ~dec r =
     r |> update (fun x -> x - 1)
 
 end

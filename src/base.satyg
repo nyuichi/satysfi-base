@@ -1,5 +1,9 @@
 module Util = struct
 
+  %% Right-associative function application operator.
+  %% [f x <| g y <| h z] is interpreted as [f x (g y (h z))].
+  val persistent ~(<|) f x = f x
+
   %% Short-circuit conjunction operator.
   %%
   %% e.g. [if (i < String.length s) &&&- (fun () -> Char.equal (Char.at i s) Char.space) then `yes` else `no`]
@@ -49,5 +53,22 @@ module Util = struct
   type result 'ok 'err =
     | Ok of 'ok
     | Err of 'err
+
+  %% Short-circuit conjunction operator.
+  %%
+  %% e.g. [if ~(&(i < String.length s) &&& &(Char.equal (Char.at i s) Char.space)) then `yes` else `no`]
+  val ~( &&& ) b1 b2 = &(if ~b1 then ~b2 else false)
+
+  %% Short-circuit disjunction operator. See also [(&&&)].
+  val ~( ||| ) b1 b2 = &(if ~b1 then true else ~b2)
+
+  %% Construct for lazy evaluation.
+  %% [make-thunk e] returns a thunk containing expression [e].
+  val ~make-thunk e =
+    &(fun () -> ~e)
+
+  %% Alias of [make-thunk].
+  %% It is usually combined with [~] and [&], like [~(!!(&(e)))].
+  val ~( !! ) e = make-thunk e
 
 end

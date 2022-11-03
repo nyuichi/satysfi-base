@@ -1,107 +1,109 @@
-@stage: persistent
-@import: base
-@import: ord
-@import: fn
-@import: option-ext
-@import: int
-@import: stream
+use Util
+use Ord
+use Fn
+use Option
+use Int
+use Stream
 
-module TreeSet : sig
+module TreeSet :> sig
   %% Immutable set.
-  type 'a t
+  type t :: o -> o
 
   %% Creates an empty set.
-  val empty : 'a t
+  val persistent ~empty : t 'a
 
   %% Returns the number of elements in the given set.
-  val size : 'a t -> int
+  val persistent ~size : t 'a -> int
 
   %% Returns [true] if the given set is empty.
-  val is-empty : 'a t -> bool
+  val persistent ~is-empty : t 'a -> bool
 
   %% [x |> mem ord s] returns [true] if [s] contains [x].
-  val mem : ('a Ord.t) implicit -> 'a t -> 'a -> bool
+  val persistent ~mem : implicit (Ord.t 'a) -> t 'a -> 'a -> bool
 
   %% [contains ord x s] is the same as [mem ord s x].
-  val contains : ('a Ord.t) implicit -> 'a -> 'a t -> bool
+  val persistent ~contains : implicit (Ord.t 'a) -> 'a -> t 'a -> bool
 
   %% [get ord x s] Returns an element that is equal to [x] with respect to [ord].
-  val get : ('a Ord.t) implicit -> 'a -> 'a t -> 'a option
+  val persistent ~get : implicit (Ord.t 'a) -> 'a -> t 'a -> option 'a
 
   %% Adds a value to the given set. If the set contains a value that is equal to the new value,
   %% the old value is replaced with the new value. If you need to get the old value, query [get] first.
-  val insert : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
+  val persistent ~insert : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
 
   %% Removes a value from the given set.
-  val remove : ('a Ord.t) implicit -> 'a -> 'a t -> 'a t
+  val persistent ~remove : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
 
   %% Constructs a set from a list. If the list contains two equal values, the preceding one is preferred.
-  val of-list : ('a Ord.t) implicit -> 'a list -> 'a t
+  val persistent ~of-list : implicit (Ord.t 'a) -> list 'a -> t 'a
 
-  val to-list : 'a t -> 'a list
+  val persistent ~to-list : t 'a -> list 'a
 
-  val to-stream : 'a t -> 'a Stream.t
+  val persistent ~to-stream : t 'a -> Stream.t 'a
 end = struct
 
   % AVL-tree's invariant:
   % (INV) for each node n, |height(n#left) - height(n#right)| < 2
 
   % AVL tree
-  type 'a node = Node of ((|
-    height : int;
-    value : 'a;
-    left : 'a node;
-    right : 'a node;
-  |)) option
+  type node 'a = Node of (option (|
+    height : int,
+    value : 'a,
+    left : node 'a,
+    right : node 'a,
+  |))
 
-  type 'a t = Tree of (|
-    root : 'a node;
-    size : int;
+  type t 'a = Tree of (|
+    root : node 'a,
+    size : int,
   |)
 
-  let empty-node = Node(None)
+  val persistent ~empty-node = Node(None)
 
-  let empty = Tree (|
-    root = empty-node;
-    size = 0;
+  val persistent ~empty = Tree (|
+    root = empty-node,
+    size = 0,
   |)
 
-  let size (Tree t) = t#size
+  val persistent ~size (Tree t) = t#size
 
-  let is-empty-node (Node(n)) = Option.is-none n
+  val persistent ~is-empty-node (Node(n)) = Option.is-none n
 
-  let is-empty t = size t == 0
+  val persistent ~is-empty t = size t == 0
 
-  let get ord x (Tree t) =
-    t#root |> Fn.fix (fun rec (Node(node)) -> (
+  val persistent ~get ord x (Tree t) =
+    t#root |> Fn.fix (fun recf (Node(node)) -> (
       match node with
       | None -> None
       | Some(node) ->
-        (match Ord.compare ord x node#value with
+        match Ord.compare ord x node#value with
         | Eq -> Some(node#value)
-        | Lt -> rec node#left
-        | Gt -> rec node#right)
+        | Lt -> recf node#left
+        | Gt -> recf node#right
+        end
+      end
     ))
 
-  let mem ord s x = Option.is-some (get ord x s)
+  val persistent ~mem ord s x = Option.is-some (get ord x s)
 
-  let contains ord x s = mem ord s x
+  val persistent ~contains ord x s = mem ord s x
 
-  let height (Node n) =
+  val persistent ~height (Node n) =
     match n with
     | None -> 0
     | Some(node) -> node#height
+    end
 
-  let make-node left right value =
+  val persistent ~make-node left right value =
     Node (Some (|
-      height = 1 + Int.max (height left) (height right);
-      left = left;
-      right = right;
-      value = value;
+      height = 1 + Int.max (height left) (height right),
+      left = left,
+      right = right,
+      value = value,
     |))
 
   % If both l and r satisfy (INV) and |height(l) - height(r)| <= 2, so does [balance l r v].
-  let balance l r v =
+  val persistent ~balance l r v =
     let hl = height l in
     let hr = height r in
     if Int.(abs (hl - hr) < 2) then
@@ -157,28 +159,30 @@ end = struct
         %    rll   rlr            rlr   rr
         make-node (make-node l rll v) (make-node rlr rr rv) rlv
 
-  let insert ord x (Tree t) =
+  val persistent ~insert ord x (Tree t) =
     let found = Ref.make false in
-    let root = t#root |> Fn.fix (fun rec (Node(node)) -> (
+    let root = t#root |> Fn.fix (fun recf (Node(node)) -> (
       match node with
       | None -> make-node empty-node empty-node x
       | Some(node) ->
-        (match Ord.compare ord x node#value with
-        | Lt -> balance (rec node#left) node#right node#value
-        | Gt -> balance node#left (rec node#right) node#value
+        match Ord.compare ord x node#value with
+        | Lt -> balance (recf node#left) node#right node#value
+        | Gt -> balance node#left (recf node#right) node#value
         | Eq ->
           let () = found |> Ref.set true in
-          make-node node#left node#right x)
+          make-node node#left node#right x
+        end
+      end
     )) in
     let size =
       if Ref.get found then
         t#size
       else
         t#size + 1 in
-    Tree (| root = root; size = size |)
+    Tree (| root = root, size = size |)
 
   % pop the minimum value from the tree
-  let-rec pop (Node(n)) =
+  val persistent ~rec pop (Node(n)) =
     match n with
     | None -> Option.none
     | Some(n) ->
@@ -188,16 +192,17 @@ end = struct
         pop n#left |> Option.map (fun (v, l) -> (
           (v, balance l n#right n#value)
         ))
+    end
 
-  let remove ord x (Tree t) =
+  val persistent ~remove ord x (Tree t) =
     let found = Ref.make false in
-    let root = t#root |> Fn.fix (fun rec (Node(node)) -> (
+    let root = t#root |> Fn.fix (fun recf (Node(node)) -> (
       match node with
       | None -> empty-node
       | Some(node) ->
-        (match Ord.compare ord x node#value with
-        | Lt -> balance (rec node#left) node#right node#value
-        | Gt -> balance node#left (rec node#right) node#value
+        match Ord.compare ord x node#value with
+        | Lt -> balance (recf node#left) node#right node#value
+        | Gt -> balance node#left (recf node#right) node#value
         | Eq ->
           let () = found |> Ref.set true in
           if is-empty-node node#left then
@@ -206,33 +211,37 @@ end = struct
             node#left
           else
             let (Some((v, r))) = pop node#right in
-            balance node#left r v)
+            balance node#left r v
+        end
+      end
     )) in
     let size =
       if Ref.get found then
         t#size - 1
       else
         t#size in
-    Tree (| root = root; size = size |)
+    Tree (| root = root, size = size |)
 
-  let of-list ord list =
+  val persistent ~of-list ord list =
     list |> List.fold-right (fun x s -> (s |> insert ord x)) empty
-  
+
   % BFS-order
-  let to-stream (Tree(t)) =
+  val persistent ~to-stream (Tree(t)) =
     [t#root] |> Stream.unfold (fun ns -> (
       ns |> Fn.fix (fun loop ns -> (
         match ns with
         | [] -> None
-        | ((Node(n)) :: ns) ->
-          (match n with
+        | (Node(n)) :: ns ->
+          match n with
           | None ->
             loop ns
           | Some(n) ->
-            let next = List.append ns [n#left; n#right] in
-            Some((n#value, next)))
+            let next = List.append ns [n#left, n#right] in
+            Some((n#value, next))
+          end
+        end
       ))
     ))
 
-  let to-list s = (Fn.compose Stream.to-list to-stream) s
+  val persistent ~to-list s = (Fn.compose Stream.to-list to-stream) s
 end

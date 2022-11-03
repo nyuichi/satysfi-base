@@ -1,11 +1,11 @@
-@require: list
-@import: fn
-@require: deco
-@import: length
-@import: inline
+use List
+use Fn
+%use package open Stdlib
+use Length
+use Inline
 
 %% Module for manipulating block-boxes.
-module Block : sig
+module Block :> sig
   %% [Block.read bt ctx] converts block-text [bt] into a block-boxes using context [ctx].
   val read : block-text -> context -> block-boxes
 
@@ -19,7 +19,7 @@ module Block : sig
   %% the paragraph represented by the return value.
   %% [may-break-after] is similar to [may-break-before], but affects the tail of
   %% the paragraph.
-  val of-inline : bool ?-> bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
+  val of-inline : ?(fill-tail : bool) bool -> bool -> (context -> inline-boxes) -> context -> block-boxes
 
   %% [Block.skip len] creates a block-boxes with length [len].
   val skip : length -> block-boxes
@@ -41,27 +41,28 @@ module Block : sig
   %% Centering is performed only if the length is less than the length of the page.
   val centering : (context -> inline-boxes) -> context -> block-boxes
 end = struct
-  let read = Fn.flip read-block
+  val read = Fn.flip read-block
 
-  let of-inline ?:fill-tail b1 b2 ibf ctx =
+  val of-inline ?(fill-tail = fill-tail) b1 b2 ibf ctx =
     let tail =
       match fill-tail with
       | Some(true) -> Inline.fil
       | _ -> Inline.nil
+      end
     in line-break b1 b2 ctx ((ibf ctx) ++ tail)
 
-  let skip = block-skip
+  val skip = block-skip
 
-  let nil = block-nil
+  val nil = block-nil
 
-  let append b1 b2 = b1 +++ b2
+  val append b1 b2 = b1 +++ b2
 
-  let concat bbs =
+  val concat bbs =
     List.fold-right append nil bbs
 
-  let natural-length = get-natural-length
+  val natural-length = get-natural-length
 
-  let centering ibf ctx =
+  val centering ibf ctx =
     let text-width = ctx |> get-text-width in
     let ib = ctx |> ibf in
     let ib-center =
@@ -71,6 +72,6 @@ end = struct
         Inline.fil ++ ib ++ Inline.fil
     in ctx |> of-inline true true (Fn.const ib-center)
 
-  let frame-breakable pads deco f ctx =
+  val frame-breakable pads deco f ctx =
     block-frame-breakable ctx pads deco f
 end
