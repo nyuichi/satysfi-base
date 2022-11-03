@@ -1,3 +1,5 @@
+use UtilSub
+
 module Util = struct
 
   %% Right-associative function application operator.
@@ -70,5 +72,9 @@ module Util = struct
   %% Alias of [make-thunk].
   %% It is usually combined with [~] and [&], like [~(!!(&(e)))].
   val ~( !! ) e = make-thunk e
+
+  %% [finish] returns an empty document. It is useful when writing a prograam
+  %% involving no typesetting logic.
+  val finish = UtilSub.finish
 
 end

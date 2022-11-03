@@ -4,3 +4,4 @@ contents:
   main_module: "Base"
   source_directories:
     - "./src"
+    - "./src/__sub__"

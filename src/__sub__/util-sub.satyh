@@ -1,0 +1,11 @@
+%use package open Standalone
+
+module UtilSub :> sig
+
+  val finish : document
+
+end = struct
+
+  val finish = standalone '<>
+
+end
