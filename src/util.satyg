@@ -2,6 +2,10 @@ use UtilSub
 
 module Util = struct
 
+  type point = length * length
+
+  type font = string * float * float
+
   %% Right-associative function application operator.
   %% [f x <| g y <| h z] is interpreted as [f x (g y (h z))].
   val persistent ~(<|) f x = f x

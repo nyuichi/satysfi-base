@@ -1,8 +1,10 @@
-use Util
+use open Util
 use Ord
 use TreeSet
 use Option
+use List
 use Int
+use Fn
 use Stream
 use Tuple
 
@@ -11,32 +13,32 @@ module TreeMap :> sig
   type t :: o -> o -> o
 
   %% Creates an empty map.
-  val persistent ~empty : t 'k 'v
+  val persistent ~empty 'k 'v : t 'k 'v
 
   %% Returns the number of elements in the given map.
-  val persistent ~size : t 'k 'v -> int
+  val persistent ~size 'k 'v : t 'k 'v -> int
 
   %% Returns [true] if the given map is empty.
-  val persistent ~is-empty : t 'k 'v -> bool
+  val persistent ~is-empty 'k 'v : t 'k 'v -> bool
 
   %% Returns [true] if the given map contains a binding to the given key.
-  val persistent ~contains : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> bool
+  val persistent ~contains 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> bool
 
   %% [get ord k m] returns the value bound to [k].
-  val persistent ~get : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> option 'v
+  val persistent ~get 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> option 'v
 
   %% Binds key to the value.
-  val persistent ~insert : implicit (Ord.t 'k) -> 'k -> 'v -> t 'k 'v -> t 'k 'v
+  val persistent ~insert 'k 'v : implicit (Ord.t 'k) -> 'k -> 'v -> t 'k 'v -> t 'k 'v
 
   %% Removes a binding from the given map.
-  val persistent ~remove : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
+  val persistent ~remove 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
 
   %% Constructs a map from a list. If the list contains two equal keys, the preceding one is preferred.
-  val persistent ~of-list : implicit (Ord.t 'k) -> list ('k * 'v) -> t 'k 'v
+  val persistent ~of-list 'k 'v : implicit (Ord.t 'k) -> list ('k * 'v) -> t 'k 'v
 
-  val persistent ~to-list : t 'k 'v -> list ('k * 'v)
+  val persistent ~to-list 'k 'v : t 'k 'v -> list ('k * 'v)
 
-  val persistent ~to-stream : t 'k 'v -> Stream.t ('k * 'v)
+  val persistent ~to-stream 'k 'v : t 'k 'v -> Stream.t ('k * 'v)
 end = struct
 
   type t 'k 'v = TreeSet.t ('k * (option 'v))
@@ -50,7 +52,7 @@ end = struct
   val persistent ~key-ord ord = Ord.make (fun (k1, _) (k2, _) -> Ord.compare ord k1 k2)
 
   val persistent ~get ord key map =
-    map |> TreeSet.get (key-ord ord) (key, None) |> Option.map (Fn.compose Option.unwrap Pair.snd)
+    map |> TreeSet.get (key-ord ord) (key, None) |> Option.map (Fn.compose Option.unwrap Tuple.Pair.snd)
 
   val persistent ~contains ord key map =
     Option.is-some (get ord key map)

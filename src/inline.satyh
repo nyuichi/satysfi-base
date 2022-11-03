@@ -1,6 +1,6 @@
 % module for inline-boxes
+use open Util
 use List
-%use package open Stdlib
 use Fn
 use Util
 
@@ -8,9 +8,9 @@ module Inline :> sig
   type baseline-spec = Top | Bottom
   val read : inline-text -> context -> inline-boxes
   val of-string : string -> context -> inline-boxes
-  val of-math : math-text -> context -> inline-boxes
+  val of-math : math-boxes -> context -> inline-boxes
   val of-image : length -> image -> inline-boxes
-  val of-graphics : length -> length -> length -> (point -> list graphics) -> inline-boxes
+  val of-graphics : length -> length -> length -> (point -> graphics) -> inline-boxes
   val of-block : ?(baseline : baseline-spec) length -> (context -> block-boxes) -> context -> inline-boxes
   val of-block-breakable : block-boxes -> context -> inline-boxes
 
@@ -22,7 +22,7 @@ module Inline :> sig
 
   val nil : inline-boxes
   val append : inline-boxes -> inline-boxes -> inline-boxes
-  val concat : inline-boxes list -> inline-boxes
+  val concat : list inline-boxes -> inline-boxes
 
   % concatenate inline-boxes in a block-box direction
   % val stack : baseline-spec ?-> inline-boxes list -> inline-boxes
@@ -91,6 +91,6 @@ end = struct
   % inline-frame-hogehoge
   % inline-graphics-outer
 
-  val no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> []) ib
+  val no-break ib = inline-frame-outer (0pt, 0pt, 0pt, 0pt) (fun _ _ _ _ -> unite-graphics []) ib
   val mandatory-break ctx = discretionary 0 (skip (get-text-width ctx *' 2.)) fil nil
 end

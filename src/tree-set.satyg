@@ -1,45 +1,47 @@
-use Util
+use open Util
 use Ord
 use Fn
 use Option
+use List
 use Int
 use Stream
+use Ref
 
 module TreeSet :> sig
   %% Immutable set.
   type t :: o -> o
 
   %% Creates an empty set.
-  val persistent ~empty : t 'a
+  val persistent ~empty 'a : t 'a
 
   %% Returns the number of elements in the given set.
-  val persistent ~size : t 'a -> int
+  val persistent ~size 'a : t 'a -> int
 
   %% Returns [true] if the given set is empty.
-  val persistent ~is-empty : t 'a -> bool
+  val persistent ~is-empty 'a : t 'a -> bool
 
   %% [x |> mem ord s] returns [true] if [s] contains [x].
-  val persistent ~mem : implicit (Ord.t 'a) -> t 'a -> 'a -> bool
+  val persistent ~mem 'a : implicit (Ord.t 'a) -> t 'a -> 'a -> bool
 
   %% [contains ord x s] is the same as [mem ord s x].
-  val persistent ~contains : implicit (Ord.t 'a) -> 'a -> t 'a -> bool
+  val persistent ~contains 'a : implicit (Ord.t 'a) -> 'a -> t 'a -> bool
 
   %% [get ord x s] Returns an element that is equal to [x] with respect to [ord].
-  val persistent ~get : implicit (Ord.t 'a) -> 'a -> t 'a -> option 'a
+  val persistent ~get 'a : implicit (Ord.t 'a) -> 'a -> t 'a -> option 'a
 
   %% Adds a value to the given set. If the set contains a value that is equal to the new value,
   %% the old value is replaced with the new value. If you need to get the old value, query [get] first.
-  val persistent ~insert : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
+  val persistent ~insert 'a : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
 
   %% Removes a value from the given set.
-  val persistent ~remove : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
+  val persistent ~remove 'a : implicit (Ord.t 'a) -> 'a -> t 'a -> t 'a
 
   %% Constructs a set from a list. If the list contains two equal values, the preceding one is preferred.
-  val persistent ~of-list : implicit (Ord.t 'a) -> list 'a -> t 'a
+  val persistent ~of-list 'a : implicit (Ord.t 'a) -> list 'a -> t 'a
 
-  val persistent ~to-list : t 'a -> list 'a
+  val persistent ~to-list 'a : t 'a -> list 'a
 
-  val persistent ~to-stream : t 'a -> Stream.t 'a
+  val persistent ~to-stream 'a : t 'a -> Stream.t 'a
 end = struct
 
   % AVL-tree's invariant:
@@ -77,9 +79,9 @@ end = struct
       | None -> None
       | Some(node) ->
         match Ord.compare ord x node#value with
-        | Eq -> Some(node#value)
-        | Lt -> recf node#left
-        | Gt -> recf node#right
+        | Ord.Eq -> Some(node#value)
+        | Ord.Lt -> recf node#left
+        | Ord.Gt -> recf node#right
         end
       end
     ))
@@ -166,9 +168,9 @@ end = struct
       | None -> make-node empty-node empty-node x
       | Some(node) ->
         match Ord.compare ord x node#value with
-        | Lt -> balance (recf node#left) node#right node#value
-        | Gt -> balance node#left (recf node#right) node#value
-        | Eq ->
+        | Ord.Lt -> balance (recf node#left) node#right node#value
+        | Ord.Gt -> balance node#left (recf node#right) node#value
+        | Ord.Eq ->
           let () = found |> Ref.set true in
           make-node node#left node#right x
         end
@@ -201,9 +203,9 @@ end = struct
       | None -> empty-node
       | Some(node) ->
         match Ord.compare ord x node#value with
-        | Lt -> balance (recf node#left) node#right node#value
-        | Gt -> balance node#left (recf node#right) node#value
-        | Eq ->
+        | Ord.Lt -> balance (recf node#left) node#right node#value
+        | Ord.Gt -> balance node#left (recf node#right) node#value
+        | Ord.Eq ->
           let () = found |> Ref.set true in
           if is-empty-node node#left then
             node#right

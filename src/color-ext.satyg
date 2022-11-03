@@ -1,9 +1,10 @@
-use Util
+use open Util
 use RegExp
 use Int
 use List
 use Ord
 use Float
+use String
 
 module Color :> sig
   val gray   : float -> color
@@ -186,7 +187,7 @@ end = struct
     match x with
     | Some(_) ->
       let ((Some(_,r))::(Some(_,g))::(Some(_,b))::_) = xs in
-      srgb24 (Int.of-string ?(base = 16) r) (Int.of-string ?(base = 16) g) (Int.of-string ?(base = 16) b)
+      srgb24 (Int.of-string ?(radix = 16) r) (Int.of-string ?(radix = 16) g) (Int.of-string ?(radix = 16) b)
     | None ->
       css-color-names
         |> List.assoc String.equal s

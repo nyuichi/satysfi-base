@@ -1,4 +1,4 @@
-use Util
+use open Util
 use Fn
 
 %% [either 'a 'b] contains a value of either ['a] or ['b].
@@ -9,20 +9,20 @@ module Either :> sig
   type either 'a 'b =
     | Left of 'a
     | Right of 'b
-  val persistent ~left : 'a -> either 'a 'b
-  val persistent ~right : 'b -> either 'a 'b
-  val persistent ~is-left : either 'a 'b -> bool
-  val persistent ~is-right : either 'a 'b -> bool
-  val persistent ~unwrap-left : either 'a 'b -> 'a
-  val persistent ~unwrap-left-or : 'a -> either 'a 'b -> 'a
-  val persistent ~unwrap-left-or-else : ('b -> 'a) -> either 'a 'b -> 'a
-  val persistent ~unwrap-right : either 'a 'b -> 'b
-  val persistent ~unwrap-right-or : 'b -> either 'a 'b -> 'b
-  val persistent ~unwrap-right-or-else : ('a -> 'b) -> either 'a 'b -> 'b
-  val persistent ~either : ('a -> 'c) -> ('b -> 'c) -> either 'a 'b -> 'c
-  val persistent ~bimap : ('a -> 'c) -> ('b -> 'd) -> either 'a 'b -> either 'c 'd
-  val persistent ~swap : either 'a 'b -> either 'b 'a
-  val persistent ~value : either 'a 'a -> 'a
+  val persistent ~left 'a 'b : 'a -> either 'a 'b
+  val persistent ~right 'a 'b : 'b -> either 'a 'b
+  val persistent ~is-left 'a 'b : either 'a 'b -> bool
+  val persistent ~is-right 'a 'b : either 'a 'b -> bool
+  val persistent ~unwrap-left 'a 'b : either 'a 'b -> 'a
+  val persistent ~unwrap-left-or 'a 'b : 'a -> either 'a 'b -> 'a
+  val persistent ~unwrap-left-or-else 'a 'b : ('b -> 'a) -> either 'a 'b -> 'a
+  val persistent ~unwrap-right 'a 'b : either 'a 'b -> 'b
+  val persistent ~unwrap-right-or 'a 'b : 'b -> either 'a 'b -> 'b
+  val persistent ~unwrap-right-or-else 'a 'b : ('a -> 'b) -> either 'a 'b -> 'b
+  val persistent ~either 'a 'b 'c : ('a -> 'c) -> ('b -> 'c) -> either 'a 'b -> 'c
+  val persistent ~bimap 'a 'b 'c 'd : ('a -> 'c) -> ('b -> 'd) -> either 'a 'b -> either 'c 'd
+  val persistent ~swap 'a 'b : either 'a 'b -> either 'b 'a
+  val persistent ~value 'a : either 'a 'a -> 'a
 end = struct
   type either 'a 'b =
     | Left of 'a

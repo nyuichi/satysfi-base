@@ -1,5 +1,7 @@
+use open Util
+
 module Font :> sig
-  type t = string * float * float
+  type t = font
   val persistent ~make : string -> float -> float -> font
   val persistent ~font-name : font -> string
   val persistent ~ratio : font -> float

@@ -1,11 +1,14 @@
+use open Util
 use List
 use Option
 use String
+use Tuple
 use Char
 use Fn
 use Result
 use Ord
 use Int
+use Ref
 use Promise
 use Stream
 use Token
@@ -18,64 +21,69 @@ module Parser :> sig
 
   type t :: o -> o -> o
 
-  val run : t 'a 'd -> Stream.t (Token.t 'd) -> result 'a (list (parse-error 'd))
+  val persistent ~run 'a 'd : t 'a 'd -> Stream.t (Token.t 'd) -> result 'a (list (parse-error 'd))
 
   % functor
-  val map 'a 'b 'd : ('a -> 'b) -> t 'a 'd -> t 'b 'd
-  val (<&>) 'a 'b 'd : t 'a 'd -> ('a -> 'b) -> t 'b 'd
+  val persistent ~map 'a 'b 'd : ('a -> 'b) -> t 'a 'd -> t 'b 'd
+  val persistent ~(<&>) 'a 'b 'd : t 'a 'd -> ('a -> 'b) -> t 'b 'd
 
   % applicative
-  val pure 'a 'd : 'a -> t 'a 'd
-  val ap 'a 'b 'd : t 'a 'd -> t ('a -> 'b) 'd -> t 'b 'd
-  val (<*>) 'a 'b 'd : t ('a -> 'b) 'd -> t 'a 'd -> t 'b 'd
-  val (*>) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'b 'd
-  val (<*) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'a 'd
-  val traverse 'a 'b : ('a -> t 'b 'd) -> list 'a -> t (list 'b) 'd
-  val sequence 'a 'd : list (t 'a 'd) -> t (list 'a) 'd
+  val persistent ~pure 'a 'd : 'a -> t 'a 'd
+  val persistent ~ap 'a 'b 'd : t 'a 'd -> t ('a -> 'b) 'd -> t 'b 'd
+  val persistent ~(<*>) 'a 'b 'd : t ('a -> 'b) 'd -> t 'a 'd -> t 'b 'd
+  val persistent ~(*>) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'b 'd
+  val persistent ~(<*) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'a 'd
+  val persistent ~traverse 'a 'b 'd : ('a -> t 'b 'd) -> list 'a -> t (list 'b) 'd
+  val persistent ~sequence 'a 'd : list (t 'a 'd) -> t (list 'a) 'd
 
   % monad
-  val ret : 'a -> t 'a 'd
-  val bind : ('a -> t 'b 'd) -> t 'a 'd -> t 'b 'd
-  val (>>=) : t 'a 'd -> ('a -> t 'b 'd) -> t 'b 'd
-  val (>>) : t 'a 'd -> t 'b 'd -> t 'b 'd
-  val (<<) : t 'a 'd -> t 'b 'd -> t 'a 'd
+  val persistent ~ret 'a 'd : 'a -> t 'a 'd
+  val persistent ~bind 'a 'b 'd : ('a -> t 'b 'd) -> t 'a 'd -> t 'b 'd
+  val persistent ~(>>=) 'a 'b 'd : t 'a 'd -> ('a -> t 'b 'd) -> t 'b 'd
+  val persistent ~(>>) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'b 'd
+  val persistent ~(<<) 'a 'b 'd : t 'a 'd -> t 'b 'd -> t 'a 'd
 
   % alternative
-  val empty 'a 'd : t 'a 'd
-  val alt 'a 'd : t 'a 'd -> t 'a 'd -> t 'a 'd   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
-  val (<|>) 'a 'd : t 'a 'd -> t 'a 'd -> t 'a 'd
-  val some 'a 'd : t 'a 'd -> t (list 'a) 'd  % one or more; use `try` if necessary
-  val many 'a 'd : t 'a 'd -> t (list 'a) 'd  % zero or more; use `try` if necessary
-  val optional 'a 'd : t 'a 'd -> t (option 'a) 'd  % zero or one; use `try` if necessary
-  val choice 'a 'd : list (t 'a 'd) -> t 'a 'd  % use `try` if necessary
+  val persistent ~empty 'a 'd : t 'a 'd
+  val persistent ~alt 'a 'd : t 'a 'd -> t 'a 'd -> t 'a 'd   % predicative choice; the second parser is only tried when the first parser fails without consuming any tokens
+  val persistent ~(<|>) 'a 'd : t 'a 'd -> t 'a 'd -> t 'a 'd
+  val persistent ~some 'a 'd : t 'a 'd -> t (list 'a) 'd  % one or more; use `try` if necessary
+  val persistent ~many 'a 'd : t 'a 'd -> t (list 'a) 'd  % zero or more; use `try` if necessary
+  val persistent ~optional 'a 'd : t 'a 'd -> t (option 'a) 'd  % zero or one; use `try` if necessary
+  val persistent ~choice 'a 'd : list (t 'a 'd) -> t 'a 'd  % use `try` if necessary
 
   % error handling
-  val report 'd : string -> unit 'd t  % reports new error messege; always succeeds and never consumes input
-  val label 'a 'd : string -> t 'a 'd -> t 'a 'd  % reports new error message on failure of the given parser regardless of consumption of input
-  val (<?>) 'a 'd : t 'a 'd -> string -> t 'a 'd
-  val fail 'a 'd : string -> t 'a 'd
+  val persistent ~report 'd : string -> t unit 'd  % reports new error messege; always succeeds and never consumes input
+  val persistent ~label 'a 'd : string -> t 'a 'd -> t 'a 'd  % reports new error message on failure of the given parser regardless of consumption of input
+  val persistent ~(<?>) 'a 'd : t 'a 'd -> string -> t 'a 'd
+  val persistent ~fail 'a 'd : string -> t 'a 'd
 
   % parser
-  val try 'a 'd : t 'a 'd -> t 'a 'd  % mark savepoints to perform backtracking
-  val lookahead 'a 'd : t 'a 'd -> t 'a 'd
-  val not-followed-by 'a 'd : t 'a 'd -> unit 'd t  % flip success and failure; never consumes input
-  val catch 'a 'd : t 'a 'd -> t (option 'a * list (parse-error 'd)) 'd
-  val any 'd : t (Token.t 'd) 'd
+  val persistent ~try 'a 'd : t 'a 'd -> t 'a 'd  % mark savepoints to perform backtracking
+  val persistent ~lookahead 'a 'd : t 'a 'd -> t 'a 'd
+  val persistent ~not-followed-by 'a 'd : t 'a 'd -> t unit 'd  % flip success and failure; never consumes input
+  val persistent ~catch 'a 'd : t 'a 'd -> t (option 'a * list (parse-error 'd)) 'd
+  val persistent ~any 'd : t (Token.t 'd) 'd
 
   % recursively defined grammars
-  val delay 'a 'd : Promise.t (t 'a 'd) -> t 'a 'd
-  val fix 'a 'd : (t 'a 'd -> t 'a 'd) -> t 'a 'd
+  val persistent ~delay 'a 'd : Promise.t (t 'a 'd) -> t 'a 'd
+  val persistent ~fix 'a 'd : (t 'a 'd -> t 'a 'd) -> t 'a 'd
 
   % derived combinators
-  val eof 'd : t unit 'd
-  val satisfy 'd : (Token.t 'd -> bool) -> t (Token.t 'd) 'd
-  val some-sep-by 'a 'd : t 'sep 'd -> t 'a 'd -> t (list 'a) 'd
-  val many-sep-by 'a 'd : t 'sep 'd -> t 'a 'd -> t (list 'a) 'd
-  val between 'open 'close 'a 'd : t 'open 'd -> t 'close 'd -> t 'a 'd -> t 'a 'd
-  val pair 'a 'b 'd : t 'a 'd -> t 'b 'd -> t ('a * 'b) 'd
-  val triple 'a 'b 'c 'd : t 'a 'd -> t 'b 'd -> t 'c 'd -> t ('a * 'b * 'c) 'd
-  val some-chain-left 'a 'd : t ('a -> 'a -> 'a) 'd -> t 'a 'd -> t 'a 'd
+  val persistent ~eof 'd : t unit 'd
+  val persistent ~satisfy 'd : (Token.t 'd -> bool) -> t (Token.t 'd) 'd
+  val persistent ~some-sep-by 'sep 'a 'd : t 'sep 'd -> t 'a 'd -> t (list 'a) 'd
+  val persistent ~many-sep-by 'sep 'a 'd : t 'sep 'd -> t 'a 'd -> t (list 'a) 'd
+  val persistent ~between 'open 'close 'a 'd : t 'open 'd -> t 'close 'd -> t 'a 'd -> t 'a 'd
+  val persistent ~pair 'a 'b 'd : t 'a 'd -> t 'b 'd -> t ('a * 'b) 'd
+  val persistent ~triple 'a 'b 'c 'd : t 'a 'd -> t 'b 'd -> t 'c 'd -> t ('a * 'b * 'c) 'd
+  val persistent ~some-chain-left 'a 'd : t ('a -> 'a -> 'a) 'd -> t 'a 'd -> t 'a 'd
 end = struct
+
+  type parse-error 'd = (|
+    token : option (Token.t 'd),  % None for EOF
+    desc  : string,
+  |)
 
   % state of parser
   type state 'd = (|
@@ -226,7 +234,7 @@ end = struct
 
   val persistent ~catch p s =
     let (o, _, e) = p s in
-    (Option.some (s, (o |> Option.map Pair.snd, e)), Virgin, [])
+    (Option.some (s, (o |> Option.map Tuple.Pair.snd, e)), Virgin, [])
 
   val persistent ~any s =
     match Stream.uncons s#input with
@@ -258,7 +266,7 @@ end = struct
     op >> p >>= (fun x -> cl >> ret x)
 
   val persistent ~pair p1 p2 =
-    (pure Pair.make <*> p1) <*> p2
+    (pure Tuple.Pair.make <*> p1) <*> p2
 
   val persistent ~triple p1 p2 p3 =
     p1 >>= (fun x -> p2 >>= (fun y -> p3 >>= (fun z -> ret (x, y, z))))

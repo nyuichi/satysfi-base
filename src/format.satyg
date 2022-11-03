@@ -1,4 +1,4 @@
-use Util
+use open Util
 use RegExp
 
 module Format :> sig

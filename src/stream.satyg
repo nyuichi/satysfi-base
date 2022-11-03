@@ -4,62 +4,64 @@ use Option
 use List
 use Tuple
 use Result
+use Char
 use String
 use Array
+use Fn
 
 module Stream :> sig
   type t :: o -> o
-  val persistent ~nil : unit -> t 'a
-  val persistent ~cons : thunk 'a -> thunk (t 'a) -> t 'a
-  val persistent ~unfold : ('a -> option ('b * 'a)) -> 'a -> t 'b
-  val persistent ~const : 'a -> t 'a
-  val persistent ~nat : int t
-  val persistent ~fib : int t
-  val persistent ~uncons : t 'a -> option ('a * t 'a)
-  val persistent ~null : t 'a -> bool
-  val persistent ~head : t 'a -> option 'a
-  val persistent ~tail : t 'a -> option (t 'a)
-  val persistent ~length : t 'a -> int
-  val persistent ~last : t 'a -> option 'a
-  val persistent ~nth : int -> t 'a -> option 'a
-  val persistent ~step-by : int -> t 'a -> t 'a
-  val persistent ~append : t 'a -> t 'a -> t 'a
-  val persistent ~chain : t 'a -> t 'a -> t 'a
-  val persistent ~zip : t 'a -> t 'b -> t ('a * 'b)
-  val persistent ~map : ('a -> 'b) -> t 'a -> t 'b
-  val persistent ~iter : ('a -> unit) -> t 'a -> unit
-  val persistent ~filter : ('a -> bool) -> t 'a -> t 'a
-  val persistent ~filter-map : ('a -> option 'b) -> t 'a -> t 'b
-  val persistent ~enumerate : t 'a -> t (int * 'a)
-  val persistent ~drop-while : ('a -> bool) -> t 'a -> t 'a
-  val persistent ~take-while : ('a -> bool) -> t 'a -> t 'a
-  val persistent ~map-while : ('a -> option 'b) -> t 'a -> t 'b
-  val persistent ~drop : int -> t 'a -> t 'a
-  val persistent ~take : int -> t 'a -> t 'a
-  val persistent ~flat-map : ('a -> t 'b) -> t 'a -> t 'b
-  val persistent ~flatten : t (t 'a) -> t 'a
-  val persistent ~tap : ('a -> unit) -> t 'a -> t 'a
-  val persistent ~partition : ('a -> bool) -> t 'a -> (t 'a * t 'a)
-  val persistent ~fold-option : 'b -> ('a -> 'b -> option 'b) -> t 'a -> option 'b
-  val persistent ~fold-result : 'b -> ('a -> 'b -> result 'b 'e) -> t 'a -> result 'b 'e
-  val persistent ~iter-option : ('a -> option unit) -> t 'a -> option unit
-  val persistent ~iter-result : ('a -> result unit 'e) -> t 'a -> result unit 'e
-  val persistent ~all : ('a -> bool) -> t 'a -> bool
-  val persistent ~any : ('a -> bool) -> t 'a -> bool
-  val persistent ~find : ('a -> bool) -> t 'a -> option 'a
-  val persistent ~find-map : ('a -> option 'b) -> t 'a -> option 'b
-  val persistent ~find-result : ('a -> result bool 'e) -> t 'a -> result (option 'a) 'e
-  val persistent ~position : ('a -> bool) -> t 'a -> int option
-  val persistent ~unzip : t ('a * 'b) -> (t 'a * t 'b)
-  val persistent ~of-list : list 'a -> t 'a
+  val persistent ~nil 'a : unit -> t 'a
+  val persistent ~cons 'a : thunk 'a -> thunk (t 'a) -> t 'a
+  val persistent ~unfold 'a 'b : ('a -> option ('b * 'a)) -> 'a -> t 'b
+  val persistent ~const 'a : 'a -> t 'a
+  val persistent ~nat : t int
+  val persistent ~fib : t int
+  val persistent ~uncons 'a : t 'a -> option ('a * t 'a)
+  val persistent ~null 'a : t 'a -> bool
+  val persistent ~head 'a : t 'a -> option 'a
+  val persistent ~tail 'a : t 'a -> option (t 'a)
+  val persistent ~length 'a : t 'a -> int
+  val persistent ~last 'a : t 'a -> option 'a
+  val persistent ~nth 'a : int -> t 'a -> option 'a
+  val persistent ~step-by 'a : int -> t 'a -> t 'a
+  val persistent ~append 'a : t 'a -> t 'a -> t 'a
+  val persistent ~chain 'a : t 'a -> t 'a -> t 'a
+  val persistent ~zip 'a 'b : t 'a -> t 'b -> t ('a * 'b)
+  val persistent ~map 'a 'b : ('a -> 'b) -> t 'a -> t 'b
+  val persistent ~iter 'a : ('a -> unit) -> t 'a -> unit
+  val persistent ~filter 'a : ('a -> bool) -> t 'a -> t 'a
+  val persistent ~filter-map 'a 'b : ('a -> option 'b) -> t 'a -> t 'b
+  val persistent ~enumerate 'a : t 'a -> t (int * 'a)
+  val persistent ~drop-while 'a : ('a -> bool) -> t 'a -> t 'a
+  val persistent ~take-while 'a : ('a -> bool) -> t 'a -> t 'a
+  val persistent ~map-while 'a 'b : ('a -> option 'b) -> t 'a -> t 'b
+  val persistent ~drop 'a : int -> t 'a -> t 'a
+  val persistent ~take 'a : int -> t 'a -> t 'a
+  val persistent ~flat-map 'a 'b : ('a -> t 'b) -> t 'a -> t 'b
+  val persistent ~flatten 'a : t (t 'a) -> t 'a
+  val persistent ~tap 'a : ('a -> unit) -> t 'a -> t 'a
+  val persistent ~partition 'a : ('a -> bool) -> t 'a -> (t 'a * t 'a)
+  val persistent ~fold-option 'a 'b : 'b -> ('a -> 'b -> option 'b) -> t 'a -> option 'b
+  val persistent ~fold-result 'a 'b 'e : 'b -> ('a -> 'b -> result 'b 'e) -> t 'a -> result 'b 'e
+  val persistent ~iter-option 'a : ('a -> option unit) -> t 'a -> option unit
+  val persistent ~iter-result 'a 'e : ('a -> result unit 'e) -> t 'a -> result unit 'e
+  val persistent ~all 'a : ('a -> bool) -> t 'a -> bool
+  val persistent ~any 'a : ('a -> bool) -> t 'a -> bool
+  val persistent ~find 'a : ('a -> bool) -> t 'a -> option 'a
+  val persistent ~find-map 'a 'b : ('a -> option 'b) -> t 'a -> option 'b
+  val persistent ~find-result 'a 'e : ('a -> result bool 'e) -> t 'a -> result (option 'a) 'e
+  val persistent ~position 'a : ('a -> bool) -> t 'a -> option int
+  val persistent ~unzip 'a 'b : t ('a * 'b) -> (t 'a * t 'b)
+  val persistent ~of-list 'a : list 'a -> t 'a
   val persistent ~of-string : string -> t Char.t
-  val persistent ~of-array : Array.t 'a -> t 'a
-  val persistent ~of-option : option 'a -> t 'a
-  val persistent ~to-list : t 'a -> list 'a
-  val persistent ~to-array : t 'a -> Array.t 'a
+  val persistent ~of-array 'a : Array.t 'a -> t 'a
+  val persistent ~of-option 'a : option 'a -> t 'a
+  val persistent ~to-list 'a : t 'a -> list 'a
+  val persistent ~to-array 'a : t 'a -> Array.t 'a
 
   % deprecated
-  val persistent ~fold : ('b -> 'a -> 'b) -> 'b -> t 'a -> 'b  % TODO: swap arguments
+  val persistent ~fold 'a 'b : ('b -> 'a -> 'b) -> 'b -> t 'a -> 'b  % TODO: swap arguments
 end = struct
 
   type state 'a =
@@ -80,10 +82,10 @@ end = struct
     end
 
   val persistent ~head s =
-    uncons s |> Option.map Pair.fst
+    uncons s |> Option.map Tuple.Pair.fst
 
   val persistent ~tail s =
-    uncons s |> Option.map Pair.snd
+    uncons s |> Option.map Tuple.Pair.snd
 
   val persistent ~rec unfold f x =
     Promise.delay-force
@@ -127,7 +129,7 @@ end = struct
       (s1, s2) |> unfold go
 
   val persistent ~rec unzip s =
-    (map Pair.fst s, map Pair.snd s)
+    (map Tuple.Pair.fst s, map Tuple.Pair.snd s)
 
   val persistent ~rec take n s =
     Promise.delay-force
@@ -226,7 +228,7 @@ end = struct
     if n == 0 then
       panic `Stream.step-by: invalid argument`
     else
-      s |> enumerate |> filter (fun (i, x) -> i mod n == 0) |> map Pair.snd
+      s |> enumerate |> filter (fun (i, x) -> i mod n == 0) |> map Tuple.Pair.snd
 
   val persistent ~rec chain s2 s1 =
     Promise.delay-force
@@ -244,7 +246,7 @@ end = struct
     let rec go s =
       match uncons s with
       | None -> ()
-      | Some(x, s) -> f x before go s
+      | Some(x, s) -> let () = f x in go s
       end
     in
       go s
@@ -290,7 +292,7 @@ end = struct
     s |> map f |> flatten
 
   val persistent ~tap f s =
-    s |> map (fun x -> (f x before x))
+    s |> map (fun x -> (let () = f x in x))
 
   val persistent ~partition f s =
     (s |> filter f, s |> filter (Fn.non f))
@@ -364,7 +366,7 @@ end = struct
       |> Option.transpose
 
   val persistent ~position f s =
-    s |> enumerate |> find (Fn.compose f Pair.snd) |> Option.map Pair.fst
+    s |> enumerate |> find (Fn.compose f Tuple.Pair.snd) |> Option.map Tuple.Pair.fst
 
   val persistent ~of-string s =
     of-list (String.to-list s)
@@ -390,10 +392,12 @@ end = struct
     | None -> Array.of-list []
     | Some(x, _) ->
       let result = Array.make x (s |> length) in
-      s |> enumerate
-        |> iter (fun (i, a) -> (
-          result |> Array.set i a
-        )) before
+      let () =
+        s |> enumerate
+          |> iter (fun (i, a) -> (
+            result |> Array.set i a
+          ))
+      in
       result
     end
 end

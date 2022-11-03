@@ -1,3 +1,4 @@
+use open Util
 use Eq
 use Ord
 use String
@@ -41,7 +42,7 @@ module Float :> sig
 
   val persistent ~of-int : int -> float
   val persistent ~to-int : float -> int
-  val persistent ~of-string-opt : string -> float option
+  val persistent ~of-string-opt : string -> option float
   val persistent ~to-string : float -> string
 
   val persistent ~ceil : float -> float
@@ -113,7 +114,7 @@ end = struct
   val persistent ~is-subnormal f = is-finite f && not (is-zero f) && f < min-normal
   val persistent ~is-normal f = is-finite f && not (is-zero f) && f >= min-normal
 
-  val persistent ~ord = Ord.make (fun a b -> (if a < b then Lt else if a > b then Gt else Eq))
+  val persistent ~ord = Ord.make (fun a b -> (if a < b then Ord.Lt else if a > b then Ord.Gt else Ord.Eq))
   val persistent ~eq = Ord.derive-eq ord
 
   val persistent ~equal = Eq.equal eq

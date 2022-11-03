@@ -1,4 +1,5 @@
 module Page :> sig
+  type page = length * length
   val a0 : page
   val a1 : page
   val a2 : page
@@ -46,30 +47,18 @@ module Page :> sig
   val us-letter : page
   val us-legal : page
   val custom : length -> length -> page
-  val to-size : page -> (length * length)
 end = struct
-  val custom l1 l2 = UserDefinedPaper(l1,l2)
+  type page = length * length
+  val custom l1 l2 = (l1, l2)
 
   % values are from https://github.com/johnwhitington/camlpdf/blob/fd56554adb16ad03f84ad70a721e01a11092a836/pdfpaper.ml
-  val to-size pg =
-    match pg with
-    | A0Paper                -> (841mm,1189mm)
-    | A1Paper                -> (594mm, 841mm)
-    | A2Paper                -> (420mm, 594mm)
-    | A3Paper                -> (297mm, 420mm)
-    | A4Paper                -> (210mm, 297mm)
-    | A5Paper                -> (148mm, 210mm)
-    | USLetter               -> (8.5inch, 11inch)
-    | USLegal                -> (8.5inch, 14inch)
-    | UserDefinedPaper(w, h) -> (w, h)
-    end
 
-  val a0 = A0Paper
-  val a1 = A1Paper
-  val a2 = A2Paper
-  val a3 = A3Paper
-  val a4 = A4Paper
-  val a5 = A5Paper
+  val a0 = custom 841mm 1189mm
+  val a1 = custom 594mm 841mm
+  val a2 = custom 420mm 594mm
+  val a3 = custom 297mm 420mm
+  val a4 = custom 210mm 297mm
+  val a5 = custom 148mm 210mm
   val a6 = custom 105mm 148mm
   val a7 = custom 74mm 105mm
   val a8 = custom 52mm 74mm
@@ -112,6 +101,6 @@ end = struct
   val b9j = custom 45mm 64mm
   val b10j = custom 32mm 45mm
 
-  val us-letter = USLetter
-  val us-legal = USLegal
+  val us-letter = custom 8.5inch 11inch
+  val us-legal = custom 8.5inch 14inch
 end

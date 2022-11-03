@@ -1,4 +1,6 @@
-use Util
+use open Util
+use Ord
+use Eq
 use String
 use Char
 use List
@@ -31,8 +33,8 @@ module Int :> sig
   val persistent ~pow : int -> int -> int
   val persistent ~max : int -> int -> int
   val persistent ~min : int -> int -> int
-  val persistent ~sup : int list -> int
-  val persistent ~inf : int list -> int
+  val persistent ~sup : list int -> int
+  val persistent ~inf : list int -> int
 
   % bitwise operations
   val persistent ~lsl : int -> int -> int
@@ -45,9 +47,9 @@ module Int :> sig
 
   val persistent ~of-string : ?(radix : int) string -> int % may throw an error
   val persistent ~to-string : int -> string
-  val persistent ~of-string-opt : ?(radix : int) string -> int option
+  val persistent ~of-string-opt : ?(radix : int) string -> option int
 end = struct
-  val persistent ~ord = Ord.make (fun i j -> (if i == j then Eq else if i < j then Lt else Gt))
+  val persistent ~ord = Ord.make (fun i j -> (if i == j then Ord.Eq else if i < j then Ord.Lt else Ord.Gt))
   val persistent ~max = Ord.max ord
   val persistent ~min = Ord.min ord
 

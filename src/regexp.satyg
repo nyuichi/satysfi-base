@@ -1,13 +1,17 @@
 % based on https://swtch.com/~rsc/regexp/regexp1.html
-use Util
+use open Util
 use String
 use Array
 use Debug
 use Option
+use Result
 use List
+use Fn
 use Char
 use Parser
+use StringParser
 use Ref
+use Stream
 use Eq
 
 module RegExp :> sig
@@ -152,7 +156,7 @@ end = struct
   |)
 
   % monadic combinators for ('a 'e result) list
-  val persistent ~sequence =
+  val persistent ~sequence0 =
     let f m ms =
       m |> Result.and-then (fun x -> (
         ms |> Result.and-then (fun xs -> (
@@ -160,7 +164,7 @@ end = struct
         ))
       )) in
     List.fold-right f (Result.ret [])
-  val persistent ~map-m f xs = sequence (List.map f xs)
+  val persistent ~map-m f xs = sequence0 (List.map f xs)
   val persistent ~ret x = Result.ret (list-ret x)
   val persistent ~and-then f x =
     x |> Result.and-then (fun l -> (

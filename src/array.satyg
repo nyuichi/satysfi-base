@@ -1,5 +1,5 @@
+use open Util
 use Ref
-use Util
 use List
 
 module Array :> sig

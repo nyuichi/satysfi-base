@@ -1,10 +1,11 @@
+use open Util
 use Font
 use Inline
 
 module Context :> sig
   val make : length -> context
 
-  val set-math-variant-char : math-char-class -> int -> int -> context -> context
+  val set-math-variant-char : int -> (math-char-class -> int) -> context -> context
   val set-math-command : inline [math-text] -> context -> context
   val get-initial-context : length -> inline [math-text] -> context
   val set-hyphen-min : int -> int -> context -> context
@@ -65,7 +66,10 @@ end = struct
   val get-text-width = get-text-width
   val set-manual-rising = set-manual-rising
   val set-hyphen-penalty = set-hyphen-penalty
-  val get-axis-height = get-axis-height
+
+  val get-axis-height ctx =
+    get-font-size ctx *' get-math-axis-height-ratio ctx
+
   val set-word-break-penalty = set-word-break-penalty
   val set-every-word-break = set-every-word-break
   val get-every-word-break = get-every-word-break
@@ -95,7 +99,7 @@ end = struct
       h1 +' d1 -' (h +' d) *' 2.0
 
   val inline ctx \math m =
-    Inline.of-math m ctx
+    Inline.of-math (read-math ctx m) ctx
 
   val make text-width = get-initial-context text-width (command \math)
 end

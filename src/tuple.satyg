@@ -6,10 +6,10 @@ module Tuple = struct
   end
 
   module Pair :> sig
-    val persistent ~make : 'a -> 'b -> ('a * 'b)
-    val persistent ~fst : ('a * 'b) -> 'a
-    val persistent ~snd : ('a * 'b) -> 'b
-    val persistent ~swap : ('a * 'b) -> ('b * 'a)
+    val persistent ~make 'a 'b : 'a -> 'b -> ('a * 'b)
+    val persistent ~fst 'a 'b : ('a * 'b) -> 'a
+    val persistent ~snd 'a 'b : ('a * 'b) -> 'b
+    val persistent ~swap 'a 'b : ('a * 'b) -> ('b * 'a)
   end = struct
     val persistent ~make x y = (x, y)
     val persistent ~fst (x, _) = x

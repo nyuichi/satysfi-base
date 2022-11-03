@@ -20,7 +20,7 @@ end = struct
     | Cyan
     | White
 
-  val color-num c =
+  val persistent ~color-num c =
     match c with
     | Black -> 0
     | Red -> 1

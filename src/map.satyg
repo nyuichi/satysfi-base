@@ -1,7 +1,9 @@
+use open Util
 use Set
 use List
 use Fn
 use Tuple
+use Eq
 
 % immutable map
 %
@@ -14,13 +16,13 @@ module Map :> sig
   val persistent ~empty 'k 'v : t 'k 'v
   val persistent ~is-empty 'k 'v : t 'k 'v -> bool
   val persistent ~size 'k 'v : t 'k 'v -> int
-  val persistent ~of- : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> option 'v
-  val persistent ~bind : 'k -> 'v -> t 'k 'v -> t 'k 'v
-  val persistent ~unbind : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
-  val persistent ~dom : implicit (Eq.t 'k) -> t 'k 'v -> list 'k
-  val persistent ~ran : implicit (Eq.t 'k) -> t 'k 'v -> list 'v
-  val persistent ~of-list : list ('k * 'v) -> t 'k 'v
-  val persistent ~to-list : implicit (Eq.t 'k) -> t 'k 'v -> list ('k * 'v)
+  val persistent ~of- 'k 'v : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> option 'v
+  val persistent ~bind 'k 'v : 'k -> 'v -> t 'k 'v -> t 'k 'v
+  val persistent ~unbind 'k 'v : implicit (Eq.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
+  val persistent ~dom 'k 'v : implicit (Eq.t 'k) -> t 'k 'v -> list 'k
+  val persistent ~ran 'k 'v : implicit (Eq.t 'k) -> t 'k 'v -> list 'v
+  val persistent ~of-list 'k 'v : list ('k * 'v) -> t 'k 'v
+  val persistent ~to-list 'k 'v : implicit (Eq.t 'k) -> t 'k 'v -> list ('k * 'v)
 end = struct
   type t 'k 'v = Set.t ('k * 'v)
 
@@ -31,7 +33,7 @@ end = struct
   val persistent ~is-empty m = Set.is-empty m
 
   val persistent ~key-eq eq =
-    Eq.make (Eq.equal eq |> Fn.on Pair.fst)
+    Eq.make (Eq.equal eq |> Fn.on Tuple.Pair.fst)
 
   val persistent ~of- eq k m =
     match Set.choose m with
@@ -51,9 +53,9 @@ end = struct
     | Some(_, v) -> Set.remove (key-eq eq) (k, v) m
     end
 
-  val persistent ~dom eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.fst
+  val persistent ~dom eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.Pair.fst
 
-  val persistent ~ran eq m = m |> Set.to-list (key-eq eq) |> List.map Pair.snd
+  val persistent ~ran eq m = m |> Set.to-list (key-eq eq) |> List.map Tuple.Pair.snd
 
   val persistent ~of-list alist =
     let rec aux alist =

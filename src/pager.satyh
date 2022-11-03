@@ -1,3 +1,4 @@
+use open Util
 use Page
 
 module Pager :> sig
@@ -15,7 +16,7 @@ module Pager :> sig
     footer-origin : point,
   |)
 
-  val make-document : page -> margin pager-hook -> header-footer pager-hook -> block-boxes -> document
+  val make-document : Page.page -> pager-hook margin -> pager-hook header-footer -> block-boxes -> document
   val clear : block-boxes  % hard page break
   val make-footnote : block-boxes -> inline-boxes
   val make-hook : pager-hook (point -> unit) -> inline-boxes

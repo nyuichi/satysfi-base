@@ -1,4 +1,4 @@
-% use package open Stdlib
+use open Util
 
 module Path :> sig
   val start : point -> pre-path

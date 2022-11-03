@@ -1,4 +1,4 @@
-use Util
+use open Util
 use Ord
 use Eq
 use Float
@@ -28,10 +28,10 @@ module Bool :> sig
 end = struct
   val persistent ~ord = Ord.make (fun b1 b2 -> (
     match (b1, b2) with
-    | (true, true) -> Eq
-    | (false, false) -> Eq
-    | (true, false) -> Gt
-    | (false, true) -> Lt
+    | (true, true) -> Ord.Eq
+    | (false, false) -> Ord.Eq
+    | (true, false) -> Ord.Gt
+    | (false, true) -> Ord.Lt
     end
   ))
 

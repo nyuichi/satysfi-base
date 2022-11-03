@@ -1,4 +1,4 @@
-% use package open Stdlib
+use open Util
 
 module Graphics :> sig
   val persistent ~of-inline : point -> inline-boxes -> graphics
@@ -6,7 +6,7 @@ module Graphics :> sig
   val persistent ~dashed-stroke : length -> (length * length * length) -> color -> path -> graphics
   val persistent ~fill : color -> path -> graphics
   val persistent ~shift : point -> graphics -> graphics
-  val persistent ~bbox : graphics -> point * point
+  val persistent ~bbox : graphics -> option (point * point)
 end = struct
   val persistent ~of-inline = draw-text
   val persistent ~shift = shift-graphics
