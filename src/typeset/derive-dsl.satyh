@@ -9,7 +9,7 @@ module DeriveDSL :> sig
     val derive : math-text -> DeriveAst.t
     val by : inline-text -> DeriveAst.t -> DeriveAst.t
     val byOp : inline-text -> DeriveAst.t -> DeriveAst.t
-    val from : DeriveAst.t list -> DeriveAst.t -> DeriveAst.t
+    val from : list DeriveAst.t -> DeriveAst.t -> DeriveAst.t
     val withLine : DeriveLine.t -> DeriveAst.t -> DeriveAst.t
 
     val assume : math-text -> DeriveAst.t

@@ -1,12 +1,14 @@
 % @require: gr
 use Option
+use List
+use Context
 use DeriveAst
 use DeriveConfig
 use DeriveLine
 
 module DeriveRender :> sig
 
-    val render-math   : DeriveConfig.t -> DeriveAst.t -> math-boxes
+    val render-math   : context -> DeriveConfig.t -> DeriveAst.t -> math-boxes
     val render-inline : context -> DeriveConfig.t -> DeriveAst.t -> inline-boxes
 
 end = struct
@@ -25,6 +27,11 @@ end = struct
     val length-max lens =
         let max2 len1 len2 = if len1 <' len2 then len2 else len1 in
         lens |> List.fold-left max2 0pt
+
+    %% TODO: remove this
+    val get-natural-width ib =
+        let (w, _, _) = get-natural-metrics ib in
+        w
 
     val get-bar-width assumptions-layout conclusion-layout =
         length-max [assumptions-layout#inner-width, conclusion-layout#inner-width]
@@ -51,12 +58,12 @@ end = struct
                 (fun (x, y) -> (
                     let barx = x +' (get-natural-width llabel) +' label-margin in
                     let rlabelx = barx +' bar-width +' label-margin in
-                    List.append
-                    [
-                        Gr.text-rightward (x, y -' (get-axis-height ctx)) llabel,
-                        Gr.text-rightward (rlabelx , y -' (get-axis-height ctx)) rlabel
-                    ]
-                    (DeriveLine.render line ctx (barx, y) bar-width bar-thickness)
+                    unite-graphics
+                      [
+                        draw-text (x, y -' (Context.get-axis-height ctx)) llabel,
+                        draw-text (rlabelx , y -' (Context.get-axis-height ctx)) rlabel,
+                        DeriveLine.render line ctx (barx, y) bar-width bar-thickness,
+                      ]
                 )) in
 
         let llabel =
@@ -113,7 +120,7 @@ end = struct
 
     val render-conclusion ctx config conclusion =
         let padding = config |> DeriveConfig.get-content-left-right-padding in
-        let rendered = inline-skip padding ++ embed-math ctx conclusion ++ inline-skip padding in
+        let rendered = inline-skip padding ++ embed-math ctx (read-math ctx conclusion) ++ inline-skip padding in
         (|
             rendered = rendered,
             layout = (|
@@ -166,6 +173,6 @@ end = struct
 
     val render-inline ctx config ast = (render ctx config ast)#rendered
 
-    val render-math config ast = text-in-math MathInner (fun ctx -> (render-inline ctx config ast))
+    val render-math ctx config ast = embed-inline-to-math MathInner (render-inline ctx config ast)
 
 end

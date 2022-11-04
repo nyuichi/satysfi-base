@@ -1,7 +1,8 @@
 use List
 use Inline
+use Color
+use Path
 use Graphics
-% @require: table
 
 module TypesetTabular :> sig
   type cell :: o
@@ -19,6 +20,20 @@ end = struct
 
   type cell = cell-align-spec * inline-text
 
+  val tabular-scheme ctx pads cellssf decof =
+    let nc ib = NormalCell(pads, ib) in
+    let mc i j ib = MultiCell(i, j, pads, ib) in
+    let cellss =
+      cellssf (|
+        l = (fun it -> nc (read-inline ctx it ++ inline-fil)),
+        r = (fun it -> nc (inline-fil ++ read-inline ctx it)),
+        c = (fun it -> nc (inline-fil ++ read-inline ctx it ++ inline-fil)),
+        m = (fun i j it -> mc i j (inline-fil ++ read-inline ctx it ++ inline-fil)),
+        e = EmptyCell,
+      |)
+    in
+    tabular cellss decof
+
   val inline ctx \tabular2 dat =
     let f t = dat |> List.map (List.map (fun x -> (
       match x with
@@ -27,15 +42,16 @@ end = struct
       | (R, it) -> t#r it
       end)))
     in
-    ctx |> Inline.read {\tabular(f)(fun xs ys -> (
+    let pads = (2pt, 2pt, 2pt, 2pt) in
+    tabular-scheme ctx pads f (fun xs ys -> (
       let thin = Graphics.stroke 0.5pt Color.black in
       let (y0 :: ys, ylast :: _) = (ys, List.reverse ys) in
       let (_ :: ys) = List.reverse ys in
       let (x0 :: xs, xlast :: _) = (xs, List.reverse xs) in
       let (_ :: xs) = List.reverse xs in
-      let gsYs = ys |> List.map (fun y -> thin (Gr.line (x0, y) (xlast, y))) in
-      let gsXs = xs |> List.map (fun x -> thin (Gr.line (x, y0) (x, ylast))) in
-      List.append gsXs gsYs
-    ));}
+      let gsYs = ys |> List.map (fun y -> thin (Path.line (x0, y) (xlast, y))) in
+      let gsXs = xs |> List.map (fun x -> thin (Path.line (x, y0) (x, ylast))) in
+      unite-graphics (List.append gsXs gsYs)
+    ))
 
 end

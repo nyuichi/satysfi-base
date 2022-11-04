@@ -2,6 +2,7 @@ use open Util
 use Fn
 use Inline
 use Block
+use Page
 use Pager
 use Context
 use Option

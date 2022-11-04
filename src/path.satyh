@@ -1,4 +1,5 @@
 use open Util
+use List
 
 module Path :> sig
   val start : point -> pre-path
@@ -10,6 +11,9 @@ module Path :> sig
   val bbox : path -> point * point
   val unite : path -> path -> path
   val shift : point -> path -> path
+  val line : point -> point -> path
+  val poly-line : point -> list point -> path
+  val rectangle : point -> point -> path
   val ellipse : point -> length -> length -> path
 end = struct
   val start = start-path
@@ -22,6 +26,23 @@ end = struct
   val unite = unite-path
   val shift = shift-path
 
+  %% copied from `gr.satyh`
+  val line pt1 pt2 =
+    start-path pt1 |> line-to pt2 |> terminate-path
+
+  %% copied from `gr.satyh`
+  val poly-line pt-init pts =
+    pts |> List.fold-left (fun acc pt -> (
+      acc |> line-to pt
+    )) (start-path pt-init) |> terminate-path
+
+  %% copied from `gr.satyh`
+  val rectangle (x1, y1) (x2, y2) =
+    start-path (x1, y1)
+      |> line-to (x1, y2)
+      |> line-to (x2, y2)
+      |> line-to (x2, y1)
+      |> close-with-line
 
   val ellipse center x-len y-len =
     let sqrt2 = 1.4142135623 in

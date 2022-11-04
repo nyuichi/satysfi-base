@@ -29,6 +29,7 @@ use Random
 use Format
 use Path
 use Graphics
+use VDecoSet
 use Length
 use Inline
 use Block
@@ -41,6 +42,7 @@ use TypesetFont
 use TypesetTabular
 use TypesetItemize
 use TypesetListingDesignFun
+use TypesetDerive
 
 module Base = struct
   module Util = Util
@@ -74,6 +76,7 @@ module Base = struct
   module Format = Format
   module Path = Path
   module Graphics = Graphics
+  module VDecoSet = VDecoSet
   module Length = Length
   module Inline = Inline
   module Block = Block
@@ -88,5 +91,6 @@ module Base = struct
     module Tabular = TypesetTabular
     module Itemize = TypesetItemize
     module ListingDesignFun = TypesetListingDesignFun
+    module Derive = TypesetDerive
   end
 end

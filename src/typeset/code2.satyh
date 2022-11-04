@@ -1,12 +1,14 @@
 % @require: pervasives
 % @require: gr
-% @require: vdecoset
 use Color
 use List
 use String
+use Path
+use VDecoSet
 use RegExp
 use Debug
 use Inline
+use Lexer
 
 module TypesetCode :> sig
 
@@ -15,7 +17,7 @@ module TypesetCode :> sig
     ident-regexp : RegExp.t,
   |)
 
-  val scheme : deco-set -> color -> context -> syntax-def option -> string -> block-boxes
+  val scheme : deco-set -> color -> context -> option syntax-def -> string -> block-boxes
   val +code : block [?(syntax : syntax-def) string]
   val +console : block [?(syntax : syntax-def) string]
   val \code : inline [string]
@@ -42,31 +44,31 @@ end = struct
   val dummy _ =
     let strokef = stroke 1pt code-stroke-color in
     let gr-back x y w d h =
-      fill code-fill-color (Gr.rectangle (x, y -' d) (x +' w, y +' h))
+      fill code-fill-color (Path.rectangle (x, y -' d) (x +' w, y +' h))
     in
     let decoS (x, y) w h d =
-      [
+      unite-graphics [
         gr-back x y w d h,
-        strokef (Gr.rectangle (x, y -' d) (x +' w, y +' h)),
+        strokef (Path.rectangle (x, y -' d) (x +' w, y +' h)),
       ]
     in
     let decoH (x, y) w h d =
-      [
+      unite-graphics [
         gr-back x y w d h,
-        strokef (Gr.poly-line (x, y -' d) [(x, y +' h), (x +' w, y +' h), (x +' w, y -' d),])
+        strokef (Path.poly-line (x, y -' d) [(x, y +' h), (x +' w, y +' h), (x +' w, y -' d),])
       ]
     in
     let decoM (x, y) w h d =
-      [
+      unite-graphics [
         gr-back x y w d h,
-        strokef (Gr.line (x, y -' d) (x, y +' h)),
-        strokef (Gr.line (x +' w, y -' d) (x +' w, y +' h)),
+        strokef (Path.line (x, y -' d) (x, y +' h)),
+        strokef (Path.line (x +' w, y -' d) (x +' w, y +' h)),
       ]
     in
     let decoT (x, y) w h d =
-      [
+      unite-graphics [
         gr-back x y w d h,
-        strokef (Gr.poly-line (x, y +' h) [(x, y -' d), (x +' w, y -' d), (x +' w, y +' h)])
+        strokef (Path.poly-line (x, y +' h) [(x, y -' d), (x +' w, y -' d), (x +' w, y +' h)])
       ]
     in
       (decoS, decoH, decoM, decoT)
@@ -74,7 +76,7 @@ end = struct
 
   val decoset-console =
     let deco (x, y) w h d =
-      [ fill console-fill-color (Gr.rectangle (x, y -' d) (x +' w, y +' h)) ]
+      fill console-fill-color (Path.rectangle (x, y -' d) (x +' w, y +' h))
     in
       (deco, deco, deco, deco)
 
@@ -111,7 +113,7 @@ end = struct
     block-frame-breakable ctx pads decoset (fun ctx -> (
       let fontsize = get-font-size ctx in
       let ctx = ctx |> set-code-font in
-      let charwid = get-natural-width (read-inline ctx {0}) in
+      let (charwid, _, _) = get-natural-metrics (read-inline ctx {0}) in
       let ctx-code =
         ctx |> set-space-ratio (charwid /' fontsize) 0. 0.
             |> set-text-color txtcolor

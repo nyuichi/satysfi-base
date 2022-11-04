@@ -2,6 +2,7 @@ use Option
 use DeriveAst
 use DeriveConfig
 use DeriveLine
+use DeriveRender
 
 module TypesetDerive :> sig
 

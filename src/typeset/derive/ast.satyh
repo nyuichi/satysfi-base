@@ -1,3 +1,4 @@
+use Option
 use DeriveLine
 
 module DeriveAst :> sig
@@ -8,7 +9,7 @@ module DeriveAst :> sig
 
     val get-main-label : t -> option inline-text
     val get-sub-label : t -> option inline-text
-    val get-conclusion : t -> math-boxes
+    val get-conclusion : t -> math-text
     val get-assumptions : t -> list t
     val get-line : t -> option DeriveLine.t
 
@@ -24,7 +25,7 @@ end = struct
     | Ast of option inline-text
         * option inline-text
         * math-text
-        * list u
+        * list t
         * option DeriveLine.t
 
     val make mlabel slabel conclusion assumptions line =

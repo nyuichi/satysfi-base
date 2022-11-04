@@ -1,4 +1,5 @@
 use open Util
+use Path
 
 module DeriveLine :> sig
 
@@ -22,24 +23,26 @@ end = struct
         let color = get-text-color ctx in
         match pt with
         | (x, y) ->
-            [ fill color (Gr.rectangle pt (x +' width, y +' thickness)) ]
+            fill color (Path.rectangle pt (x +' width, y +' thickness))
         end
     )
 
-    val no-line = fun _ _ _ _ -> []
+    val no-line = fun _ _ _ _ -> unite-graphics []
 
     val dotted-line = fun dotlen spacing ->
         (fun ctx pt width thickness -> (
             let color = get-text-color ctx in
             let rec write-dots x y len =
                 if len <' dotlen then
-                    [fill color (Gr.rectangle (x, y) (x +' len, y +' thickness))]
+                    fill color (Path.rectangle (x, y) (x +' len, y +' thickness))
                 else if len <' (dotlen +' spacing) then
-                    [fill color (Gr.rectangle (x, y) (x +' dotlen, y +' thickness))]
+                    fill color (Path.rectangle (x, y) (x +' dotlen, y +' thickness))
                 else
-                    (fill color (Gr.rectangle (x, y) (x +' dotlen, y +' thickness)))
-                    :: (write-dots (x +' dotlen +' spacing) y (len -' dotlen -' spacing)) in
-
+                    unite-graphics [
+                      fill color (Path.rectangle (x, y) (x +' dotlen, y +' thickness)),
+                      write-dots (x +' dotlen +' spacing) y (len -' dotlen -' spacing),
+                    ]
+            in
             match pt with
             | (x, y) -> write-dots x y width
             end))

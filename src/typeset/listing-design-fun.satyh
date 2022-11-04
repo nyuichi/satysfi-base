@@ -1,7 +1,7 @@
 module TypesetListingDesignFun :> sig
 
-  val noraml-listing : context -> int list -> int -> inline-boxes
-  val noraml-enumerate : context -> int list -> int -> inline-boxes
+  val noraml-listing : context -> list int -> int -> inline-boxes
+  val noraml-enumerate : context -> list int -> int -> inline-boxes
 
 end = struct
 

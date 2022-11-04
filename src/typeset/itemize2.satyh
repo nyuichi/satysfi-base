@@ -1,9 +1,8 @@
 use List
-% @require: vdecoset
 
 module TypesetItemize :> sig
 
-  val itemize2 : (context -> int list -> int -> inline-boxes) -> (int -> int -> length) -> int list -> int -> context -> itemize -> block-boxes
+  val itemize2 : (context -> list int -> int -> inline-boxes) -> (int -> int -> length) -> list int -> int -> context -> itemize -> block-boxes
 
 end = struct
 
@@ -15,13 +14,16 @@ end = struct
       end
     in
     let item-indent = f-item-indent index depth in
-    let deco = VDecoSet.empty in
+    let deco =
+      let f _ _ _ _ = unite-graphics [] in
+      (f, f, f, f)
+    in
     let make-bb ctx it index-lst depth =
       let num-ib =
         f ctx index-lst depth
       in
-      let num-ib-w =
-        get-natural-width num-ib
+      let (num-ib-w, _, _) =
+        get-natural-metrics num-ib
       in
       let inline-space =
         num-ib-w *' (float (-1)) |> inline-skip
@@ -33,14 +35,14 @@ end = struct
     let main-bb =
       match itemize with
       | Item(it, [])  ->
-          let bullet-width = get-natural-width (f ctx index-lst depth) in
+          let (bullet-width, _, _) = get-natural-metrics (f ctx index-lst depth) in
           let pads =
             (parent-indent +' bullet-width, 0pt, 0pt, 0pt)
           in
           block-frame-breakable ctx pads deco (fun ctx -> make-bb ctx it index-lst depth)
 
       | Item(it, lst) ->
-          let bullet-width = get-natural-width (f ctx index-lst depth) in
+          let (bullet-width, _, _) = get-natural-metrics (f ctx index-lst depth) in
           let pads =
             (parent-indent +' bullet-width, 0pt, 0pt, 0pt)
           in
