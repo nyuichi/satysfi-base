@@ -1,11 +1,36 @@
-%use package open Standalone
+use Page
 
 module UtilSub :> sig
 
-%  val finish : document
+  val standalone : block-text -> document
+  val finish : document
 
 end = struct
 
-%  val finish = standalone '<>
+  val inline ctx \math m =
+    embed-math ctx (read-math ctx m)
+
+  % copied from `standalone.satyh`
+  val standalone bt =
+    let ctx =
+      get-initial-context 440pt (command \math)
+        |> set-dominant-narrow-script Latin
+        |> set-dominant-wide-script Kana
+    in
+    let bb = read-block ctx bt in
+    page-break Page.a4
+      (fun _ -> (|
+        text-origin = (80pt, 100pt),
+        text-height = 630pt,
+      |))
+      (fun _ -> (|
+        header-origin  = (0pt, 0pt),
+        header-content = block-nil,
+        footer-origin  = (0pt, 0pt),
+        footer-content = block-nil,
+      |))
+      bb
+
+  val finish = standalone '<>
 
 end

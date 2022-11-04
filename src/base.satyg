@@ -1,4 +1,5 @@
 use Util
+use Debug
 use Bool
 use Int
 use Float
@@ -28,6 +29,7 @@ use Array
 use Random
 use Format
 use Path
+use Color
 use Graphics
 use VDecoSet
 use Length
@@ -37,15 +39,18 @@ use Font
 use CrossRef
 use Page
 use Pager
+use Lexer
 use TypesetSatysfiIt
 use TypesetFont
 use TypesetTabular
 use TypesetItemize
 use TypesetListingDesignFun
 use TypesetDerive
+use UtilSub
 
 module Base = struct
-  module Util = Util
+  include Util
+  module Debug = Debug
   module Bool = Bool
   module Int = Int
   module Float = Float
@@ -75,6 +80,7 @@ module Base = struct
   module Random = Random
   module Format = Format
   module Path = Path
+  module Color = Color
   module Graphics = Graphics
   module VDecoSet = VDecoSet
   module Length = Length
@@ -84,8 +90,9 @@ module Base = struct
   module CrossRef = CrossRef
   module Page = Page
   module Pager = Pager
+  module Lexer = Lexer
 
-  module Typset = struct
+  module Typeset = struct
     module SatysfiIt = TypesetSatysfiIt
     module Font = TypesetFont
     module Tabular = TypesetTabular
@@ -93,4 +100,6 @@ module Base = struct
     module ListingDesignFun = TypesetListingDesignFun
     module Derive = TypesetDerive
   end
+
+  module UtilSub = UtilSub
 end
