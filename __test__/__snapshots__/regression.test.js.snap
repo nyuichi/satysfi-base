@@ -154,43 +154,43 @@ false
 [32m[debug.log] 2.71828182846[0m
 [32m[debug.log] inf == inf = true[0m
 [32m[debug.log] inf == -inf = false[0m
-[32m[debug.log] inf == -nan = false[0m
+[32m[debug.log] inf == nan = false[0m
 [32m[debug.log] inf == 0. = false[0m
 [32m[debug.log] inf == -0. = false[0m
 [32m[debug.log] inf == 1. = false[0m
 [32m[debug.log] -inf == inf = false[0m
 [32m[debug.log] -inf == -inf = true[0m
-[32m[debug.log] -inf == -nan = false[0m
+[32m[debug.log] -inf == nan = false[0m
 [32m[debug.log] -inf == 0. = false[0m
 [32m[debug.log] -inf == -0. = false[0m
 [32m[debug.log] -inf == 1. = false[0m
-[32m[debug.log] -nan == inf = false[0m
-[32m[debug.log] -nan == -inf = false[0m
-[32m[debug.log] -nan == -nan = false[0m
-[32m[debug.log] -nan == 0. = false[0m
-[32m[debug.log] -nan == -0. = false[0m
-[32m[debug.log] -nan == 1. = false[0m
+[32m[debug.log] nan == inf = false[0m
+[32m[debug.log] nan == -inf = false[0m
+[32m[debug.log] nan == nan = false[0m
+[32m[debug.log] nan == 0. = false[0m
+[32m[debug.log] nan == -0. = false[0m
+[32m[debug.log] nan == 1. = false[0m
 [32m[debug.log] 0. == inf = false[0m
 [32m[debug.log] 0. == -inf = false[0m
-[32m[debug.log] 0. == -nan = false[0m
+[32m[debug.log] 0. == nan = false[0m
 [32m[debug.log] 0. == 0. = true[0m
 [32m[debug.log] 0. == -0. = true[0m
 [32m[debug.log] 0. == 1. = false[0m
 [32m[debug.log] -0. == inf = false[0m
 [32m[debug.log] -0. == -inf = false[0m
-[32m[debug.log] -0. == -nan = false[0m
+[32m[debug.log] -0. == nan = false[0m
 [32m[debug.log] -0. == 0. = true[0m
 [32m[debug.log] -0. == -0. = true[0m
 [32m[debug.log] -0. == 1. = false[0m
 [32m[debug.log] 1. == inf = false[0m
 [32m[debug.log] 1. == -inf = false[0m
-[32m[debug.log] 1. == -nan = false[0m
+[32m[debug.log] 1. == nan = false[0m
 [32m[debug.log] 1. == 0. = false[0m
 [32m[debug.log] 1. == -0. = false[0m
 [32m[debug.log] 1. == 1. = true[0m
 [32m[debug.log] inf[0m
 [32m[debug.log] -inf[0m
-[32m[debug.log] -nan[0m
+[32m[debug.log] nan[0m
 [32m[debug.log] 23.1406926328[0m
 [32m[debug.log] 1.14472988585[0m
 [32m[debug.log] 36.4621596072[0m

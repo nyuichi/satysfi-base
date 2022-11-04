@@ -1,3 +1,8 @@
-@import: ../../src/typeset/satysfi-it
+use package open Base
 
-let satysfi-it math = satysfi-it ?:440pt ?:(50pt, 50pt, 50pt, 50pt) math
+module TestUtil = struct
+
+  val satysfi-it m =
+    Typeset.SatysfiIt.satysfi-it ?(text-width = 440pt, margin = (50pt, 50pt, 50pt, 50pt)) m
+
+end

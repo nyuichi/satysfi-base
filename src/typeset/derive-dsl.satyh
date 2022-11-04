@@ -3,7 +3,7 @@ use DeriveAst
 use DeriveConfig
 use DeriveLine
 
-module DeriveDSL :> sig
+module TypesetDeriveDSL :> sig
 
     % DSL
     val derive : math-text -> DeriveAst.t

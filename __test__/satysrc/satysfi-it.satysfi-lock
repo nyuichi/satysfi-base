@@ -1,0 +1,5 @@
+locks:
+  - name: "base"
+    location:
+      type: "local"
+      path: "../../"

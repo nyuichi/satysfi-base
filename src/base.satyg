@@ -46,6 +46,7 @@ use TypesetTabular
 use TypesetItemize
 use TypesetListingDesignFun
 use TypesetDerive
+use TypesetDeriveDSL
 use UtilSub
 
 module Base = struct
@@ -99,6 +100,7 @@ module Base = struct
     module Itemize = TypesetItemize
     module ListingDesignFun = TypesetListingDesignFun
     module Derive = TypesetDerive
+    module DeriveDSL = TypesetDeriveDSL
   end
 
   module UtilSub = UtilSub
