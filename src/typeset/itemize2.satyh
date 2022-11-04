@@ -1,18 +1,18 @@
-@require: list
-@require: vdecoset
+use List
+% @require: vdecoset
 
-module Itemize2 : sig
+module TypesetItemize :> sig
 
   val itemize2 : (context -> int list -> int -> inline-boxes) -> (int -> int -> length) -> int list -> int -> context -> itemize -> block-boxes
 
 end = struct
 
-
-  let-rec itemize2 f f-item-indent index-lst depth ctx itemize =
+  val rec itemize2 f f-item-indent index-lst depth ctx itemize =
     let index =
       match index-lst with
       | [] -> 0
       | x :: xs -> x
+      end
     in
     let item-indent = f-item-indent index depth in
     let deco = VDecoSet.empty in
@@ -32,14 +32,14 @@ end = struct
     let parent-indent = item-indent *' (float depth) in
     let main-bb =
       match itemize with
-      | Item(it, [])  -> (
+      | Item(it, [])  ->
           let bullet-width = get-natural-width (f ctx index-lst depth) in
           let pads =
             (parent-indent +' bullet-width, 0pt, 0pt, 0pt)
           in
           block-frame-breakable ctx pads deco (fun ctx -> make-bb ctx it index-lst depth)
-        )
-      | Item(it, lst) -> (
+
+      | Item(it, lst) ->
           let bullet-width = get-natural-width (f ctx index-lst depth) in
           let pads =
             (parent-indent +' bullet-width, 0pt, 0pt, 0pt)
@@ -51,32 +51,8 @@ end = struct
             List.mapi (fun i -> itemize2 f f-item-indent ((i + 1) :: index-lst) (depth + 1) ctx) lst
           in
             index-bb +++ (List.fold-left (+++) block-nil bb-lst)
-        )
+      end
     in
       main-bb
 
 end
-
-
-module ListingDesignFun :sig
-
-  val noraml-listing : context -> int list -> int -> inline-boxes
-  val noraml-enumerate : context -> int list -> int -> inline-boxes
-
-end = struct
-
-  let noraml-listing ctx index-lst depth = inline-nil
-
-  let noraml-enumerate ctx index-lst depth =
-    let num =
-      match index-lst with
-      | [] -> 0
-      | x :: xs -> x
-    in
-    let str-num = arabic num in
-    let it-num = `(` ^ str-num ^ `)` |> embed-string in
-    let ib-num = read-inline ctx {#it-num;\ } in
-      ib-num
-
-end
-

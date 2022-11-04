@@ -1,10 +1,10 @@
-@require: gr
+use open Util
 
-module DeriveLine : sig
+module DeriveLine :> sig
 
-    type t
-    val make : (context -> point -> length -> length -> graphics list) -> t
-    val render : t -> context -> point -> length -> length -> graphics list
+    type t :: o
+    val make : (context -> point -> length -> length -> graphics) -> t
+    val render : t -> context -> point -> length -> length -> graphics
 
     val standard-line : t
     val no-line       : t
@@ -12,25 +12,26 @@ module DeriveLine : sig
 
 end = struct
 
-    type t = context -> point -> length -> length -> graphics list
+    type t = context -> point -> length -> length -> graphics
 
-    let render line ctx pt width thickness = line ctx pt width thickness
+    val render line ctx pt width thickness = line ctx pt width thickness
 
-    let make line = line
+    val make line = line
 
-    let standard-line = fun ctx pt width thickness -> (
+    val standard-line = fun ctx pt width thickness -> (
         let color = get-text-color ctx in
         match pt with
         | (x, y) ->
             [ fill color (Gr.rectangle pt (x +' width, y +' thickness)) ]
+        end
     )
 
-    let no-line = fun _ _ _ _ -> []
+    val no-line = fun _ _ _ _ -> []
 
-    let dotted-line = fun dotlen spacing ->
+    val dotted-line = fun dotlen spacing ->
         (fun ctx pt width thickness -> (
             let color = get-text-color ctx in
-            let-rec write-dots x y len =
+            let rec write-dots x y len =
                 if len <' dotlen then
                     [fill color (Gr.rectangle (x, y) (x +' len, y +' thickness))]
                 else if len <' (dotlen +' spacing) then
@@ -38,8 +39,9 @@ end = struct
                 else
                     (fill color (Gr.rectangle (x, y) (x +' dotlen, y +' thickness)))
                     :: (write-dots (x +' dotlen +' spacing) y (len -' dotlen -' spacing)) in
-            
+
             match pt with
-            | (x, y) -> write-dots x y width))
+            | (x, y) -> write-dots x y width
+            end))
 
 end

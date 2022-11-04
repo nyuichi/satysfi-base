@@ -1,30 +1,34 @@
-@import: ../base
-@import: ../fn
-@import: ../inline
-@import: ../block
-@import: ../pager
-@import: ../context
-@import: ../option-ext
+use open Util
+use Fn
+use Inline
+use Block
+use Pager
+use Context
+use Option
 
 %% Usage:
 %%
 %%  $ cat test.saty
-%%  @require: base/typeset/satysfi-it
-%%  
-%%  satysfi-it ${1 + 2 = 3}
+%%  use package open Base
+%%
+%%  Typeset.SatysfiIt.satysfi-it ${1 + 2 = 3}
 %%  $ satysfi test.saty
 %%  $ open test.pdf
 
-let satysfi-it ?:text-width ?:margin math =
-  let text-width = text-width |> Option.unwrap-or 440pt in
-  let (top, right, bottom, left) = margin |> Option.unwrap-or (3pt, 3pt, 3pt, 3pt) in
-  let default-ctx = Context.make text-width in
-  let ib = default-ctx |> Inline.of-math math in
-  let (w0, h0, d0) = Inline.natural-metrics ib in
-  let w = w0 +' left +' right in
-  let h = h0 +' d0 +' top +' bottom in
-  Pager.make-document
-    (Page.custom w h)
-    (Fn.const (| text-height = 0pt; text-origin = (left, top) |))
-    (Fn.const (| header-content = Block.nil; header-origin = (0pt, 0pt); footer-content = Block.nil; footer-origin = (0pt, 0pt) |))
-    (default-ctx |> Block.of-inline false false (Fn.const ib))
+module TypesetSatysfiIt = struct
+
+  val satysfi-it ?(text-width = text-width, margin = margin) m =
+    let text-width = text-width |> Option.unwrap-or 440pt in
+    let (top, right, bottom, left) = margin |> Option.unwrap-or (3pt, 3pt, 3pt, 3pt) in
+    let default-ctx = Context.make text-width in
+    let ib = default-ctx |> Inline.of-math (read-math default-ctx m) in
+    let (w0, h0, d0) = Inline.natural-metrics ib in
+    let w = w0 +' left +' right in
+    let h = h0 +' d0 +' top +' bottom in
+    Pager.make-document
+      (Page.custom w h)
+      (Fn.const (| text-height = 0pt, text-origin = (left, top) |))
+      (Fn.const (| header-content = Block.nil, header-origin = (0pt, 0pt), footer-content = Block.nil, footer-origin = (0pt, 0pt) |))
+      (default-ctx |> Block.of-inline false false (Fn.const ib))
+
+end

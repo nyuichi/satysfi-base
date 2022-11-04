@@ -1,14 +1,17 @@
-module Font : sig
+module TypesetFont :> sig
 
-    direct \force-font : [float?; string; inline-text] inline-cmd
+    val \force-font : inline [?(font-size : float) string, inline-text]
 
 end = struct
 
     % from https://qiita.com/zr_tex8r/items/56dee4364b05974d7a54
-    let-inline ctx \force-font ?:font-size-opt font-name body =
-        let font-size = match font-size-opt with
+    val inline ctx \force-font ?(font-size = font-size-opt) font-name body =
+        let font-size =
+            match font-size-opt with
             | Some(l) -> l
-            | None -> 1.0 in
+            | None -> 1.0
+            end
+        in
         let set-font-for-each-script setf ctx = ctx
             |> setf HanIdeographic
             |> setf Kana

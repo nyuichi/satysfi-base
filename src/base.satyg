@@ -36,6 +36,11 @@ use Font
 use CrossRef
 use Page
 use Pager
+use TypesetSatysfiIt
+use TypesetFont
+use TypesetTabular
+use TypesetItemize
+use TypesetListingDesignFun
 
 module Base = struct
   module Util = Util
@@ -76,4 +81,12 @@ module Base = struct
   module CrossRef = CrossRef
   module Page = Page
   module Pager = Pager
+
+  module Typset = struct
+    module SatysfiIt = TypesetSatysfiIt
+    module Font = TypesetFont
+    module Tabular = TypesetTabular
+    module Itemize = TypesetItemize
+    module ListingDesignFun = TypesetListingDesignFun
+  end
 end
