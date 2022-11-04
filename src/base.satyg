@@ -47,6 +47,8 @@ use TypesetItemize
 use TypesetListingDesignFun
 use TypesetDerive
 use TypesetDeriveDSL
+use DeriveConfig
+use DeriveLine
 use UtilSub
 
 module Base = struct
@@ -100,6 +102,8 @@ module Base = struct
     module Itemize = TypesetItemize
     module ListingDesignFun = TypesetListingDesignFun
     module Derive = TypesetDerive
+    module DeriveConfig = DeriveConfig
+    module DeriveLine = DeriveLine
     module DeriveDSL = TypesetDeriveDSL
   end
 

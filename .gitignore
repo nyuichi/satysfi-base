@@ -1,4 +1,5 @@
 __test__/satysrc/*.pdf
+__test__/satysrc/derive/*.pdf
 *.satysfi-aux
 node_modules
 *~
