@@ -8,6 +8,14 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: zeptometer/satysfi-yarn-diff-pdf:latest
+    strategy:
+      matrix:
+        satysfi-version:
+          [
+            0.0.5,
+            0.0.6,
+            0.0.7,
+          ]
     steps:
       - uses: actions/checkout@v1
       - name: Install Yarn dependencies
@@ -17,6 +25,7 @@ jobs:
           export HOME=/root
           eval $(opam env)
           opam update
+          opam pin add satysfi ${{ matrix.satysfi-version }}
           opam pin add --verbose --yes "."
           satyrographos install -l base
       - name: Run regression tests
