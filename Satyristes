@@ -1,7 +1,7 @@
 (version "0.0.2")
 (library
   (name "base")
-  (version "1.4.0")
+  (version "1.4.1")
   (sources
     ((packageDir "src")
 	))
