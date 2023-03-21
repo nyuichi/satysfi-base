@@ -42,7 +42,7 @@ module String : sig
   val index : Char.t -> string -> int option
   val make  : int -> Char.t -> string
   val init  : int -> (int -> Char.t) -> string
-  val get   : int -> string -> Char.t
+  val get   : int -> string -> Char.t option
   val contains : string -> string -> bool
   val trim       : string -> string
   val trim-start : string -> string
@@ -141,7 +141,9 @@ end = struct
 
 
   let get n str =
-    Char.make (sub n 1 str)
+    str
+    |> to-list
+    |> List.nth n
 
 
   let-rec search-and-get-next-char is-eq clst slst =
