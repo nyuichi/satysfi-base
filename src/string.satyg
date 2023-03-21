@@ -26,7 +26,9 @@ module String : sig
   val of-char : Char.t -> string
   val of-length : length -> string
   val append : string -> string -> string
+  val with-concat : string -> string list -> string
   val concat : string list -> string
+  val cat : string -> string -> string
   val is-empty : string -> bool
   val starts-with : string -> string -> bool
   val ends-with : string -> string -> bool
@@ -38,6 +40,17 @@ module String : sig
   val split-by : Char.t -> string -> string list
   val lines : string -> string list
   val index : Char.t -> string -> int option
+  val make  : int -> Char.t -> string
+  val init  : int -> (int -> Char.t) -> string
+  val get   : int -> string -> Char.t
+  val contains : string -> string -> bool
+  val trim       : string -> string
+  val trim-start : string -> string
+  val trim-end   : string -> string
+  val uppercase-ascii    : string -> string
+  val lowercase-ascii    : string -> string
+  val capitalize-ascii   : string -> string
+  val uncapitalize-ascii : string -> string
   % val byte-length : string -> int
   % val sub-bytes : int -> int -> string -> string
 end = struct
@@ -53,9 +66,16 @@ end = struct
   let of-char = Char.to-string
   let append s1 s2 = s1 ^ s2
 
-  let-rec concat xs = match xs with
-  | [] -> empty
-  | s :: xs -> s ^ concat xs
+
+  let-rec with-concat s xs =
+    match xs with
+    | [] -> empty
+    | [x] -> x
+    | x :: xs -> x ^ s ^ with-concat s xs
+
+  let concat xs = with-concat empty xs
+
+  let cat = (^)
 
   let is-empty s =
     equal s empty
@@ -71,10 +91,9 @@ end = struct
     (s-len >= p-len) &&&- (fun () -> equal (s |> sub (s-len - 1 - p-len) p-len) p)
 
   let to-list s =
-    let-rec go i acc = (match i with
-    | 0 -> acc
-    | _ -> go (i - 1) (Char.at (i - 1) s :: acc)) in
-    go (length s) []
+    s
+    |> string-explode
+    |> List.map Char.of-codepoint
 
   let of-list chars =
     chars |> List.map Char.to-string |> concat
@@ -102,6 +121,166 @@ end = struct
     | (head, None)       -> [head]
 
   let lines = split-by Char.newline
+
+
+  let-rec make n c =
+    if n <= 0 then
+      empty
+    else
+      Char.to-string c ^ make (n - 1) c
+
+
+  let init n f =
+    let-rec sub m f =
+      if m >= n then
+        empty
+      else
+        Char.to-string (f m) ^ sub (m + 1) f
+    in
+    sub 0 f
+
+
+  let get n str =
+    Char.make (sub n 1 str)
+
+
+  let-rec search-and-get-next-char is-eq clst slst =
+    match (clst, slst) with
+    | ([], []) -> (is-eq, None)
+    | ([], s::_) -> (is-eq, Some(s))
+    | (_, []) -> (false, None)
+    | (c::cs, s::ss) -> (
+      if Char.equal c s && is-eq then
+        search-and-get-next-char true cs ss
+      else
+        search-and-get-next-char false cs ss
+    )
+
+  let-rec find-next-char-pos n lst c clst =
+    match clst with
+    | x::xs -> (
+      if Char.equal x c then
+        find-next-char-pos (n + 1) (n::lst) c xs
+      else
+        find-next-char-pos (n + 1) lst c xs
+    )
+    | [] -> lst
+
+
+  let-rec shift n lst =
+    if n <= 0 then
+      lst
+    else
+      match lst with
+      | [] -> []
+      | _::xs -> shift (n - 1) xs
+
+
+  % Quick-Search
+  let contains s str =
+    let clst = to-list s in
+    let-rec sub l =
+      match search-and-get-next-char true clst l with
+      | (true, _) -> true
+      | (false, None) -> false
+      | (false, Some(c)) -> (
+        let nlst = find-next-char-pos 0 [] c clst in
+        let n =
+          match nlst with
+          | n::_ -> List.length clst - n
+          | _ -> List.length clst
+        in
+        let new-l = shift n l in
+        sub new-l
+      )
+    in
+    sub (to-list str)
+
+
+  let-rec space-len n clst =
+    match clst with
+    | c::xs -> (
+      if Char.is-space c then
+        space-len (n + 1) xs
+      else
+        n
+    )
+    | _ -> n
+
+  let trim str =
+    let len = length str in
+    let lst = to-list str in
+    let rev-lst = List.reverse lst in
+    let start-space-len = space-len 0 lst in
+    let end-space-len = space-len 0 rev-lst in
+    let len = len - start-space-len - end-space-len in
+    let len = if len < 0 then 0 else len in
+    sub start-space-len len str
+
+  let trim-start str =
+    let len = length str in
+    let lst = to-list str in
+    let start-space-len = space-len 0 lst in
+    let len = len - start-space-len in
+    sub start-space-len len str
+
+  let trim-end str =
+    let len = length str in
+    let lst = str |> to-list |> List.reverse in
+    let start-space-len = space-len 0 lst in
+    let len = len - start-space-len in
+    sub 0 len str
+
+
+  let uppercase-ascii str =
+    str
+    |> to-list
+    |> List.map (fun c -> (
+      let n = Char.to-codepoint c in
+      if 0x61 <= n && n <= 0x7A then
+        Char.of-codepoint (n - 0x20)
+      else
+        c
+    ))
+    |> of-list
+
+  let lowercase-ascii str =
+    str
+    |> to-list
+    |> List.map (fun c -> (
+      let n = Char.to-codepoint c in
+      if 0x41 <= n && n <= 0x5A then
+        Char.of-codepoint (n + 0x20)
+      else
+        c
+    ))
+    |> of-list
+
+  let capitalize-ascii str =
+    str
+    |> to-list
+    |> List.mapi (fun i c -> (
+      let n = Char.to-codepoint c in
+      if i == 0 && 0x61 <= n && n <= 0x7A then
+        Char.of-codepoint (n - 0x20)
+      else
+        c
+    ))
+    |> of-list
+
+  let uncapitalize-ascii str =
+    str
+    |> to-list
+    |> List.mapi (fun i c -> (
+      let n = Char.to-codepoint c in
+      if i == 0 && 0x41 <= n && n <= 0x5A then
+        Char.of-codepoint (n + 0x20)
+      else
+        c
+    ))
+    |> of-list
+
+
 
   let index c s =
     let cs = to-list s in
