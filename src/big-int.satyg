@@ -61,7 +61,7 @@ end = struct
 
 
   % 繰り上がり処理を行う
-  let carry-and-fix (is-plus, lst) =
+  let carry-and-fix (is-positive, lst) =
     % 繰り上げ・繰り下げの処理
     let-rec sub1 stack lst =
       match lst with
@@ -70,7 +70,7 @@ end = struct
       | x::y::zs -> (
         if Int.(x >= 10) then
           let k = x / 10 in
-          let new-x = x - (10 * k) in
+          let new-x = x mod 10 in
           let new-y = y + k in
           sub1 (new-x::stack) (new-y::zs)
         else if Int.(x < 0) then
@@ -90,7 +90,7 @@ end = struct
       | x::xs -> (
         if Int.(x >= 10) then
           let k = x / 10 in
-          let new-x = x - (10 * k) in
+          let new-x = x mod 10 in
           sub2 (k::new-x::xs)
         else if Int.(x < 0) then
           (false, lst)
@@ -99,24 +99,19 @@ end = struct
       )
     in
     % 一番上の桁の0を消しつつリストを反転させる
-    let-rec sub3 stack b lst =
+    let-rec sub3 stack is-zero lst =
       match lst with
       | [] -> stack
       | x::xs -> (
-        if b && Int.(x == 0) then
+        if is-zero && Int.(x == 0) then
           sub3 stack true xs
         else
           sub3 (x::stack) false xs
       )
     in
-    let (is-ok, new-lst) =
-      lst
-      |> sub1 []
-      |> sub2
-    in
     match lst |> sub1 [] |> sub2 with
       | (_, [0]) -> (true, [0])
-      | (true, new-lst) -> (is-plus, sub3 [] true new-lst)
+      | (true, new-lst) -> (is-positive, sub3 [] true new-lst)
       | (false, new-lst) -> (
         let new-lst =
           new-lst
@@ -124,7 +119,7 @@ end = struct
           |> List.map Int.neg
           |> sub1 []
         in
-        (not is-plus, sub3 [] true new-lst)
+        (not is-positive, sub3 [] true new-lst)
       )
 
 
@@ -226,7 +221,7 @@ end = struct
 
   let succ t = add t one
   let pred t = sub t one
-  let neg (b,l) = (not b, l)
+  let neg (is-positive,l) = (not is-positive, l)
   let abs (_,lst) = (true, lst)
 
 
@@ -310,18 +305,18 @@ end = struct
     if Int.((List.length lst1) < (List.length lst2)) then
       (zero, (is-positive-2, lst2))
     else
-      let answer-is-plus =
+      let answer-is-positive =
         Bool.equal is-positive-1 is-positive-2
       in
-      let surplus-is-plus = is-positive-1 || is-positive-2 in
+      let surplus-is-positive = is-positive-1 || is-positive-2 in
       let d = (List.length lst1) - (List.length lst2) in
       let (left-lst1, right-lst1) = List.split-at d lst1 in
       let (answer-lst, surplus-lst) =
         div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2
       in
       (
-        carry-and-fix (answer-is-plus, answer-lst),
-        carry-and-fix (surplus-is-plus, surplus-lst)
+        carry-and-fix (answer-is-positive, answer-lst),
+        carry-and-fix (surplus-is-positive, surplus-lst)
       )
 
 
@@ -353,8 +348,8 @@ end = struct
       | [] -> str
       | i::is -> sub is ((Int.to-string i)^str)
     in
-    let (b, lst) = t in
-    if b then
+    let (is-positive, lst) = t in
+    if is-positive then
       sub lst String.empty
     else
       `-` ^ (sub lst String.empty)
