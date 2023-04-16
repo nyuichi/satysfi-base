@@ -1,14 +1,13 @@
-@stage: persistent
-@import: base
+use open Util
 
-module Eq : sig
-  type 'a t
-  val make : ('a -> 'a -> bool) -> 'a t
-  val equal : ('a t) implicit -> 'a -> 'a -> bool
-  val inequal : ('a t) implicit -> 'a -> 'a -> bool
+module Eq :> sig
+  type t :: o -> o
+  val persistent ~make 'a : ('a -> 'a -> bool) -> t 'a
+  val persistent ~equal 'a : implicit (t 'a) -> 'a -> 'a -> bool
+  val persistent ~inequal 'a : implicit (t 'a) -> 'a -> 'a -> bool
 end = struct
-  type 'a t = 'a -> 'a -> bool
-  let make eq = eq
-  let equal eq = eq
-  let inequal eq a b = not (eq a b)
+  type t 'a = 'a -> 'a -> bool
+  val persistent ~make eq = eq
+  val persistent ~equal eq = eq
+  val persistent ~inequal eq a b = not (eq a b)
 end

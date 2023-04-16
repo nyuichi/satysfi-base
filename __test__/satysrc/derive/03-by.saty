@@ -1,11 +1,12 @@
-@require: math
-@import: ../util
-@import: ../../../src/typeset/derive
+use package open Math
+use package open Base
+use open TestUtil of `./../util`
 
-open Derive in
+let open Typeset in
+let open Derive in
 satysfi-it ${
   \proven!(
-    open DeriveDSL in
+    let open DeriveDSL in
     derive ${A \vdash A}
     |> by {Refl}
   )

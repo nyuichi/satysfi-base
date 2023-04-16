@@ -1,0 +1,9 @@
+language: "0.1.0"
+contents:
+  type: "library"
+  main_module: "Base"
+  source_directories:
+    - "./src"
+    - "./src/typeset"
+    - "./src/typeset/derive"
+    - "./src/__sub__"

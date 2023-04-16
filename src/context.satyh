@@ -1,18 +1,19 @@
-@import: font
-@import: inline
+use open Util
+use Font
+use Inline
 
-module Context : sig
+module Context :> sig
   val make : length -> context
 
-  val set-math-variant-char : math-char-class -> int -> int -> context -> context
-  val set-math-command : [math] inline-cmd -> context -> context
-  val get-initial-context : length -> [math] inline-cmd -> context
+  val set-math-variant-char : int -> (math-char-class -> int) -> context -> context
+  val set-math-command : inline [math-text] -> context -> context
+  val get-initial-context : length -> inline [math-text] -> context
   val set-hyphen-min : int -> int -> context -> context
   val get-min-gap-of-lines : context -> length
   val set-min-gap-of-lines : length -> context -> context
   val set-space-ratio : float -> float -> float -> context -> context
   val set-space-ratio-between-scripts : float -> float -> float -> script -> script -> context -> context
-  val get-space-ratio-between-scripts : context -> script -> script -> (float * float * float) option
+  val get-space-ratio-between-scripts : context -> script -> script -> option (float * float * float)
   val set-paragraph-margin : length -> length -> context -> context
   val set-min-paragraph-ascender-and-descender : length -> length -> context -> context
   val set-font-size : length -> context -> context
@@ -38,39 +39,42 @@ module Context : sig
   val set-every-word-break : inline-boxes -> inline-boxes -> context -> context
   val get-every-word-break : context -> inline-boxes * inline-boxes
 end = struct
-  let set-math-variant-char = set-math-variant-char
-  let set-math-command = set-math-command
-  let get-initial-context = get-initial-context
-  let set-hyphen-min = set-hyphen-min
-  let set-min-gap-of-lines = set-min-gap-of-lines
-  let set-space-ratio = set-space-ratio
-  let set-space-ratio-between-scripts = set-space-ratio-between-scripts
-  let get-space-ratio-between-scripts = get-space-ratio-between-scripts
-  let set-paragraph-margin = set-paragraph-margin
-  let set-min-paragraph-ascender-and-descender = set-min-paragraph-ascender-and-descender
-  let set-font-size = set-font-size
-  let get-font-size = get-font-size
-  let set-font = set-font
-  let get-font = get-font
-  let set-math-font = set-math-font
-  let set-dominant-wide-script = set-dominant-wide-script
-  let get-dominant-wide-script = get-dominant-wide-script
-  let set-dominant-narrow-script = set-dominant-narrow-script
-  let get-dominant-narrow-script = get-dominant-narrow-script
-  let set-language = set-language
-  let get-language = get-language
-  let set-text-color = set-text-color
-  let get-text-color = get-text-color
-  let set-leading = set-leading
-  let get-text-width = get-text-width
-  let set-manual-rising = set-manual-rising
-  let set-hyphen-penalty = set-hyphen-penalty
-  let get-axis-height = get-axis-height
-  let set-word-break-penalty = set-word-break-penalty
-  let set-every-word-break = set-every-word-break
-  let get-every-word-break = get-every-word-break
+  val set-math-variant-char = set-math-variant-char
+  val set-math-command = set-math-command
+  val get-initial-context = get-initial-context
+  val set-hyphen-min = set-hyphen-min
+  val set-min-gap-of-lines = set-min-gap-of-lines
+  val set-space-ratio = set-space-ratio
+  val set-space-ratio-between-scripts = set-space-ratio-between-scripts
+  val get-space-ratio-between-scripts = get-space-ratio-between-scripts
+  val set-paragraph-margin = set-paragraph-margin
+  val set-min-paragraph-ascender-and-descender = set-min-paragraph-ascender-and-descender
+  val set-font-size = set-font-size
+  val get-font-size = get-font-size
+  val set-font = set-font
+  val get-font = get-font
+  val set-math-font = set-math-font
+  val set-dominant-wide-script = set-dominant-wide-script
+  val get-dominant-wide-script = get-dominant-wide-script
+  val set-dominant-narrow-script = set-dominant-narrow-script
+  val get-dominant-narrow-script = get-dominant-narrow-script
+  val set-language = set-language
+  val get-language = get-language
+  val set-text-color = set-text-color
+  val get-text-color = get-text-color
+  val set-leading = set-leading
+  val get-text-width = get-text-width
+  val set-manual-rising = set-manual-rising
+  val set-hyphen-penalty = set-hyphen-penalty
 
-  let get-leading ctx =
+  val get-axis-height ctx =
+    get-font-size ctx *' get-math-axis-height-ratio ctx
+
+  val set-word-break-penalty = set-word-break-penalty
+  val set-every-word-break = set-every-word-break
+  val get-every-word-break = get-every-word-break
+
+  val get-leading ctx =
       let s = `aa` in
       % NOTE: font size should be small enough to get correct value
       let ctx = ctx |> set-font-size 5pt |> set-min-gap-of-lines 0pt in
@@ -83,7 +87,7 @@ end = struct
       let () = display-message (show-float ((h1 +' d1 -' h -' d) /' 1pt)) in
       h1 +' d1 -' h -' d
 
-  let get-min-gap-of-lines ctx =
+  val get-min-gap-of-lines ctx =
       let s = `aa` in
       let ctx = ctx |> set-leading 0pt in
       let ib = read-inline ctx (embed-string s) in
@@ -94,8 +98,8 @@ end = struct
       let (_, h1, d1) = get-natural-metrics ib1 in
       h1 +' d1 -' (h +' d) *' 2.0
 
-  let-inline ctx \math m =
-    Inline.of-math m ctx
+  val inline ctx \math m =
+    Inline.of-math (read-math ctx m) ctx
 
-  let make text-width = get-initial-context text-width (command \math)
+  val make text-width = get-initial-context text-width (command \math)
 end

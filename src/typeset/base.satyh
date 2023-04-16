@@ -1,14 +1,14 @@
-module Base : sig
+module TypesetBase :> sig
   % `{\embed(it);}` is equivalent to `it`
-  direct \embed : [inline-text] inline-cmd
-  direct \eval : [context -> inline-boxes] inline-cmd
-  direct \eval-const : [inline-boxes] inline-cmd
-  direct +eval : [context -> block-boxes] block-cmd
-  direct +eval-const : [block-boxes] block-cmd
+  val \embed : inline [inline-text]
+  val \eval : inline [(context -> inline-boxes)]
+  val \eval-const : inline [inline-boxes]
+  val +eval : block [(context -> block-boxes)]
+  val +eval-const : block [block-boxes]
 end = struct
-  let-inline \embed it = it
-  let-inline ctx \eval ibf = ibf ctx
-  let-inline ctx \eval-const ib = ib
-  let-block ctx +eval bbf = bbf ctx
-  let-block ctx +eval-const bb = bb
+  val inline \embed it = it
+  val inline ctx \eval ibf = ibf ctx
+  val inline ctx \eval-const ib = ib
+  val block ctx +eval bbf = bbf ctx
+  val block ctx +eval-const bb = bb
 end

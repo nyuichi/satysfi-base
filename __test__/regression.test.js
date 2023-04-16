@@ -29,7 +29,7 @@ afterAll(() => {
 });
 
 test("Confirm that satysfi is installed", () => {
-  expect(shell.exec("satysfi -v").code).toBe(0);
+  expect(shell.exec("satysfi --version").code).toBe(0);
 });
 
 test("Check compiler outputs", () => {

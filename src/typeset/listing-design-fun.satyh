@@ -1,0 +1,22 @@
+module TypesetListingDesignFun :> sig
+
+  val noraml-listing : context -> list int -> int -> inline-boxes
+  val noraml-enumerate : context -> list int -> int -> inline-boxes
+
+end = struct
+
+  val noraml-listing ctx index-lst depth = inline-nil
+
+  val noraml-enumerate ctx index-lst depth =
+    let num =
+      match index-lst with
+      | [] -> 0
+      | x :: xs -> x
+      end
+    in
+    let str-num = arabic num in
+    let it-num = `(` ^ str-num ^ `)` |> embed-string in
+    let ib-num = read-inline ctx {#it-num;\ } in
+      ib-num
+
+end

@@ -1,25 +1,27 @@
-@import: base
-@import: regexp
+use open Util
+use RegExp
 
-module Format : sig
+module Format :> sig
   %% [Format.format template strs] returns a new string with the same
   %% contents as [template] except each occurence of substring [`{}`]
   %% is replaced with each string in list [strs]. The number of occurences
   %% of [`{}`] in [template] and the length of [strs] must be equal.
   %%
   %% e.g. [Format.format `foo{}bar{}baz` [`AA`;`BB`]] => [`fooAAbarBBbaz`]
-  val format : string -> string list -> string
+  val format : string -> list string -> string
 end = struct
-  let split ss =
+  val split ss =
     match RegExp.exec (RegExp.of-string `(.*?)(\{\})(.*)`) ss with
     | (None) :: _ -> None
     | _::(Some(_,s1))::_::(Some(_,s2))::_ -> Some(s1,s2)
     | _ -> panic `logic flaw`
-  let format s ss =
-    let-rec aux s ss =
+    end
+  val format s ss =
+    let rec aux s ss =
       match (split s, ss) with
       | (None, []) -> s
       | (Some(s1,s2), (s :: ss)) -> s1 ^ s ^ aux s2 ss
       | _ -> panic `Format.format: wrong number of format specifiers`
+      end
     in aux s ss
 end

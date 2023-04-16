@@ -1,13 +1,15 @@
-type font = string * float * float
+use open Util
 
-module Font : sig
-  val make : string -> float -> float -> font
-  val font-name : font -> string
-  val ratio : font -> float
-  val baseline : font -> float
+module Font :> sig
+  type t = font
+  val persistent ~make : string -> float -> float -> font
+  val persistent ~font-name : font -> string
+  val persistent ~ratio : font -> float
+  val persistent ~baseline : font -> float
 end = struct
-  let make fn rt bl = (fn, rt, bl)
-  let font-name (fn, _, _) = fn
-  let ratio (_, rt, _) = rt
-  let baseline (_, _, bl) = bl
+  type t = string * float * float
+  val persistent ~make fn rt bl = (fn, rt, bl)
+  val persistent ~font-name (fn, _, _) = fn
+  val persistent ~ratio (_, rt, _) = rt
+  val persistent ~baseline (_, _, bl) = bl
 end

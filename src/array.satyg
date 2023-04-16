@@ -1,84 +1,85 @@
-@stage: persistent
-@import: ref
-@import: base
-@import: list-ext
+use open Util
+use Ref
+use List
 
-module Array : sig
+module Array :> sig
   %% Mutable array with elements of type ['a].
-  type 'a t
+  type t :: o -> o
 
   %% Return the number of elements of the given array.
-  val length : 'a t -> int
+  val persistent ~length 'a : t 'a -> int
 
   %% [Array.get n a] returns the [n]-th element of array [a].
   %% It throws an error if [n] is out of range.
-  val get : int -> 'a t -> 'a
+  val persistent ~get 'a : int -> t 'a -> 'a
 
   %% [Array.set n x a] modifies array [a] by replacing its [n]-th
   %% element with [x].
   %% It throws an error if [n] is out of range.
-  val set : int -> 'a -> 'a t -> unit
+  val persistent ~set 'a : int -> 'a -> t 'a -> unit
 
   %% [Array.make x n] creates a new array of length [n] whose every
   %% cell is initialized with [x].
-  val make : 'a -> int -> 'a t
+  val persistent ~make 'a : 'a -> int -> t 'a
 
   %% [Array.init f n] is similar to [Array.make], but every element is
   %% initialized with the result of [f] applied to the corresponding
   %% index.
-  val init : (int -> 'a) -> int -> 'a t
+  val persistent ~init 'a : (int -> 'a) -> int -> t 'a
 
   %% [Array.append a1 a2] returns a new array such that the first part
   %% is a copy of [a1] and the rest part is a copy of [a2].
-  val append : 'a t -> 'a t -> 'a t
+  val persistent ~append 'a : t 'a -> t 'a -> t 'a
 
   %% [Array.concat ls] concatenates a list of arrays.
-  val concat : ('a t) list -> 'a t
+  val persistent ~concat 'a : list (t 'a) -> t 'a
 
   %% [Array.sub start len a] returns a new array containing [len]
   %% elements from array [a] in range [start] to [len - start + 1].
-  val sub : int -> int -> 'a t -> 'a t
+  val persistent ~sub 'a : int -> int -> t 'a -> t 'a
 
   %% [Array.to-list a] returns a new list containing the elements of
   %% array [a] in the same order.
-  val to-list : 'a t -> 'a list
+  val persistent ~to-list 'a : t 'a -> list 'a
 
   %% [Array.of-list ls] returns a new array containing the elements of
   %% list [ls] in the same order.
-  val of-list : 'a list -> 'a t
+  val persistent ~of-list 'a : list 'a -> t 'a
 
   %% [Array.map f a] applies [f] to every elements of array [a], and
   %% collects the results as a new array.
-  val map : ('a -> 'b) -> 'a t -> 'b t
+  val persistent ~map 'a 'b : ('a -> 'b) -> t 'a -> t 'b
 end = struct
   % Polyfill for mutable array structure.
   % The current implementation is based on singly-linked lists and is very slow.
   % The following code should be replaced with a more efficient implementation when
   % the runtime support is ready.
-  type 'a t = ('a ref) list
+  type t 'a = list (ref 'a)
 
-  let length = List.length
+  val persistent ~length = List.length
 
-  let get i a =
+  val persistent ~get i a =
     match a |> List.nth i with
     | None -> panic `array: index out of range`
     | Some r -> Ref.get r
+    end
 
-  let set i v a =
+  val persistent ~set i v a =
     match a |> List.nth i with
     | None -> panic `array: index out of range`
     | Some r -> r |> Ref.set v
+    end
 
-  let make v n =
-    let-rec aux i acc =
+  val persistent ~make v n =
+    let rec aux i acc =
       if i == n then
         acc
       else
         aux (i + 1) (Ref.make v :: acc)
     in aux 0 []
 
-  let init f n =
-    let-rec aux i =
+  val persistent ~init f n =
+    let rec aux i =
       if i == n then
         []
       else
@@ -86,16 +87,16 @@ end = struct
         Ref.make v :: aux (i + 1)
     in aux 0
 
-  let append = List.append
+  val persistent ~append = List.append
 
-  let concat = List.concat
+  val persistent ~concat = List.concat
 
-  let sub start len a =
+  val persistent ~sub start len a =
     a |> List.drop start |> List.take len
 
-  let to-list a = List.map Ref.get a
+  val persistent ~to-list a = List.map Ref.get a
 
-  let of-list l = List.map Ref.make l
+  val persistent ~of-list l = List.map Ref.make l
 
-  let map f a = of-list (List.map f (to-list a))
+  val persistent ~map f a = of-list (List.map f (to-list a))
 end

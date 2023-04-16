@@ -1,0 +1,106 @@
+module Page :> sig
+  type page = length * length
+  val a0 : page
+  val a1 : page
+  val a2 : page
+  val a3 : page
+  val a4 : page
+  val a5 : page
+  val a6 : page
+  val a7 : page
+  val a8 : page
+  val a9 : page
+  val a10 : page
+  val b0 : page
+  val b1 : page
+  val b2 : page
+  val b3 : page
+  val b4 : page
+  val b5 : page
+  val b6 : page
+  val b7 : page
+  val b8 : page
+  val b9 : page
+  val b10 : page
+  val c0 : page
+  val c1 : page
+  val c2 : page
+  val c3 : page
+  val c4 : page
+  val c5 : page
+  val c6 : page
+  val c7 : page
+  val c8 : page
+  val c9 : page
+  val c10 : page
+  val b0j : page
+  val b1j : page
+  val b2j : page
+  val b3j : page
+  val b4j : page
+  val b5j : page
+  val b6j : page
+  val b7j : page
+  val b8j : page
+  val b9j : page
+  val b10j : page
+  val us-letter : page
+  val us-legal : page
+  val custom : length -> length -> page
+end = struct
+  type page = length * length
+  val custom l1 l2 = (l1, l2)
+
+  % values are from https://github.com/johnwhitington/camlpdf/blob/fd56554adb16ad03f84ad70a721e01a11092a836/pdfpaper.ml
+
+  val a0 = custom 841mm 1189mm
+  val a1 = custom 594mm 841mm
+  val a2 = custom 420mm 594mm
+  val a3 = custom 297mm 420mm
+  val a4 = custom 210mm 297mm
+  val a5 = custom 148mm 210mm
+  val a6 = custom 105mm 148mm
+  val a7 = custom 74mm 105mm
+  val a8 = custom 52mm 74mm
+  val a9 = custom 37mm 52mm
+  val a10 = custom 26mm 37mm
+
+  val b0 = custom 1000mm 1414mm
+  val b1 = custom 707mm 1000mm
+  val b2 = custom 500mm 707mm
+  val b3 = custom 353mm 500mm
+  val b4 = custom 250mm 353mm
+  val b5 = custom 176mm 250mm
+  val b6 = custom 125mm 176mm
+  val b7 = custom 88mm 125mm
+  val b8 = custom 62mm 88mm
+  val b9 = custom 44mm 62mm
+  val b10 = custom 31mm 44mm
+
+  val c0 = custom 917mm 1297mm
+  val c1 = custom 648mm 917mm
+  val c2 = custom 458mm 648mm
+  val c3 = custom 324mm 458mm
+  val c4 = custom 229mm 324mm
+  val c5 = custom 162mm 229mm
+  val c6 = custom 114mm 162mm
+  val c7 = custom 81mm 114mm
+  val c8 = custom 57mm 81mm
+  val c9 = custom 40mm 57mm
+  val c10 = custom 28mm 40mm
+
+  val b0j = custom 1030mm 1456mm
+  val b1j = custom 728mm 1030mm
+  val b2j = custom 515mm 728mm
+  val b3j = custom 364mm 515mm
+  val b4j = custom 257mm 364mm
+  val b5j = custom 182mm 257mm
+  val b6j = custom 128mm 182mm
+  val b7j = custom 91mm 128mm
+  val b8j = custom 64mm 91mm
+  val b9j = custom 45mm 64mm
+  val b10j = custom 32mm 45mm
+
+  val us-letter = custom 8.5inch 11inch
+  val us-legal = custom 8.5inch 14inch
+end

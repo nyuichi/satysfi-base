@@ -1,51 +1,58 @@
-@import: base
-@import: list-ext
-@import: eq
+use open Util
+use List
+use Eq
 
 % This module implements pre-set-like structure
 
-module Set : sig
-  type 'a t
-  val empty : 'a t
-  val singleton : 'a -> 'a t
-  val size : 'a t -> int
-  val is-empty : 'a t -> bool
-  val choose : 'a t -> 'a option
-  val mem : ('a Eq.t) implicit -> 'a -> 'a t -> bool
-  val insert : 'a -> 'a t -> 'a t
-  val remove : ('a Eq.t) implicit -> 'a -> 'a t -> 'a t
-  val of-list : 'a list -> 'a t
-  val to-list : ('a Eq.t) implicit -> 'a t -> 'a list
-  val mem-opt : ('a Eq.t) implicit -> 'a -> 'a t -> 'a option
+module Set :> sig
+  type t :: o -> o
+  val persistent ~empty 'a : t 'a
+  val persistent ~singleton 'a : 'a -> t 'a
+  val persistent ~size 'a : t 'a -> int
+  val persistent ~is-empty 'a : t 'a -> bool
+  val persistent ~choose 'a : t 'a -> option 'a
+  val persistent ~mem 'a : implicit (Eq.t 'a) -> 'a -> t 'a -> bool
+  val persistent ~insert 'a : 'a -> t 'a -> t 'a
+  val persistent ~remove 'a : implicit (Eq.t 'a) -> 'a -> t 'a -> t 'a
+  val persistent ~of-list 'a : list 'a -> t 'a
+  val persistent ~to-list 'a : implicit (Eq.t 'a) -> t 'a -> list 'a
+  val persistent ~mem-opt 'a : implicit (Eq.t 'a) -> 'a -> t 'a -> option 'a
 end = struct
-  type 'a t = 'a list
+  type t 'a = list 'a
 
-  let empty = []
+  val persistent ~empty = []
 
-  let singleton v = [v]
+  val persistent ~singleton v = [v]
 
-  let size l = List.length l
+  val persistent ~size l = List.length l
 
-  let is-empty l = List.null l
+  val persistent ~is-empty l = List.null l
 
-  let choose l = match l with
-  | [] -> None
-  | v :: _ -> Some(v)
+  val persistent ~choose l =
+    match l with
+    | [] -> None
+    | v :: _ -> Some(v)
+    end
 
-  let mem eq v l = List.exists (Eq.equal eq v) l
+  val persistent ~mem eq v l = List.exists (Eq.equal eq v) l
 
-  let insert v l = v :: l
+  val persistent ~insert v l = v :: l
 
-  let remove eq v l = List.filter (Eq.inequal eq v) l
+  val persistent ~remove eq v l = List.filter (Eq.inequal eq v) l
 
-  let of-list l = l
+  val persistent ~of-list l = l
 
-  let to-list eq l =
-    let-rec dedup l acc = match l with
-    | [] -> List.reverse acc
-    | x :: l when List.exists (Eq.equal eq x) acc -> dedup l acc
-    | x :: l -> dedup l (x :: acc)
+  val persistent ~to-list eq l =
+    let rec dedup l acc =
+      match l with
+      | [] -> List.reverse acc
+      | x :: l ->
+          if List.exists (Eq.equal eq x) acc then
+            dedup l acc
+          else
+            dedup l (x :: acc)
+      end
     in dedup [] l
 
-  let mem-opt eq v l = List.find (Eq.equal eq v) l
+  val persistent ~mem-opt eq v l = List.find (Eq.equal eq v) l
 end

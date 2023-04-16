@@ -1,10 +1,11 @@
-@require: math
-@import: ../util
-@import: ../../../src/typeset/derive
-@import: ../../../src/typeset/derive/line
+use package open Math
+use package open Base
+use open TestUtil of `./../util`
 
-open Derive in
-let my-derive-config = open DeriveConfig in
+let open Typeset in
+let open Derive in
+let my-derive-config =
+  let open DeriveConfig in
     default
     |> set-main-label-position LabelRight
     |> set-default-line (DeriveLine.dotted-line 5pt 5pt)
@@ -14,14 +15,13 @@ let my-derive-config = open DeriveConfig in
     |> set-content-left-right-padding 30pt
 in
 satysfi-it ${
-  \proven ?:!(my-derive-config) !(
-    open DeriveDSL in
+  \proven?!(config = my-derive-config)!(
+    let open DeriveDSL in
     derive ${ \Gamma \vdash \Delta }
     |> by {Cut}
     |> from [
-      assume ${\Gamma \vdash \Delta, A};
-      assume ${\Gamma, A \vdash \Delta}
+      assume ${\Gamma \vdash \Delta, A},
+      assume ${\Gamma, A \vdash \Delta},
     ]
   )
 }
-

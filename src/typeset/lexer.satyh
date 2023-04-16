@@ -1,0 +1,37 @@
+use List
+use String
+use RegExp
+
+% % usage:
+% let rules = [
+%   (| kind = `identifier`, regexp = seq alpha (many (alt alpha (alt digit (char `-`)))) |),
+%   (| kind = `whitespace`, regexp = spaces |),
+% ] in
+% let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 `
+% tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`)))
+
+module Lexer :> sig
+  val lex : list (| kind : string, regexp : RegExp.t |) -> string -> option (list (| kind : string, data : string |))
+end = struct
+
+  val lex rules src =
+    let len = String.length src in
+    let rec loop i acc =
+      if i == len
+      then Some (List.reverse acc)
+      else
+        let s = src |> String.sub i (len - i) in
+        let rec iter rules =
+          match rules with
+          | [] -> None
+          | (r :: rules) -> let (m :: _) = RegExp.exec (RegExp.seq RegExp.bof r#regexp) s in
+            match m with
+            | None -> iter rules
+            | (Some (_, m)) -> loop (i + String.length m) ((| kind = r#kind, data = m |) :: acc)
+            end
+          end
+        in
+        iter rules in
+    loop 0 []
+
+end

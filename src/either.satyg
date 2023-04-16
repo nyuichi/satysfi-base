@@ -1,86 +1,98 @@
-@import: base
-@import: fn
+use open Util
+use Fn
 
-%% ['a 'b either] contains a value of either ['a] or ['b].
-%% Unlike ['a 'b result], ['a 'b either] should have
+%% [either 'a 'b] contains a value of either ['a] or ['b].
+%% Unlike [result 'a 'b], [either 'a 'b] should have
 %% no bias between ['a] and ['b].
-type 'a 'b either =
-| Left of 'a
-| Right of 'b
 
-module Either : sig
-  val left : 'a -> 'a 'b either
-  val right : 'b -> 'a 'b either
-  val is-left : 'a 'b either -> bool
-  val is-right : 'a 'b either -> bool
-  val unwrap-left : 'a 'b either -> 'a
-  val unwrap-left-or : 'a -> 'a 'b either -> 'a
-  val unwrap-left-or-else : ('b -> 'a) -> 'a 'b either -> 'a
-  val unwrap-right : 'a 'b either -> 'b
-  val unwrap-right-or : 'b -> 'a 'b either -> 'b
-  val unwrap-right-or-else : ('a -> 'b) -> 'a 'b either -> 'b
-  val either : ('a -> 'c) -> ('b -> 'c) -> 'a 'b either -> 'c
-  val bimap : ('a -> 'c) -> ('b -> 'd) -> 'a 'b either -> 'c 'd either
-  val swap : 'a 'b either -> 'b 'a either
-  val value : 'a 'a either -> 'a
+module Either :> sig
+  type either 'a 'b =
+    | Left of 'a
+    | Right of 'b
+  val persistent ~left 'a 'b : 'a -> either 'a 'b
+  val persistent ~right 'a 'b : 'b -> either 'a 'b
+  val persistent ~is-left 'a 'b : either 'a 'b -> bool
+  val persistent ~is-right 'a 'b : either 'a 'b -> bool
+  val persistent ~unwrap-left 'a 'b : either 'a 'b -> 'a
+  val persistent ~unwrap-left-or 'a 'b : 'a -> either 'a 'b -> 'a
+  val persistent ~unwrap-left-or-else 'a 'b : ('b -> 'a) -> either 'a 'b -> 'a
+  val persistent ~unwrap-right 'a 'b : either 'a 'b -> 'b
+  val persistent ~unwrap-right-or 'a 'b : 'b -> either 'a 'b -> 'b
+  val persistent ~unwrap-right-or-else 'a 'b : ('a -> 'b) -> either 'a 'b -> 'b
+  val persistent ~either 'a 'b 'c : ('a -> 'c) -> ('b -> 'c) -> either 'a 'b -> 'c
+  val persistent ~bimap 'a 'b 'c 'd : ('a -> 'c) -> ('b -> 'd) -> either 'a 'b -> either 'c 'd
+  val persistent ~swap 'a 'b : either 'a 'b -> either 'b 'a
+  val persistent ~value 'a : either 'a 'a -> 'a
 end = struct
-  let left x = Left(x)
+  type either 'a 'b =
+    | Left of 'a
+    | Right of 'b
 
-  let right y = Right(y)
+  val persistent ~left x = Left(x)
 
-  let is-left e =
+  val persistent ~right y = Right(y)
+
+  val persistent ~is-left e =
     match e with
     | Left(_) -> true
     | Right(_) -> false
+    end
 
-  let is-right e =
+  val persistent ~is-right e =
     match e with
     | Left(_) -> false
     | Right(_) -> true
+    end
 
-  let unwrap-left-or-else f e =
+  val persistent ~unwrap-left-or-else f e =
     match e with
     | Left(x) -> x
     | Right(y) -> f y
+    end
 
-  let unwrap-left-or x e =
+  val persistent ~unwrap-left-or x e =
     e |> unwrap-left-or-else (Fn.const x)
 
-  let unwrap-left e =
+  val persistent ~unwrap-left e =
     e |> unwrap-left-or-else (fun _ ->
       panic `unwrap-left failed`
     )
 
-  let unwrap-right-or-else f e =
+  val persistent ~unwrap-right-or-else f e =
     match e with
     | Left(x) -> f x
     | Right(y) -> y
+    end
 
-  let unwrap-right-or y e =
+  val persistent ~unwrap-right-or y e =
     e |> unwrap-right-or-else (Fn.const y)
 
-  let unwrap-right e =
+  val persistent ~unwrap-right e =
     e |> unwrap-right-or-else (fun _ ->
       panic `unwrap-right failed`
     )
 
-  let either f g e =
+  val persistent ~either f g e =
     match e with
     | Left(x) -> f x
     | Right(y) -> g y
+    end
 
-  let bimap f g e =
+  val persistent ~bimap f g e =
     match e with
     | Left(x) -> left (f x)
     | Right(y) -> right (g y)
+    end
 
-  let swap e =
+  val persistent ~swap e =
     match e with
     | Left(x) -> right x
     | Right(y) -> left y
+    end
 
-  let value e =
+  val persistent ~value e =
     match e with
     | Left(x) -> x
     | Right(y) -> y
+    end
 end

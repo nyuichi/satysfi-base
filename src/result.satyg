@@ -1,138 +1,158 @@
-@stage: persistent
-@import: fn
+use open Util
+use Fn
 
-module Result : sig
-  val ok : 'a -> 'a 'e result
-  val err : 'e -> 'a 'e result
-  val is-ok : 'a 'e result -> bool
-  val is-err : 'a 'e result -> bool
-  val to-ok : 'a 'e result -> 'a option
-  val to-err : 'a 'e result -> 'e option
-  val unwrap : 'a 'e result -> 'a
-  val unwrap-or : 'a -> 'a 'e result -> 'a
-  val unwrap-or-else : ('e -> 'a) -> 'a 'e result -> 'a
-  val unwrap-err : 'a 'e result -> 'e
-  val expect : string -> 'a 'e result -> 'a
-  val expect-err : string -> 'a 'e result -> 'e
-  val map : ('a -> 'b) -> 'a 'e result -> 'b 'e result
-  val map-or : 'b -> ('a -> 'b) -> 'a 'e result -> 'b
-  val map-or-else : ('e -> 'b) -> ('a -> 'b) -> 'a 'e result -> 'b
-  val map-err : ('e -> 'f) -> 'a 'e result -> 'a 'f result
-  val and- : 'a 'e result -> 'a 'e result -> 'a 'e result
-  val and-then : ('a -> 'b 'e result) -> 'a 'e result -> 'b 'e result
-  val or : 'a 'e result -> 'a 'e result -> 'a 'e result
-  val or-else : ('e -> 'a 'f result) -> 'a 'e result -> 'a 'f result
-  val transpose : ('a option) 'e result -> ('a 'e result) option
-  val flatten : ('a 'e result) 'e result -> 'a 'e result
-  val ret : 'a -> 'a 'e result
-  val fold-list : 'a list -> ('a -> 'b -> 'b 'e result) -> 'b -> 'b 'e result
+module Result :> sig
+  val persistent ~ok 'a 'e : 'a -> result 'a 'e
+  val persistent ~err 'a 'e : 'e -> result 'a 'e
+  val persistent ~is-ok 'a 'e : result 'a 'e -> bool
+  val persistent ~is-err 'a 'e : result 'a 'e -> bool
+  val persistent ~to-ok 'a 'e : result 'a 'e -> option 'a
+  val persistent ~to-err 'a 'e : result 'a 'e -> option 'e
+  val persistent ~unwrap 'a 'e : result 'a 'e -> 'a
+  val persistent ~unwrap-or 'a 'e : 'a -> result 'a 'e -> 'a
+  val persistent ~unwrap-or-else 'a 'e : ('e -> 'a) -> result 'a 'e -> 'a
+  val persistent ~unwrap-err 'a 'e : result 'a 'e -> 'e
+  val persistent ~expect 'a 'e : string -> result 'a 'e -> 'a
+  val persistent ~expect-err 'a 'e : string -> result 'a 'e -> 'e
+  val persistent ~map 'a 'b 'e : ('a -> 'b) -> result 'a 'e -> result 'b 'e
+  val persistent ~map-or 'a 'b 'e : 'b -> ('a -> 'b) -> result 'a 'e -> 'b
+  val persistent ~map-or-else 'a 'b 'e : ('e -> 'b) -> ('a -> 'b) -> result 'a 'e -> 'b
+  val persistent ~map-err 'a 'e 'f : ('e -> 'f) -> result 'a 'e -> result 'a 'f
+  val persistent ~and- 'a 'e : result 'a 'e -> result 'a 'e -> result 'a 'e
+  val persistent ~and-then 'a 'b 'e : ('a -> result 'b 'e) -> result 'a 'e -> result 'b 'e
+  val persistent ~or 'a 'e : result 'a 'e -> result 'a 'e -> result 'a 'e
+  val persistent ~or-else 'a 'e 'f : ('e -> result 'a 'f) -> result 'a 'e -> result 'a 'f
+  val persistent ~transpose 'a 'e : result (option 'a) 'e -> option (result 'a 'e)
+  val persistent ~flatten 'a 'e : result (result 'a 'e) 'e -> result 'a 'e
+  val persistent ~ret 'a 'e : 'a -> result 'a 'e
+  val persistent ~fold-list 'a 'b 'e : list 'a -> ('a -> 'b -> result 'b 'e) -> 'b -> result 'b 'e
 
   % deprecated
-  val bind : ('a -> 'b 'e result) -> 'a 'e result -> 'b 'e result
-  val join : ('a 'e result) 'e result -> 'a 'e result
-  val to-option : 'a 'e result -> 'a option
+  val persistent ~bind 'a 'b 'e : ('a -> result 'b 'e) -> result 'a 'e -> result 'b 'e
+  val persistent ~join 'a 'e : result (result 'a 'e) 'e -> result 'a 'e
+  val persistent ~to-option 'a 'e : result 'a 'e -> option 'a
 end = struct
-  let ok x = Ok x
-  let err e = Err e
+  val persistent ~ok x = Ok x
+  val persistent ~err e = Err e
 
-  let is-ok r =
+  val persistent ~is-ok r =
     match r with
     | Ok(_) -> true
     | _ -> false
+    end
 
-  let is-err r =
+  val persistent ~is-err r =
     match r with
     | Ok(_) -> false
     | _ -> true
+    end
 
-  let to-ok r =
+  val persistent ~to-ok r =
     match r with
     | Ok(a) -> Some(a)
     | _ -> None
+    end
 
-  let to-err r =
+  val persistent ~to-err r =
     match r with
     | Err(e) -> Some(e)
     | _ -> None
+    end
 
-  let unwrap-or-else f r =
+  val persistent ~unwrap-or-else f r =
     match r with
     | Ok(a) -> a
     | Err(e) -> f e
+    end
 
-  let expect msg r =
+  val persistent ~expect msg r =
     r |> unwrap-or-else (fun _ -> panic msg)
 
-  let expect-err msg r =
+  val persistent ~expect-err msg r =
     match r with
     | Ok(a) -> panic msg
     | Err(e) -> e
+    end
 
-  let unwrap r =
+  val persistent ~unwrap r =
     r |> expect `unwrap error`
 
-  let unwrap-or x r =
+  val persistent ~unwrap-or x r =
     r |> unwrap-or-else (Fn.const x)
 
-  let unwrap-err r =
+  val persistent ~unwrap-err r =
     r |> expect-err `unwrap error`
 
-  let map f r =
+  val persistent ~map f r =
     match r with
     | Ok(a) -> ok (f a)
     | Err(e) -> err e
+    end
 
-  let map-or b f r =
+  val persistent ~map-or b f r =
     match r with
     | Ok(a) -> f a
     | Err(e) -> b
+    end
 
-  let map-or-else g f r =
+  val persistent ~map-or-else g f r =
     match r with
     | Ok(a) -> f a
     | Err(e) -> g e
+    end
 
-  let map-err f r =
+  val persistent ~map-err f r =
     match r with
     | Ok(a) -> ok a
     | Err(e) -> err (f e)
+    end
 
-  let-rec and-
-  | _ (Err(_) as r) = r
-  | r _             = r
+  val persistent ~rec and- r1 r2 =
+    match r2 with
+    | Err(_) -> r2
+    | _ -> r1
+    end
 
-  let and-then k r =
+  val persistent ~and-then k r =
     match r with
     | Ok(a) -> k a
     | Err(e) -> err e
+    end
 
-  let-rec or
-  | _ (Ok(_) as r) = r
-  | r _            = r
+  val persistent ~rec or r1 r2 =
+    match r2 with
+    | Ok(_) -> r2
+    | _ -> r1
+    end
 
-  let-rec or-else
-  | _ (Ok(_) as r) = r
-  | f (Err(e))     = f e
+  val persistent ~rec or-else f r =
+    match r with
+    | Ok(a) -> ok a
+    | Err(e) -> f e
+    end
 
-  let transpose r =
+  val persistent ~transpose r =
     match r with
     | Ok(Some(x)) -> Some(ok x)
     | Ok(None)    -> None
     | Err(e)      -> Some(err e)
+    end
 
-  let ret x = ok x
+  val persistent ~ret x = ok x
 
-  let flatten r =
+  val persistent ~flatten r =
     match r with
     | Ok(r) -> r
     | Err(e) -> err e
+    end
 
-  let-rec fold-list list f init =
+  val persistent ~rec fold-list list f init =
     match list with
     | [] -> init |> ret
-    | (x::xs) -> init |> f x |> and-then (fold-list xs f)
+    | x :: xs -> init |> f x |> and-then (fold-list xs f)
+    end
 
-  let bind = and-then
-  let join = flatten
-  let to-option = to-ok
+  val persistent ~bind = and-then
+  val persistent ~join = flatten
+  val persistent ~to-option = to-ok
 end

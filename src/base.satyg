@@ -1,51 +1,111 @@
-@stage: persistent
+use Util
+use Debug
+use Bool
+use Int
+use Float
+use Char
+use String
+use Token
+use Parser
+use StringParser
+use RegExp
+use Ref
+use List
+use Option
+use Result
+use Either
+use Set
+use Map
+use Void
+use Fn
+use Ord
+use Eq
+use Tuple
+use TreeSet
+use TreeMap
+use Stream
+use Promise
+use Array
+use Random
+use Format
+use Path
+use Color
+use Graphics
+use VDecoSet
+use Length
+use Inline
+use Block
+use Font
+use CrossRef
+use Page
+use Pager
+use Lexer
+use TypesetSatysfiIt
+use TypesetFont
+use TypesetTabular
+use TypesetItemize
+use TypesetListingDesignFun
+use TypesetDerive
+use TypesetDeriveDSL
+use DeriveConfig
+use DeriveLine
+use UtilSub
 
-%% Short-circuit conjunction operator.
-%%
-%% e.g. [if (i < String.length s) &&&- (fun () -> Char.equal (Char.at i s) Char.space) then `yes` else `no`]
-%%
-%% Note: this operator is an unstable API and subject to change in the future.
-let ( &&&- ) b1 b2f = if b1 then b2f () else false
+module Base = struct
+  include Util
+  module Debug = Debug
+  module Bool = Bool
+  module Int = Int
+  module Float = Float
+  module Char = Char
+  module String = String
+  module Token = Token
+  module Parser = Parser
+  module StringParser = StringParser
+  module RegExp = RegExp
+  module Ref = Ref
+  module List = List
+  module Option = Option
+  module Result = Result
+  module Either = Either
+  module Set = Set
+  module Map = Map
+  module Void = Void
+  module Fn = Fn
+  module Ord = Ord
+  module Eq = Eq
+  module Tuple = Tuple
+  module TreeSet = TreeSet
+  module TreeMap = TreeMap
+  module Stream = Stream
+  module Promise = Promise
+  module Array = Array
+  module Random = Random
+  module Format = Format
+  module Path = Path
+  module Color = Color
+  module Graphics = Graphics
+  module VDecoSet = VDecoSet
+  module Length = Length
+  module Inline = Inline
+  module Block = Block
+  module Font = Font
+  module CrossRef = CrossRef
+  module Page = Page
+  module Pager = Pager
+  module Lexer = Lexer
 
-%% Short-circuit disjunction operator. See also [(&&&-)].
-%%
-%% Note: this operator is an unstable API and subject to change in the future.
-let ( |||- ) b1 b2f = if b1 then true else b2f ()
+  module Typeset = struct
+    module SatysfiIt = TypesetSatysfiIt
+    module Font = TypesetFont
+    module Tabular = TypesetTabular
+    module Itemize = TypesetItemize
+    module ListingDesignFun = TypesetListingDesignFun
+    module Derive = TypesetDerive
+    module DeriveConfig = DeriveConfig
+    module DeriveLine = DeriveLine
+    module DeriveDSL = TypesetDeriveDSL
+  end
 
-%% [implicit] is used in two ways:
-%% 1. The first way is to declare an argument of a function
-%%    should be a *type class*, whose actual value can be
-%%    inferred only from the type.
-%%
-%%    e.g. [val max : ('a Ord.t) implicit -> 'a -> 'a -> 'a]
-%%
-%% 2. The second way is to declare a value is used to infer
-%%    implicit arguments declared elsewhere. This corresponds
-%%    to *instance* declaration in Haskell.
-%%
-%%    e.g. [val int-ord : (int Ord.t) implicit]
-%%
-%% Also one can combine these two usages in a single declaration.
-%% For example, automatic derivation of type class instances can be
-%% defined as follows:
-%%
-%%   e.g. [val derive-eq : ('a Ord.t) implicit -> ('a Eq.t) implicit]
-%%
-%% Currently [implicit] is only a syntactic marker that tells
-%% human programmers how arguments should be considered.
-type 'a implicit = 'a
-
-%% [panic msg] exits the execution of program with message [msg].
-%% It should be used when the program encounters an unrecoverable situation.
-let panic = abort-with-message
-
-%% Type of lazily evaluated value. A value of ['a thunk] is usually constructed
-%% through the 0-stage function [make-thunk] or the unary operator [!!].
-type 'a thunk = unit -> 'a
-
-%% [run-thunk t] evaluates thunk [t] and returns the result.
-let run-thunk t = t ()
-
-type 'ok 'err result =
-| Ok of 'ok
-| Err of 'err
+  module UtilSub = UtilSub
+end

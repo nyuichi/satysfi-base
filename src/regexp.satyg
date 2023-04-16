@@ -1,18 +1,21 @@
 % based on https://swtch.com/~rsc/regexp/regexp1.html
-@stage: persistent
-@import: base
-@import: string
-@import: array
-@import: debug
-@import: option-ext
-@import: list-ext
-@import: char
-@import: parser
-@import: ref
-@import: eq
+use open Util
+use String
+use Array
+use Debug
+use Option
+use Result
+use List
+use Fn
+use Char
+use Parser
+use StringParser
+use Ref
+use Stream
+use Eq
 
-module RegExp : sig
-  type t
+module RegExp :> sig
+  type t :: o
 
   % perl-like representation of regexp
   %
@@ -59,59 +62,59 @@ module RegExp : sig
   %   ^       beginning of line
   %   $       end of line
   %
-  val of-string : string -> t
+  val persistent ~of-string : string -> t
 
-  val test : t -> string -> bool
-  val exec : t -> string -> ((int * string) option) list
+  val persistent ~test : t -> string -> bool
+  val persistent ~exec : t -> string -> list (option (int * string))
 
   % concatenation and alternation
-  val empty : t
-  val seq : t -> t -> t
-  val sequence : t list -> t
-  val fail : t
-  val alt : t -> t -> t
-  val choice : t list -> t
+  val persistent ~empty : t
+  val persistent ~seq : t -> t -> t
+  val persistent ~sequence : list t -> t
+  val persistent ~fail : t
+  val persistent ~alt : t -> t -> t
+  val persistent ~choice : list t -> t
 
   % quantifiers
-  val many : t -> t
-  val some : t -> t
-  val opt : t -> t
-  val many-ng : t -> t  % non-greedy Kleene star
-  val some-ng : t -> t
-  val opt-ng : t -> t
+  val persistent ~many : t -> t
+  val persistent ~some : t -> t
+  val persistent ~opt : t -> t
+  val persistent ~many-ng : t -> t  % non-greedy Kleene star
+  val persistent ~some-ng : t -> t
+  val persistent ~opt-ng : t -> t
 
   % submatching
-  val group : t -> t
+  val persistent ~group : t -> t
 
   % anchors
-  val bof : t  % beginning of file
-  val eof : t
-  val bol : t % beginning of line
-  val eol : t
+  val persistent ~bof : t  % beginning of file
+  val persistent ~eof : t
+  val persistent ~bol : t % beginning of line
+  val persistent ~eol : t
 
   % char classes
-  val any : t
-  val char : Char.t -> t
-  val satisfy : (Char.t -> bool) -> t
-  val oneof : string -> t
-  val alpha : t
-  val digit : t
-  val hex-digit : t
-  val space : t
+  val persistent ~any : t
+  val persistent ~char : Char.t -> t
+  val persistent ~satisfy : (Char.t -> bool) -> t
+  val persistent ~oneof : string -> t
+  val persistent ~alpha : t
+  val persistent ~digit : t
+  val persistent ~hex-digit : t
+  val persistent ~space : t
 
   % compound patterns
-  val string : string -> t
-  val spaces : t
-  val between : t -> t -> t -> t
+  val persistent ~string : string -> t
+  val persistent ~spaces : t
+  val persistent ~between : t -> t -> t -> t
 
   % deprecated
-  val many1 : t -> t % use `some` instead
-  val many1-ng : t -> t % use `some-ng` instead
+  val persistent ~many1 : t -> t % use `some` instead
+  val persistent ~many1-ng : t -> t % use `some-ng` instead
 end = struct
 
-  let snoc x xs = List.append xs [x]
-  let list-ret x = [x]
-  let push x r = r |> Ref.update (fun l -> x :: l)
+  val persistent ~snoc x xs = List.append xs [x]
+  val persistent ~list-ret x = [x]
+  val persistent ~push x r = r |> Ref.update (fun l -> x :: l)
 
   type char-class =
   | Single of Char.t
@@ -136,24 +139,24 @@ end = struct
   %       ...
   %
   type state = State of (|
-    accept : bool ref;
-    next : ((label * state) list) ref;
-    mark : int ref; % mark == current-id means there is already a thread running this state
+    accept : ref bool,
+    next : ref (list (label * state)),
+    mark : ref int, % mark == current-id means there is already a thread running this state
   |)
 
   type thread = (|
-    state : state;
-    trace : (int * int) list; % save id and char position in input
+    state : state,
+    trace : list (int * int), % save id and char position in input
   |)
 
   type re = (|
-    init : state;
-    ngroup : int;
-    states : state list;
+    init : state,
+    ngroup : int,
+    states : list state,
   |)
 
   % monadic combinators for ('a 'e result) list
-  let sequence =
+  val persistent ~sequence0 =
     let f m ms =
       m |> Result.and-then (fun x -> (
         ms |> Result.and-then (fun xs -> (
@@ -161,37 +164,37 @@ end = struct
         ))
       )) in
     List.fold-right f (Result.ret [])
-  let map-m f xs = sequence (List.map f xs)
-  let ret x = Result.ret (list-ret x)
-  let and-then f x =
+  val persistent ~map-m f xs = sequence0 (List.map f xs)
+  val persistent ~ret x = Result.ret (list-ret x)
+  val persistent ~and-then f x =
     x |> Result.and-then (fun l -> (
       l |> map-m f |> Result.map List.concat
     ))
 
-  let current-id = Ref.make 0 % number of non-epsilon steps ever done; used to avoid spawning duplicate threads
-  let current-pos = Ref.make 0
-  let current-stream = Ref.make (Stream.nil ())
-  let current-input = Ref.make ` `
+  val persistent ~current-id = Ref.make 0 % number of non-epsilon steps ever done; used to avoid spawning duplicate threads
+  val persistent ~current-pos = Ref.make 0
+  val persistent ~current-stream = Ref.make (Stream.nil ())
+  val persistent ~current-input = Ref.make ` `
 
-  let is-spawned (State s) =
+  val persistent ~is-spawned (State s) =
     Ref.get s#mark == Ref.get current-id
-  let mark-spawned (State s) =
+  val persistent ~mark-spawned (State s) =
     s#mark |> Ref.set (Ref.get current-id)
 
   % spawns a new thread unless there already exists a thread running the same state
-  let spawn state trace =
+  val persistent ~spawn state trace =
     if is-spawned state then
       Result.ok []
     else
       let () = mark-spawned state in
-      ret (| state = state; trace = trace |)
+      ret (| state = state, trace = trace |)
 
-  let next-threads = Ref.make []
-  let match-trace = Ref.make []
+  val persistent ~next-threads = Ref.make []
+  val persistent ~match-trace = Ref.make []
 
   % returns Ok([]) if it didn't match and spawned some threads
   % returns Err(trace) if it matched
-  let-rec step-1 thread =
+  val persistent ~rec step-1 thread =
     let (State state) = thread#state in
     if Ref.get state#accept then
       Result.err thread#trace
@@ -214,14 +217,16 @@ end = struct
             | EOF -> pos == String.length input
             | BOL -> (pos == 0) |||- (fun () -> Eq.equal Char.eq (Char.at (pos - 1) input) Char.newline)
             | EOL -> (pos == String.length input) |||- (fun () -> Eq.equal Char.eq (Char.at pos input) Char.newline)
-            | NOWHERE -> false in
+            | NOWHERE -> false
+            end
+          in
           if hit then
             spawn state thread#trace
               |> and-then step-1
           else
             Result.ok []
         | Char(class) ->
-          (match Stream.head (Ref.get current-stream) with
+          match Stream.head (Ref.get current-stream) with
           | None ->
             Result.ok []
           | Some(c) ->
@@ -229,7 +234,9 @@ end = struct
               match class with
               | Single(char) -> Eq.equal Char.eq c char
               | Any -> true
-              | Pred(f) -> f c in
+              | Pred(f) -> f c
+              end
+            in
             if hit then
               spawn state thread#trace
                 |> and-then (fun thread -> (
@@ -238,11 +245,12 @@ end = struct
                 ))
             else
               Result.ok []
-          )
+          end
+        end
       ))
 
   % returns (threads, Some(trace)) if NFA reached an accepting state and there are threads that are not exhausted.
-  let step-all threads =
+  val persistent ~step-all threads =
     let () = next-threads |> Ref.set [] in
     let () = match-trace |> Ref.set [] in
     let res = Result.ok threads |> and-then step-1 in
@@ -252,26 +260,28 @@ end = struct
       | Ok(_) ->
         Option.none
       | Err(trace) ->
-        Option.some trace in
+        Option.some trace
+      end
+    in
     (next-threads, trace)
 
-  let clear-marks re =
+  val persistent ~clear-marks re =
     re#states |> List.iter (fun (State s) -> (
       s#mark |> Ref.set (-1)
     ))
 
   % returns the initial thread
-  let spawn-init re =
+  val persistent ~spawn-init re =
     let () = clear-marks re in
     let init = State (|
-      accept = Ref.make false;
-      next = Ref.make [(Epsilon, re#init)];
-      mark = Ref.make (-1);
+      accept = Ref.make false,
+      next = Ref.make [(Epsilon, re#init)],
+      mark = Ref.make (-1),
     |) in
-    (| state = init; trace = [] |)
+    (| state = init, trace = [] |)
 
   % returns Some(trace) or None
-  let run re input =
+  val persistent ~run re input =
     let () = current-id |> Ref.set 0 in
     let () = current-pos |> Ref.set 0 in
     let () = current-stream |> Ref.set (Stream.of-string input) in
@@ -280,11 +290,14 @@ end = struct
     let current-answer = Ref.make Option.none in
     [spawn-init re] |> Fn.fix (fun loop threads -> (
       let (next-threads, trace) = step-all threads in
-      let () = match trace with
-      | Some(trace) ->
-        current-answer |> Ref.set (Option.some trace)
-      | None ->
-        () in
+      let () =
+        match trace with
+        | Some(trace) ->
+          current-answer |> Ref.set (Option.some trace)
+        | None ->
+          ()
+        end
+      in
       if Ref.get current-pos == input-length || List.null next-threads then
         Ref.get current-answer
       else
@@ -310,48 +323,48 @@ end = struct
 
   type t = pattern
 
-  let alt p1 p2 = PatAlt(p1, p2)
-  let seq p1 p2 = PatSeq(p1, p2)
-  let any = PatAny
-  let empty = PatEmpty
-  let char c = PatChar(c)
-  let many p = PatMany(p)
-  let some p = PatSome(p)
-  let opt p = alt p empty
-  let many-ng p = PatManyNg(p)
-  let some-ng p = PatSomeNg(p)
-  let opt-ng p = alt empty p
-  let group p = PatGroup(p)
-  let bof = PatAnchor(BOF)
-  let eof = PatAnchor(EOF)
-  let bol = PatAnchor(BOL)
-  let eol = PatAnchor(EOL)
-  let fail = PatAnchor(NOWHERE)
-  let satisfy f = PatSatisfy(f)
+  val persistent ~alt p1 p2 = PatAlt(p1, p2)
+  val persistent ~seq p1 p2 = PatSeq(p1, p2)
+  val persistent ~any = PatAny
+  val persistent ~empty = PatEmpty
+  val persistent ~char c = PatChar(c)
+  val persistent ~many p = PatMany(p)
+  val persistent ~some p = PatSome(p)
+  val persistent ~opt p = alt p empty
+  val persistent ~many-ng p = PatManyNg(p)
+  val persistent ~some-ng p = PatSomeNg(p)
+  val persistent ~opt-ng p = alt empty p
+  val persistent ~group p = PatGroup(p)
+  val persistent ~bof = PatAnchor(BOF)
+  val persistent ~eof = PatAnchor(EOF)
+  val persistent ~bol = PatAnchor(BOL)
+  val persistent ~eol = PatAnchor(EOL)
+  val persistent ~fail = PatAnchor(NOWHERE)
+  val persistent ~satisfy f = PatSatisfy(f)
 
-  let oneof s = satisfy (Char.mem s)
-  let alpha = satisfy Char.is-alpha
-  let digit = satisfy Char.is-digit
-  let hex-digit = satisfy Char.is-hex-digit
-  let space = satisfy Char.is-space
-  let spaces = some space
+  val persistent ~oneof s = satisfy (Char.mem s)
+  val persistent ~alpha = satisfy Char.is-alpha
+  val persistent ~digit = satisfy Char.is-digit
+  val persistent ~hex-digit = satisfy Char.is-hex-digit
+  val persistent ~space = satisfy Char.is-space
+  val persistent ~spaces = some space
 
-  let between op cl p = seq op (seq p cl)
-  let choice ts = List.fold-left alt fail ts
-  let sequence ts = List.fold-right seq empty ts
-  let string s = String.to-list s |> List.map char |> sequence
+  val persistent ~between op cl p = seq op (seq p cl)
+  val persistent ~choice ts = List.fold-left alt fail ts
+  val persistent ~sequence ts = List.fold-right seq empty ts
+  val persistent ~string s = String.to-list s |> List.map char |> sequence
 
-  let many1 = some
-  let many1-ng = some-ng
+  val persistent ~many1 = some
+  val persistent ~many1-ng = some-ng
 
-  let compile p =
+  val persistent ~compile p =
     let ngroup = Ref.make 0 in
     let states = Ref.make [] in
     let make-state accept next =
       let s = State (|
-        accept = Ref.make accept;
-        next = Ref.make next;
-        mark = Ref.make (-1);
+        accept = Ref.make accept,
+        next = Ref.make next,
+        mark = Ref.make (-1),
       |) in
       let () = states |> Ref.update (fun l -> (s :: l)) in
       s in
@@ -359,22 +372,22 @@ end = struct
       s#accept |> Ref.set b in
     let add-next label new (State s) =
       s#next |> Ref.update (fun l -> snoc (label, new) l) in
-    let-rec codegen p =
-      p |> Fn.fix (fun rec p -> (
+    let rec codegen p =
+      p |> Fn.fix (fun recf p -> (
         match p with
         | PatAlt(p1, p2) ->
-          let (init1, fin1) = rec p1 in
-          let (init2, fin2) = rec p2 in
+          let (init1, fin1) = recf p1 in
+          let (init2, fin2) = recf p2 in
           let fin = make-state true [] in
           let () = fin1 |> add-next Epsilon fin in
           let () = fin2 |> add-next Epsilon fin in
           let () = fin1 |> set-accept false in
           let () = fin2 |> set-accept false in
-          let init = make-state false [(Epsilon, init1); (Epsilon, init2)] in
+          let init = make-state false [(Epsilon, init1), (Epsilon, init2)] in
           (init, fin)
         | PatSeq(p1, p2) ->
-          let (init1, fin1) = rec p1 in
-          let (init2, fin2) = rec p2 in
+          let (init1, fin1) = recf p1 in
+          let (init2, fin2) = recf p2 in
           let () = fin1 |> add-next Epsilon init2 in
           let () = fin1 |> set-accept false in
           (init1, fin2)
@@ -398,53 +411,54 @@ end = struct
           let s = make-state true [] in
           (s, s)
         | PatMany(p) ->
-          let (init1, fin1) = rec p in
+          let (init1, fin1) = recf p in
           let fin2 = make-state true [] in
-          let init2 = make-state false [(Epsilon, init1); (Epsilon, fin2)] in
+          let init2 = make-state false [(Epsilon, init1), (Epsilon, fin2)] in
           let () = fin1 |> add-next Epsilon init2 in
           let () = fin1 |> set-accept false in
           (init2, fin2)
         | PatManyNg(p) ->
-          let (init1, fin1) = rec p in
+          let (init1, fin1) = recf p in
           let fin2 = make-state true [] in
-          let init2 = make-state false [(Epsilon, fin2); (Epsilon, init1)] in
+          let init2 = make-state false [(Epsilon, fin2), (Epsilon, init1)] in
           let () = fin1 |> add-next Epsilon init2 in
           let () = fin1 |> set-accept false in
           (init2, fin2)
         | PatSome(p) ->
           let n = Ref.get ngroup in
-          let (init1, fin1) = rec p in
+          let (init1, fin1) = recf p in
           let () = ngroup |> Ref.set n in
-          let (init2, fin2) = rec (PatMany(p)) in
+          let (init2, fin2) = recf (PatMany(p)) in
           let () = fin1 |> add-next Epsilon init2 in
           let () = fin1 |> set-accept false in
           (init1, fin2)
         | PatSomeNg(p) ->
           let n = Ref.get ngroup in
-          let (init1, fin1) = rec p in
+          let (init1, fin1) = recf p in
           let () = ngroup |> Ref.set n in
-          let (init2, fin2) = rec (PatManyNg(p)) in
+          let (init2, fin2) = recf (PatManyNg(p)) in
           let () = fin1 |> add-next Epsilon init2 in
           let () = fin1 |> set-accept false in
           (init1, fin2)
         | PatGroup(p) ->
           let n = ngroup |> Ref.get in
           let () = ngroup |> Ref.inc in
-          let (init1, fin1) = rec p in
+          let (init1, fin1) = recf p in
           let init2 = make-state false [(Save(2 * n), init1)] in
           let fin2 = make-state true [] in
           let () = fin1 |> add-next (Save(2 * n + 1)) fin2 in
           let () = fin1 |> set-accept false in
           (init2, fin2)
+        end
       )) in
     let (init, _) = codegen p in
-    (| init = init; ngroup = Ref.get ngroup; states = Ref.get states; |)
+    (| init = init, ngroup = Ref.get ngroup, states = Ref.get states, |)
 
-  let test p input =
+  val persistent ~test p input =
     let re = compile (seq (many-ng any) (group p)) in
     Option.is-some (run re input)
 
-  let exec p input =
+  val persistent ~exec p input =
     let re = compile (seq (many-ng any) (group p)) in
     let array = Array.make Option.none (re#ngroup * 2) in
     match run re input with
@@ -462,12 +476,15 @@ end = struct
               Option.none
             | Some(e) ->
               let s = array |> Array.get (2 * i) |> Option.unwrap in
-              Option.some (s, input |> String.sub s (e - s)) in
+              Option.some (s, input |> String.sub s (e - s))
+            end
+          in
           submatch :: loop (i + 1)
       )) in
       submatches
     | None ->
       Array.to-list array |> List.map (fun _ -> Option.none)
+    end
 
 % char-class
 %  = char-component+
@@ -483,7 +500,7 @@ end = struct
 %  | `0-7`
 %  | [^]-]
 
-  let of-string s =
+  val persistent ~of-string s =
     let is-meta-char = Char.mem `$^[](){}*+?\|` in
     let re-sequence = sequence in
     let re-choice = choice in
@@ -496,51 +513,51 @@ end = struct
     let re-many = many in
     let re-some = some in
     let re-opt = opt in
-    open Parser in
-    open StringParser in
+    let open Parser in
+    let open StringParser in
     let meta = satisfy is-meta-char in
     let non-meta = satisfy (Fn.non is-meta-char) in
     let char-class =
       sequence [
-        optional (string `]` >> ret (Char.mem `]`)) |> map Option.to-list;
+        optional (string `]` >> ret (Char.mem `]`)) |> map Option.to-list,
         many <| choice [
-          string `a-z` >> ret (Char.mem `abcdefghijklmnopqrstuvwzyz`);
-          string `A-Z` >> ret (Char.mem `ABCDEFGHIJKLMNOPQRSTUVWXYZ`);
-          string `0-9` >> ret (Char.mem `0123456789`);
-          string `a-f` >> ret (Char.mem `abcdef`);
-          string `A-F` >> ret (Char.mem `ABCDEF`);
-          string `0-7` >> ret (Char.mem `01234567`);
-          satisfy (Fn.non (Char.mem `]-`)) |> map Char.equal;
-        ];
-        optional (string `-` >> ret (Char.mem `-`)) |> map Option.to-list;
+          string `a-z` >> ret (Char.mem `abcdefghijklmnopqrstuvwzyz`),
+          string `A-Z` >> ret (Char.mem `ABCDEFGHIJKLMNOPQRSTUVWXYZ`),
+          string `0-9` >> ret (Char.mem `0123456789`),
+          string `a-f` >> ret (Char.mem `abcdef`),
+          string `A-F` >> ret (Char.mem `ABCDEF`),
+          string `0-7` >> ret (Char.mem `01234567`),
+          satisfy (Fn.non (Char.mem `]-`)) |> map Char.equal,
+        ],
+        optional (string `-` >> ret (Char.mem `-`)) |> map Option.to-list,
       ] |> map List.concat |> map (Fn.flip (fun c -> List.exists (Fn.flip Fn.apply c))) in
     let expr = fix (fun expr -> (
       let primary =
         choice [
-          between (string `(`) (string `)`) expr |> map group;
-          string `.` >> ret re-any;  % . matches with newline
+          between (string `(`) (string `)`) expr |> map group,
+          string `.` >> ret re-any,  % . matches with newline
           string `\` >> choice [
-            string `n` >> ret (re-char Char.newline);
-            string `r` >> ret (re-char Char.return);
-            string `t` >> ret (re-char Char.tab);
-            string `s` >> ret re-space;
-            string `d` >> ret re-digit;
-            string `h` >> ret re-hex-digit;
-            meta |> map re-char;
-          ];
-          (string `^` >> ret bol) <|> (string `$` >> ret eol);  % $ and ^ detect boundaries of lines
-          between (string `[^`) (string `]`) char-class |> map (Fn.compose re-satisfy Fn.non);
-          between (string `[`) (string `]`) char-class |> map re-satisfy;
-          non-meta |> map re-char;
+            string `n` >> ret (re-char Char.newline),
+            string `r` >> ret (re-char Char.return),
+            string `t` >> ret (re-char Char.tab),
+            string `s` >> ret re-space,
+            string `d` >> ret re-digit,
+            string `h` >> ret re-hex-digit,
+            meta |> map re-char,
+          ],
+          (string `^` >> ret bol) <|> (string `$` >> ret eol),  % $ and ^ detect boundaries of lines
+          between (string `[^`) (string `]`) char-class |> map (Fn.compose re-satisfy Fn.non),
+          between (string `[`) (string `]`) char-class |> map re-satisfy,
+          non-meta |> map re-char,
         ] in
       let quant = primary >>= (fun x -> choice [
-        string `*?` >> ret (many-ng x);
-        string `+?` >> ret (some-ng x);
-        string `??` >> ret (opt-ng x);
-        string `*` >> ret (re-many x);
-        string `+` >> ret (re-some x);
-        string `?` >> ret (re-opt x);
-        ret x;
+        string `*?` >> ret (many-ng x),
+        string `+?` >> ret (some-ng x),
+        string `??` >> ret (opt-ng x),
+        string `*` >> ret (re-many x),
+        string `+` >> ret (re-some x),
+        string `?` >> ret (re-opt x),
+        ret x,
       ]) in
       let seq = quant |> some |> map re-sequence in
       let expr = seq |> some-sep-by (string `|`) |> map re-choice in

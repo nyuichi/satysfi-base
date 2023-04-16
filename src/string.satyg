@@ -1,93 +1,97 @@
-@stage: persistent
-@import: base
-@require: list
-@import: char
-@import: ord
-@import: eq
+use open Util
+use List
+use Char
+use Ord
+use Eq
 
-module String : sig
-  val equal : string -> string -> bool
-  val ord : (string Ord.t) implicit
-  val eq : (string Eq.t) implicit
-  val max : string -> string -> string
-  val min : string -> string -> string
-  val (<) : string -> string -> bool
-  val (>) : string -> string -> bool
-  val (>=) : string -> string -> bool
-  val (<=) : string -> string -> bool
-  val (==) : string -> string -> bool
-  val length : string -> int
-  val sub : int -> int -> string -> string
-  val empty : string
-  val of-bool : bool -> string
-  val of-int : int -> string
-  val of-float : float -> string
-  val of-codepoints : int list -> string
-  val of-char : Char.t -> string
-  val of-length : length -> string
-  val append : string -> string -> string
-  val concat : string list -> string
-  val is-empty : string -> bool
-  val starts-with : string -> string -> bool
-  val ends-with : string -> string -> bool
-  val to-list : string -> Char.t list
-  val of-list : Char.t list -> string
-  val pow : int -> string -> string
-  val split : int -> string -> string * string
-  val split-by-first : Char.t -> string -> string * string option
-  val split-by : Char.t -> string -> string list
-  val lines : string -> string list
-  val index : Char.t -> string -> int option
+module String :> sig
+  val persistent ~equal : string -> string -> bool
+  val persistent ~ord : implicit (Ord.t string)
+  val persistent ~eq : implicit (Eq.t string)
+  val persistent ~max : string -> string -> string
+  val persistent ~min : string -> string -> string
+  val persistent ~(<) : string -> string -> bool
+  val persistent ~(>) : string -> string -> bool
+  val persistent ~(>=) : string -> string -> bool
+  val persistent ~(<=) : string -> string -> bool
+  val persistent ~(==) : string -> string -> bool
+  val persistent ~length : string -> int
+  val persistent ~sub : int -> int -> string -> string
+  val persistent ~empty : string
+  val persistent ~of-bool : bool -> string
+  val persistent ~of-int : int -> string
+  val persistent ~of-float : float -> string
+  val persistent ~of-codepoints : list int -> string
+  val persistent ~of-char : Char.t -> string
+  val persistent ~of-length : length -> string
+  val persistent ~append : string -> string -> string
+  val persistent ~concat : list string -> string
+  val persistent ~is-empty : string -> bool
+  val persistent ~starts-with : string -> string -> bool
+  val persistent ~ends-with : string -> string -> bool
+  val persistent ~to-list : string -> list Char.t
+  val persistent ~of-list : list Char.t -> string
+  val persistent ~pow : int -> string -> string
+  val persistent ~split : int -> string -> string * string
+  val persistent ~split-by-first : Char.t -> string -> string * option string
+  val persistent ~split-by : Char.t -> string -> list string
+  val persistent ~lines : string -> list string
+  val persistent ~index : Char.t -> string -> option int
   % val byte-length : string -> int
   % val sub-bytes : int -> int -> string -> string
 end = struct
-  let equal = string-same
-  let eq = Eq.make equal
-  let length = string-length
-  let sub i l s = string-sub s i l
-  let of-bool b = if b then `true` else `false`
-  let of-int = arabic
-  let of-float = show-float
-  let empty = ` `
-  let of-codepoints = string-unexplode
-  let of-char = Char.to-string
-  let append s1 s2 = s1 ^ s2
+  val persistent ~equal = string-same
+  val persistent ~eq = Eq.make equal
+  val persistent ~length = string-length
+  val persistent ~sub i l s = string-sub s i l
+  val persistent ~of-bool b = if b then `true` else `false`
+  val persistent ~of-int = arabic
+  val persistent ~of-float = show-float
+  val persistent ~empty = ` `
+  val persistent ~of-codepoints = string-unexplode
+  val persistent ~of-char = Char.to-string
+  val persistent ~append s1 s2 = s1 ^ s2
 
-  let-rec concat xs = match xs with
-  | [] -> empty
-  | s :: xs -> s ^ concat xs
+  val persistent ~rec concat xs =
+    match xs with
+    | [] -> empty
+    | s :: xs -> s ^ concat xs
+    end
 
-  let is-empty s =
+  val persistent ~is-empty s =
     equal s empty
 
-  let starts-with p s =
+  val persistent ~starts-with p s =
     let s-len = length s in
     let p-len = length p in
     (s-len >= p-len) &&&- (fun () -> equal (s |> sub 0 p-len) p)
 
-  let ends-with p s =
+  val persistent ~ends-with p s =
     let s-len = length s in
     let p-len = length p in
     (s-len >= p-len) &&&- (fun () -> equal (s |> sub (s-len - 1 - p-len) p-len) p)
 
-  let to-list s =
-    let-rec go i acc = (match i with
-    | 0 -> acc
-    | _ -> go (i - 1) (Char.at (i - 1) s :: acc)) in
+  val persistent ~to-list s =
+    let rec go i acc =
+      match i with
+      | 0 -> acc
+      | _ -> go (i - 1) (Char.at (i - 1) s :: acc)
+      end
+    in
     go (length s) []
 
-  let of-list chars =
+  val persistent ~of-list chars =
     chars |> List.map Char.to-string |> concat
 
-  let pow n s =
-    let-rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in
+  val persistent ~pow n s =
+    let rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in
     go 0 empty
 
-  let split i s =
+  val persistent ~split i s =
     (sub 0 i s, sub i (length s - i) s)
 
-  let split-by-first d s =
-    let-rec aux maxlen len =
+  val persistent ~split-by-first d s =
+    let rec aux maxlen len =
       if len >= maxlen then
         (s, None)
       else if Char.equal (Char.at len s) d then
@@ -96,21 +100,24 @@ end = struct
         aux maxlen (len + 1)
     in aux (length s) 0
 
-  let-rec split-by d s =
+  val persistent ~rec split-by d s =
     match split-by-first d s with
     | (head, Some(tail)) -> head :: split-by d tail
     | (head, None)       -> [head]
+    end
 
-  let lines = split-by Char.newline
+  val persistent ~lines = split-by Char.newline
 
-  let index c s =
+  val persistent ~index c s =
     let cs = to-list s in
-    let-rec aux cs acc = match cs with
-    | [] -> None
-    | (x::xs) -> if Eq.equal Char.eq c x then Some(acc) else aux xs (acc + 1) in
-    aux cs 0
+    let rec aux cs acc =
+      match cs with
+      | [] -> None
+      | (x::xs) -> if Eq.equal Char.eq c x then Some(acc) else aux xs (acc + 1)
+      end
+    in aux cs 0
 
-  let of-length l =
+  val persistent ~of-length l =
     % -- the following are mostly copied from `ZL0.string-of-length` in `zrbase/zl0`
     let xs = show-float (l /' 1pt) in
     let pu = string-length xs - 1 in
@@ -119,34 +126,34 @@ end = struct
     else xs ^ `pt`
     % -- end
 
-  let ord =
+  val persistent ~ord =
     Ord.make (fun sl sr -> (
       let lstl = string-explode sl in
       let lstr = string-explode sr in
-      let-rec sub lstl lstr =
+      let rec sub lstl lstr =
           match (lstl, lstr) with
-          | ([],[]) -> Eq
-          | (_, []) -> Gt
-          | ([],_) -> Lt
-          | (nl::xl,nr::xr) -> (
+          | ([],[]) -> Ord.Eq
+          | (_, []) -> Ord.Gt
+          | ([],_) -> Ord.Lt
+          | (nl::xl,nr::xr) ->
               if nl < nr then
-                  Lt
+                  Ord.Lt
               else
                   if nl > nr then
-                      Gt
+                      Ord.Gt
                   else
                       sub xl xr
-          )
+          end
       in
       sub lstl lstr
     ))
-  let max = Ord.max ord
-  let min = Ord.min ord
-  let (<) = Ord.lt ord
-  let (>) = Ord.gt ord
-  let (>=) = Ord.ge ord
-  let (<=) = Ord.le ord
-  let (==) = Ord.eq ord
+  val persistent ~max = Ord.max ord
+  val persistent ~min = Ord.min ord
+  val persistent ~(<) = Ord.lt ord
+  val persistent ~(>) = Ord.gt ord
+  val persistent ~(>=) = Ord.ge ord
+  val persistent ~(<=) = Ord.le ord
+  val persistent ~(==) = Ord.eq ord
 
 
 

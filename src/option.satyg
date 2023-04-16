@@ -1,0 +1,275 @@
+use open Util
+use Fn
+use Eq
+use Result
+
+module Option :> sig
+  val persistent ~eq 'a : implicit (Eq.t 'a) -> implicit (Eq.t (option 'a))
+
+  val persistent ~none 'a : option 'a
+  val persistent ~some 'a : 'a -> option 'a
+  val persistent ~is-none 'a : option 'a -> bool
+  val persistent ~is-some 'a : option 'a -> bool
+  val persistent ~unwrap 'a : option 'a -> 'a
+  val persistent ~unwrap-or 'a : 'a -> option 'a -> 'a
+  val persistent ~unwrap-or-else 'a : (unit -> 'a) -> option 'a -> 'a
+  val persistent ~unwrap-none 'a : option 'a -> unit
+  val persistent ~expect 'a : string -> option 'a -> 'a
+  val persistent ~expect-none 'a : string -> option 'a -> unit
+  val persistent ~map 'a 'b : ('a -> 'b) -> option 'a -> option 'b
+  val persistent ~map-or 'a 'b : 'b -> ('a -> 'b) -> option 'a -> 'b
+  val persistent ~map-or-else 'a 'b : (unit -> 'b) -> ('a -> 'b) -> option 'a -> 'b
+  val persistent ~and- 'a : option 'a -> option 'a -> option 'a
+  val persistent ~and-then 'a 'b : ('a -> option 'b) -> option 'a -> option 'b
+  val persistent ~or 'a : option 'a -> option 'a -> option 'a
+  val persistent ~or-else 'a : (unit -> option 'a) -> option 'a -> option 'a
+  val persistent ~xor 'a : option 'a -> option 'a -> option 'a
+  val persistent ~ok-or 'a 'e : 'e -> option 'a -> result 'a 'e
+  val persistent ~ok-or-else 'a 'e : (unit -> 'e) -> option 'a -> result 'a 'e
+  val persistent ~err-or 'a 'e : 'a -> option 'e -> result 'a 'e
+  val persistent ~err-or-else 'a 'e : (unit -> 'a) -> option 'e -> result 'a 'e
+  val persistent ~transpose 'a 'e : option (result 'a 'e) -> result (option 'a) 'e
+  val persistent ~flatten 'a : option (option 'a) -> option 'a
+  val persistent ~ret 'a : 'a -> option 'a
+  val persistent ~fold-list 'a 'b : list 'a -> ('a -> 'b -> option 'b) -> 'b -> option 'b
+  val persistent ~to-list 'a : option 'a -> list 'a
+  val persistent ~iter 'a : ('a -> unit) -> option 'a -> unit
+
+  % deprecated
+  val persistent ~(^&&) : option bool -> option bool -> option bool
+  val persistent ~(^||) : option bool -> option bool -> option bool
+  val persistent ~(^::) 'a : option 'a -> option (list 'a) -> option (list 'a)
+  val persistent ~(^+) : option int -> option int -> option int
+  val persistent ~(^-) : option int -> option int -> option int
+  val persistent ~(^*) : option int -> option int -> option int
+  val persistent ~(^/) : option int -> option int -> option int
+  val persistent ~(^+.) : option float -> option float -> option float
+  val persistent ~(^-.) : option float -> option float -> option float
+  val persistent ~(^*.) : option float -> option float -> option float
+  val persistent ~(^/.) : option float -> option float -> option float
+  val persistent ~(^+') : option length -> option length -> option length
+  val persistent ~(^-') : option length -> option length -> option length
+  val persistent ~(^*') : option length -> option float -> option length
+  val persistent ~(^/') : option length -> option length -> option float
+  val persistent ~from 'a : 'a -> option 'a -> 'a
+  val persistent ~value 'a : 'a -> option 'a -> 'a
+  val persistent ~bind 'a 'b : option 'a -> ('a -> option 'b) -> option 'b  % TODO: swap arguments
+  val persistent ~join 'a : option (option 'a) -> option 'a
+end = struct
+  val persistent ~none = None
+  val persistent ~some x = Some x
+
+  val persistent ~rec is-none opt =
+    match opt with
+    | None -> true
+    | Some(_) -> false
+    end
+
+  val persistent ~rec is-some opt =
+    match opt with
+    | None -> false
+    | Some(_) -> true
+    end
+
+  val persistent ~rec unwrap-or a opt =
+    match opt with
+    | None    -> a
+    | Some(a) -> a
+    end
+
+  val persistent ~rec unwrap-or-else f opt =
+    match opt with
+    | None    -> f ()
+    | Some(a) -> a
+    end
+
+  val persistent ~expect msg opt =
+    opt |> unwrap-or-else (fun () -> panic msg)
+
+  val persistent ~unwrap opt = opt |> expect `unwrap error`
+
+  val persistent ~rec expect-none msg opt =
+    match opt with
+    | None    -> ()
+    | Some(_) -> panic msg
+    end
+
+  val persistent ~unwrap-none opt = opt |> expect-none `unwrap error`
+
+  val persistent ~rec map f opt =
+    match opt with
+    | None    -> None
+    | Some(v) -> Some(f v)
+    end
+
+  val persistent ~rec map-or b f opt = opt |> map f |> unwrap-or b
+  val persistent ~rec map-or-else g f opt = opt |> map f |> unwrap-or-else g
+
+  val persistent ~ok-or e opt = opt |> map Result.ok |> unwrap-or (Result.err e)
+  val persistent ~ok-or-else f opt = opt |> map Result.ok |> unwrap-or-else (fun () -> Result.err (f ()))
+  val persistent ~err-or a opt = opt |> map Result.err |> unwrap-or (Result.ok a)
+  val persistent ~err-or-else f opt = opt |> map Result.err |> unwrap-or-else (fun () -> Result.ok (f ()))
+
+  val persistent ~rec and- opt1 opt2 =
+    match opt2 with
+    | None -> none
+    | _    -> opt1
+    end
+
+  val persistent ~rec and-then f opt =
+    match opt with
+    | None    -> None
+    | Some(v) -> f v
+    end
+
+  val persistent ~rec or opt1 opt2 =
+    match opt2 with
+    | None -> opt1
+    | _    -> opt2
+    end
+
+  val persistent ~rec or-else f opt =
+    match opt with
+    | None -> f ()
+    | _    -> opt
+    end
+
+  val persistent ~rec xor opt1 opt2 =
+    match (opt1, opt2) with
+    | (Some(_), None) -> opt1
+    | (None, Some(_)) -> opt2
+    | _               -> none
+    end
+
+  val persistent ~rec transpose opt =
+    match opt with
+    | None    -> Result.ok none
+    | Some(r) -> r |> Result.map some
+    end
+
+  val persistent ~flatten opt = opt |> and-then Fn.id
+  val persistent ~ret x = some x
+
+  val persistent ~to-list opt =
+    match opt with
+    | None -> []
+    | Some(x) -> [x]
+    end
+
+  val persistent ~rec fold-list list f init =
+    match list with
+    | [] -> init |> ret
+    | x :: xs -> init |> f x |> and-then (fold-list xs f)
+    end
+
+  val persistent ~rec iter f opt =
+    match opt with
+    | None -> ()
+    | Some(v) -> f v
+    end
+
+  val persistent ~bind m f = and-then f m
+  val persistent ~join m = flatten m
+
+  val persistent ~eq eq =
+    Eq.make (fun o1 o2 -> (
+      match (o1, o2) with
+      | (None, None) -> true
+      | (Some a, Some b) -> Eq.equal eq a b
+      | _ -> false
+      end
+    ))
+
+  val persistent ~(^&&) b-opt1 b-opt2 =
+    match (b-opt1, b-opt2) with
+    | (Some(b1), Some(b2)) -> Some(b1 && b2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^||) b-opt1 b-opt2 =
+    match (b-opt1, b-opt2) with
+    | (Some(b1), Some(b2)) -> Some(b1 || b2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^::) a-opt1 lst-opt2 =
+    match (a-opt1, lst-opt2) with
+    | (Some(x), Some(xs)) -> Some(x :: xs)
+    | (_, _)              -> None
+    end
+
+  val persistent ~(^+) i-opt1 i-opt2 =
+    match (i-opt1, i-opt2) with
+    | (Some(i1), Some(i2)) -> Some(i1 + i2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^-) i-opt1 i-opt2 =
+    match (i-opt1, i-opt2) with
+    | (Some(i1), Some(i2)) -> Some(i1 - i2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^*) i-opt1 i-opt2 =
+    match (i-opt1, i-opt2) with
+    | (Some(i1), Some(i2)) -> Some(i1 * i2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^/) i-opt1 i-opt2 =
+    match (i-opt1, i-opt2) with
+    | (Some(i1), Some(i2)) -> Some(i1 / i2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^+.) f-opt1 f-opt2 =
+    match (f-opt1, f-opt2) with
+    | (Some(f1), Some(f2)) -> Some(f1 +. f2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^-.) f-opt1 f-opt2 =
+    match (f-opt1, f-opt2) with
+    | (Some(f1), Some(f2)) -> Some(f1 -. f2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^*.) f-opt1 f-opt2 =
+    match (f-opt1, f-opt2) with
+    | (Some(f1), Some(f2)) -> Some(f1 *. f2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^/.) f-opt1 f-opt2 =
+    match (f-opt1, f-opt2) with
+    | (Some(f1), Some(f2)) -> Some(f1 /. f2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^+') l-opt1 l-opt2 =
+    match (l-opt1, l-opt2) with
+    | (Some(l1), Some(l2)) -> Some(l1 +' l2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^-') l-opt1 l-opt2 =
+    match (l-opt1, l-opt2) with
+    | (Some(l1), Some(l2)) -> Some(l1 -' l2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^*') l-opt1 f-opt2 =
+    match (l-opt1, f-opt2) with
+    | (Some(l1), Some(f2)) -> Some(l1 *' f2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~(^/') l-opt1 l-opt2 =
+    match (l-opt1, l-opt2) with
+    | (Some(l1), Some(l2)) -> Some(l1 /' l2)
+    | (_, _)               -> None
+    end
+
+  val persistent ~from = unwrap-or
+  val persistent ~value = unwrap-or
+end

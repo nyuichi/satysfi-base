@@ -1,41 +1,50 @@
-@require: gr
-@import: ../../option-ext
-@import: ast
-@import: config
-@import: line
+% @require: gr
+use Option
+use List
+use Context
+use DeriveAst
+use DeriveConfig
+use DeriveLine
 
-module DeriveRender : sig
+module DeriveRender :> sig
 
-    val render-math   : DeriveConfig.t -> DeriveAst.t -> math
+    val render-math   : context -> DeriveConfig.t -> DeriveAst.t -> math-boxes
     val render-inline : context -> DeriveConfig.t -> DeriveAst.t -> inline-boxes
 
 end = struct
 
     type layout = (|
-        left-width: length;
-        right-width: length;
-        inner-width: length;
+        left-width: length,
+        right-width: length,
+        inner-width: length,
     |)
 
     type render-intermediate-result = (|
-        rendered: inline-boxes;
-        layout: layout;
+        rendered: inline-boxes,
+        layout: layout,
     |)
 
-    let length-max lens =
+    val length-max lens =
         let max2 len1 len2 = if len1 <' len2 then len2 else len1 in
         lens |> List.fold-left max2 0pt
 
-    let get-bar-width assumptions-layout conclusion-layout =
-        length-max [assumptions-layout#inner-width; conclusion-layout#inner-width]
+    %% TODO: remove this
+    val get-natural-width ib =
+        let (w, _, _) = get-natural-metrics ib in
+        w
 
-    let render-bar-with-label ctx config line llabel-text rlabel-text bar-width =
-        open DeriveConfig in
+    val get-bar-width assumptions-layout conclusion-layout =
+        length-max [assumptions-layout#inner-width, conclusion-layout#inner-width]
+
+    val render-bar-with-label ctx config line llabel-text rlabel-text bar-width =
+        let open DeriveConfig in
 
         let make-label ctx label-text =
             match label-text with
             | None -> inline-nil
-            | Some text -> read-inline ctx text in
+            | Some text -> read-inline ctx text
+            end
+        in
 
         let make-bar ctx config line llabel rlabel bar-width =
             let bar-with-label-width = bar-width +' (get-natural-width llabel) +' (get-natural-width rlabel) in
@@ -49,34 +58,38 @@ end = struct
                 (fun (x, y) -> (
                     let barx = x +' (get-natural-width llabel) +' label-margin in
                     let rlabelx = barx +' bar-width +' label-margin in
-                    List.append
-                    [
-                        Gr.text-rightward (x, y -' (get-axis-height ctx)) llabel;
-                        Gr.text-rightward (rlabelx , y -' (get-axis-height ctx)) rlabel
-                    ]
-                    (DeriveLine.render line ctx (barx, y) bar-width bar-thickness)
-                )) in 
+                    unite-graphics
+                      [
+                        draw-text (x, y -' (Context.get-axis-height ctx)) llabel,
+                        draw-text (rlabelx , y -' (Context.get-axis-height ctx)) rlabel,
+                        DeriveLine.render line ctx (barx, y) bar-width bar-thickness,
+                      ]
+                )) in
 
-        let llabel = match config |> get-main-label-position with 
-        | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
-        | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+        let llabel =
+          match config |> get-main-label-position with
+          | LabelLeft -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+          | LabelRight -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+          end
         in
-        let rlabel = match config |> get-main-label-position with
-        | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
-        | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+        let rlabel =
+          match config |> get-main-label-position with
+          | LabelLeft -> rlabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+          | LabelRight -> llabel-text |> Option.map (read-inline ctx) |> Option.unwrap-or inline-nil
+          end
         in
         let bar = make-bar ctx config line llabel rlabel bar-width in
         let label-margin = config |> get-label-left-right-margin in
         (|
-            rendered = bar;
+            rendered = bar,
             layout   = (|
-                left-width  = (get-natural-width llabel) +' label-margin;
-                right-width = (get-natural-width rlabel) +' label-margin;
-                inner-width   = bar-width;
+                left-width  = (get-natural-width llabel) +' label-margin,
+                right-width = (get-natural-width rlabel) +' label-margin,
+                inner-width   = bar-width,
             |)
         |)
 
-    let align-and-stack assumptions bar conclusion =
+    val align-and-stack assumptions bar conclusion =
         let get-left-width med  = med#layout#left-width +' (med#layout#inner-width *' 0.5) in
         let get-right-width med = med#layout#right-width +' (med#layout#inner-width *' 0.5) in
         let get-aligned-left-width meds  = meds |> List.map get-left-width |> length-max in
@@ -94,61 +107,63 @@ end = struct
             let left-width  = get-aligned-left-width meds in
             let right-width = get-aligned-right-width meds in
             (|
-                left-width  = left-width -' (get-left-width conclusion);
-                right-width = right-width -' (get-right-width conclusion);
-                inner-width   = conclusion#layout#inner-width;
+                left-width  = left-width -' (get-left-width conclusion),
+                right-width = right-width -' (get-right-width conclusion),
+                inner-width   = conclusion#layout#inner-width,
             |) in
 
-        let meds = [assumptions; bar; conclusion] in
+        let meds = [assumptions, bar, conclusion] in
         (|
-            rendered = align-and-stack-rendered meds;
-            layout   = align-layout meds conclusion;
+            rendered = align-and-stack-rendered meds,
+            layout   = align-layout meds conclusion,
         |)
 
-    let render-conclusion ctx config conclusion =
+    val render-conclusion ctx config conclusion =
         let padding = config |> DeriveConfig.get-content-left-right-padding in
-        let rendered = inline-skip padding ++ embed-math ctx conclusion ++ inline-skip padding in
+        let rendered = inline-skip padding ++ embed-math ctx (read-math ctx conclusion) ++ inline-skip padding in
         (|
-            rendered = rendered;
+            rendered = rendered,
             layout = (|
-                left-width  = 0pt;
-                right-width = 0pt;
-                inner-width  = get-natural-width rendered;
+                left-width  = 0pt,
+                right-width = 0pt,
+                inner-width  = get-natural-width rendered,
             |)
         |)
 
-    let-rec render-assumptions ctx config assumptions =
+    val rec render-assumptions ctx config assumptions =
         let empty-med-result = (|
-            rendered = inline-nil;
+            rendered = inline-nil,
             layout = (|
-                left-width  = 0pt;
-                right-width = 0pt;
-                inner-width   = 0pt;
+                left-width  = 0pt,
+                right-width = 0pt,
+                inner-width   = 0pt,
             |)
         |) in
 
         let join-render-intermediate-result med-l med-r ladj _ =
             match ladj with
             | None -> med-r
-            | Some _ -> 
+            | Some _ ->
                 let spacing = 10pt in
                 let new-rendered = med-l#rendered ++ (inline-skip spacing) ++ med-r#rendered in
                 let new-inner-width = med-l#layout#inner-width +' med-l#layout#right-width +' spacing +' med-r#layout#left-width +' med-r#layout#inner-width in
                 (|
-                    rendered = new-rendered;
+                    rendered = new-rendered,
                     layout = (|
-                        left-width = med-l#layout#left-width;
-                        right-width = med-r#layout#right-width;
-                        inner-width = new-inner-width;
+                        left-width = med-l#layout#left-width,
+                        right-width = med-r#layout#right-width,
+                        inner-width = new-inner-width,
                     |)
-                |) in
-        
+                |)
+            end
+        in
+
         assumptions
         |> List.map (render ctx config)
         |> List.fold-left-adjacent join-render-intermediate-result empty-med-result
 
     and render ctx config ast =
-        open DeriveAst in
+        let open DeriveAst in
         let med-assumptions = render-assumptions ctx config (ast |> get-assumptions) in
         let med-conclusion = render-conclusion ctx config (ast |> get-conclusion) in
         let bar-width = get-bar-width med-assumptions#layout med-conclusion#layout in
@@ -156,8 +171,8 @@ end = struct
         let med-bar = render-bar-with-label ctx config line (ast |> get-main-label) (ast |> get-sub-label) bar-width in
         align-and-stack med-assumptions med-bar med-conclusion
 
-    let render-inline ctx config ast = (render ctx config ast)#rendered
+    val render-inline ctx config ast = (render ctx config ast)#rendered
 
-    let render-math config ast = text-in-math MathInner (fun ctx -> (render-inline ctx config ast))
+    val render-math ctx config ast = embed-inline-to-math MathInner (render-inline ctx config ast)
 
 end

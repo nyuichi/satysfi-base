@@ -1,0 +1,39 @@
+use Option
+use DeriveAst
+use DeriveConfig
+use DeriveLine
+
+module TypesetDeriveDSL :> sig
+
+    % DSL
+    val derive : math-text -> DeriveAst.t
+    val by : inline-text -> DeriveAst.t -> DeriveAst.t
+    val byOp : inline-text -> DeriveAst.t -> DeriveAst.t
+    val from : list DeriveAst.t -> DeriveAst.t -> DeriveAst.t
+    val withLine : DeriveLine.t -> DeriveAst.t -> DeriveAst.t
+
+    val assume : math-text -> DeriveAst.t
+
+    % Lines
+    val standard-line : DeriveLine.t
+    val no-line       : DeriveLine.t
+    val dotted-line   : length -> length -> DeriveLine.t
+
+end = struct
+
+    val standard-line = DeriveLine.standard-line
+    val no-line = DeriveLine.no-line
+    val dotted-line = DeriveLine.dotted-line
+
+    val derive conclusion = DeriveAst.make None None conclusion [] None
+
+    val assume assumption =
+        let no-line = Option.some(DeriveLine.no-line) in
+        DeriveAst.make None None assumption [] no-line
+
+    val by label-text ast = ast |> DeriveAst.set-main-label label-text
+    val byOp label-text ast = ast |> DeriveAst.set-sub-label label-text
+    val from assumptions ast = ast |> DeriveAst.set-assumptions assumptions
+    val withLine line ast = ast |> DeriveAst.set-line line
+
+end

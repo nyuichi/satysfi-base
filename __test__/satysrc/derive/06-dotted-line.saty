@@ -1,17 +1,18 @@
-@require: math
-@import: ../util
-@import: ../../../src/typeset/derive
+use package open Math
+use package open Base
+use open TestUtil of `./../util`
 
-open Derive in
+let open Typeset in
+let open Derive in
 satysfi-it ${
   \proven!(
-    open DeriveDSL in
+    let open DeriveDSL in
     derive ${ \Gamma \vdash \Delta }
     |> by {Cut}
     |> withLine (dotted-line 2pt 1pt)
     |> from [
-      assume ${\Gamma \vdash \Delta, A};
-      assume ${\Gamma, A \vdash \Delta}
+      assume ${\Gamma \vdash \Delta, A},
+      assume ${\Gamma, A \vdash \Delta},
     ]
   )
 }

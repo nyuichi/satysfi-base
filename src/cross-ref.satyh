@@ -1,13 +1,13 @@
-module CrossRef : sig
+module CrossRef :> sig
 
   val register : string -> string -> unit
-  val get : string -> string option
+  val get : string -> option string
 
 end = struct
 
-  let register value label =
+  val register value label =
     register-cross-reference label value
 
-  let get label = get-cross-reference label
+  val get label = get-cross-reference label
 
 end

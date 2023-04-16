@@ -1,0 +1,9 @@
+module UtilSubText :> sig
+
+  val finish : string
+
+end = struct
+
+  val finish = ` `
+
+end

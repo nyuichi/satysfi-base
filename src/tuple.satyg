@@ -1,19 +1,19 @@
-@stage: persistent
+module Tuple = struct
+  module Unit :> sig
+    val persistent ~make : unit
+  end = struct
+    val persistent ~make = ()
+  end
 
-module Unit : sig
-  val make : unit
-end = struct
-  let make = ()
-end
-
-module Pair : sig
-  val make : 'a -> 'b -> ('a * 'b)
-  val fst : ('a * 'b) -> 'a
-  val snd : ('a * 'b) -> 'b
-  val swap : ('a * 'b) -> ('b * 'a)
-end = struct
-  let make x y = (x, y)
-  let fst (x, _) = x
-  let snd (_, y) = y
-  let swap (x, y) = (y, x)
+  module Pair :> sig
+    val persistent ~make 'a 'b : 'a -> 'b -> ('a * 'b)
+    val persistent ~fst 'a 'b : ('a * 'b) -> 'a
+    val persistent ~snd 'a 'b : ('a * 'b) -> 'b
+    val persistent ~swap 'a 'b : ('a * 'b) -> ('b * 'a)
+  end = struct
+    val persistent ~make x y = (x, y)
+    val persistent ~fst (x, _) = x
+    val persistent ~snd (_, y) = y
+    val persistent ~swap (x, y) = (y, x)
+  end
 end

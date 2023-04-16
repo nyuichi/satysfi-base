@@ -1,4 +1,4 @@
-module Image : sig
+module Image :> sig
   %% [Image.of-jpeg filename] loads a JPEG image from
   %% file specified by [filename].
   val of-jpeg : string -> image
@@ -8,7 +8,7 @@ module Image : sig
   %% at index [index]. [index] is one-origin.
   val of-pdf : string -> int -> image
 end = struct
-  let of-jpeg = load-image
+  val of-jpeg = load-image
 
-  let of-pdf = load-pdf-image
+  val of-pdf = load-pdf-image
 end

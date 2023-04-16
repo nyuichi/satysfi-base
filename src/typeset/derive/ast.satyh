@@ -1,67 +1,76 @@
-@import: line
+use Option
+use DeriveLine
 
-module DeriveAst : sig
+module DeriveAst :> sig
 
-    type t
-    
-    val make : inline-text option -> inline-text option -> math -> t list -> DeriveLine.t option -> t
+    type t :: o
 
-    val get-main-label : t -> inline-text option
-    val get-sub-label : t -> inline-text option
-    val get-conclusion : t ->  math
-    val get-assumptions : t -> t list
-    val get-line : t -> DeriveLine.t option
+    val make : option inline-text -> option inline-text -> math-text -> list t -> option DeriveLine.t -> t
+
+    val get-main-label : t -> option inline-text
+    val get-sub-label : t -> option inline-text
+    val get-conclusion : t -> math-text
+    val get-assumptions : t -> list t
+    val get-line : t -> option DeriveLine.t
 
     val set-main-label : inline-text -> t -> t
     val set-sub-label : inline-text -> t -> t
-    val set-assumptions : t list -> t -> t
+    val set-assumptions : list t -> t -> t
     val set-line : DeriveLine.t -> t -> t
 
 end = struct
 
     % cf. https://github.com/nyuichi/satysfi-base/pull/19#discussion_r361930019
-    type u =
-    | Ast of inline-text option
-        * inline-text option
-        * math
-        * u list
-        * DeriveLine.t option
-    type t = u
+    type t =
+    | Ast of option inline-text
+        * option inline-text
+        * math-text
+        * list t
+        * option DeriveLine.t
 
-    let make mlabel slabel conclusion assumptions line =
+    val make mlabel slabel conclusion assumptions line =
         Ast(mlabel, slabel, conclusion, assumptions, line)
 
 
-    let get-main-label ast = match ast with
+    val get-main-label ast = match ast with
     | Ast(mlabel, _, _, _, _) -> mlabel
+    end
 
-    let get-sub-label ast = match ast with
+    val get-sub-label ast = match ast with
     | Ast(_, slabel, _, _, _) -> slabel
+    end
 
-    let get-conclusion ast = match ast with
+    val get-conclusion ast = match ast with
     | Ast(_, _, conclusion, _, _) -> conclusion
+    end
 
-    let get-assumptions ast = match ast with
+    val get-assumptions ast = match ast with
     | Ast(_, _, _, assumptions, _) -> assumptions
+    end
 
-    let get-line ast = match ast with
+    val get-line ast = match ast with
     | Ast(_, _, _, _, line) -> line
+    end
 
 
-    let set-main-label mlabel ast = match ast with
+    val set-main-label mlabel ast = match ast with
     | Ast(_, slabel, conclusion, assumptions, line) ->
         Ast(Option.some(mlabel), slabel, conclusion, assumptions, line)
+    end
 
-    let set-sub-label slabel ast = match ast with
+    val set-sub-label slabel ast = match ast with
     | Ast(mlabel, _, conclusion, assumptions, line) ->
         Ast(mlabel, Option.some(slabel), conclusion, assumptions, line)
+    end
 
-    let set-assumptions assumptions ast = match ast with
+    val set-assumptions assumptions ast = match ast with
     | Ast(mlabel, slabel, conclusion, _, line) ->
         Ast(mlabel, slabel, conclusion, assumptions, line)
+    end
 
-    let set-line line ast = match ast with
+    val set-line line ast = match ast with
     | Ast(mlabel, slabel, conclusion, assumptions, _) ->
         Ast(mlabel, slabel, conclusion, assumptions, Option.some(line))
+    end
 
 end

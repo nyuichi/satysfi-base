@@ -1,75 +1,75 @@
-@stage: persistent
-@import: base
-@import: ord
-@import: tree-set
-@import: option-ext
-@import: int
-@import: stream
-@import: tuple
+use open Util
+use Ord
+use TreeSet
+use Option
+use List
+use Int
+use Fn
+use Stream
+use Tuple
 
-module TreeMap : sig
+module TreeMap :> sig
   %% Immutable map.
-  type 'k 'v t
+  type t :: o -> o -> o
 
   %% Creates an empty map.
-  val empty : 'k 'v t
+  val persistent ~empty 'k 'v : t 'k 'v
 
   %% Returns the number of elements in the given map.
-  val size : 'k 'v t -> int
+  val persistent ~size 'k 'v : t 'k 'v -> int
 
   %% Returns [true] if the given map is empty.
-  val is-empty : 'k 'v t -> bool
+  val persistent ~is-empty 'k 'v : t 'k 'v -> bool
 
   %% Returns [true] if the given map contains a binding to the given key.
-  val contains : ('k Ord.t) implicit -> 'k -> 'k 'v t -> bool
+  val persistent ~contains 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> bool
 
   %% [get ord k m] returns the value bound to [k].
-  val get : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'v option
+  val persistent ~get 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> option 'v
 
   %% Binds key to the value.
-  val insert : ('k Ord.t) implicit -> 'k -> 'v -> 'k 'v t -> 'k 'v t
+  val persistent ~insert 'k 'v : implicit (Ord.t 'k) -> 'k -> 'v -> t 'k 'v -> t 'k 'v
 
   %% Removes a binding from the given map.
-  val remove : ('k Ord.t) implicit -> 'k -> 'k 'v t -> 'k 'v t
+  val persistent ~remove 'k 'v : implicit (Ord.t 'k) -> 'k -> t 'k 'v -> t 'k 'v
 
   %% Constructs a map from a list. If the list contains two equal keys, the preceding one is preferred.
-  val of-list : ('k Ord.t) implicit -> ('k * 'v) list -> 'k 'v t
+  val persistent ~of-list 'k 'v : implicit (Ord.t 'k) -> list ('k * 'v) -> t 'k 'v
 
-  val to-list : 'k 'v t -> ('k * 'v) list
+  val persistent ~to-list 'k 'v : t 'k 'v -> list ('k * 'v)
 
-  val to-stream : 'k 'v t -> ('k * 'v) Stream.t
+  val persistent ~to-stream 'k 'v : t 'k 'v -> Stream.t ('k * 'v)
 end = struct
 
-  type 'k 'v u = ('k * ('v option)) TreeSet.t
-  type 'k 'v t = 'k 'v u
+  type t 'k 'v = TreeSet.t ('k * (option 'v))
 
-  let empty = TreeSet.empty
+  val persistent ~empty = TreeSet.empty
 
-  let size = TreeSet.size
+  val persistent ~size = TreeSet.size
 
-  let is-empty = TreeSet.is-empty
+  val persistent ~is-empty = TreeSet.is-empty
 
-  let key-ord ord = Ord.make (fun (k1, _) (k2, _) -> Ord.compare ord k1 k2)
+  val persistent ~key-ord ord = Ord.make (fun (k1, _) (k2, _) -> Ord.compare ord k1 k2)
 
-  let get ord key map =
-    map |> TreeSet.get (key-ord ord) (key, None) |> Option.map (Fn.compose Option.unwrap Pair.snd)
+  val persistent ~get ord key map =
+    map |> TreeSet.get (key-ord ord) (key, None) |> Option.map (Fn.compose Option.unwrap Tuple.Pair.snd)
 
-  let contains ord key map =
+  val persistent ~contains ord key map =
     Option.is-some (get ord key map)
 
-  let insert ord key value map =
+  val persistent ~insert ord key value map =
     map |> TreeSet.insert (key-ord ord) (key, Some(value))
 
-  let remove ord key map =
+  val persistent ~remove ord key map =
     map |> TreeSet.remove (key-ord ord) (key, None)
 
-  let of-list ord list =
+  val persistent ~of-list ord list =
     list |> List.map (fun (k, v) -> (k, Some(v))) |> TreeSet.of-list (key-ord ord)
 
-  let to-stream map =
+  val persistent ~to-stream map =
     map |> TreeSet.to-stream |> Stream.map (fun (k, v) -> (k, Option.unwrap v))
 
-  let to-list map =
+  val persistent ~to-list map =
     map |> to-stream |> Stream.to-list
 
 end

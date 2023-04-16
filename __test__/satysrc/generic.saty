@@ -1,42 +1,44 @@
-@require: stdjareport
-@require: list
-@import: ../../src/base
-@import: ../../src/base0
-@import: ../../src/base1
-@import: ../../src/ref
-@import: ../../src/string
-@import: ../../src/debug
-@import: ../../src/array
-@import: ../../src/regexp
-@import: ../../src/list-ext
-@import: ../../src/option-ext
-@import: ../../src/typeset/code2
-@import: ../../src/parser
-@import: ../../src/int
-@import: ../../src/map
-@import: ../../src/color-ext
-@import: ../../src/promise
-@import: ../../src/fn
-@import: ../../src/float
-@import: ../../src/length
-@import: ../../src/set
-@import: ../../src/tuple
-@import: ../../src/graphics
-@import: ../../src/path
-@import: ../../src/typeset/math-ext
-@import: ../../src/result
-@import: ../../src/void
-@import: ../../src/ord
-@import: ../../src/eq
-@import: ../../src/either
-@import: ../../src/stream
-@import: ../../src/pager
-@import: ../../src/cross-ref
-@import: ../../src/bool
-@import: ../../src/tree-set
-@import: ../../src/tree-map
+use package open Base
 
-open Fn in
+% @require: stdjareport
+% @require: list
+% @import: ../../src/base
+% @import: ../../src/base0
+% @import: ../../src/base1
+% @import: ../../src/ref
+% @import: ../../src/string
+% @import: ../../src/debug
+% @import: ../../src/array
+% @import: ../../src/regexp
+% @import: ../../src/list-ext
+% @import: ../../src/option-ext
+% @import: ../../src/typeset/code2
+% @import: ../../src/parser
+% @import: ../../src/int
+% @import: ../../src/map
+% @import: ../../src/color-ext
+% @import: ../../src/promise
+% @import: ../../src/fn
+% @import: ../../src/float
+% @import: ../../src/length
+% @import: ../../src/set
+% @import: ../../src/tuple
+% @import: ../../src/graphics
+% @import: ../../src/path
+% @import: ../../src/typeset/math-ext
+% @import: ../../src/result
+% @import: ../../src/void
+% @import: ../../src/ord
+% @import: ../../src/eq
+% @import: ../../src/either
+% @import: ../../src/stream
+% @import: ../../src/pager
+% @import: ../../src/cross-ref
+% @import: ../../src/bool
+% @import: ../../src/tree-set
+% @import: ../../src/tree-map
+
+let open Fn in
 
 let () = Debug.log `==== Ref ====` in
 let r = Ref.make 1 in
@@ -52,7 +54,7 @@ let () = r |> Ref.set-temporarily 2 (fun _ -> Debug.log (String.of-int (Ref.get 
 let () = Debug.log (String.of-int (Ref.get r)) in % 1
 
 let () = Debug.log `==== String ====` in
-let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
+let () = Debug.log (String.concat [`a`, `b`, `c`,]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
 let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
@@ -62,11 +64,11 @@ let () = String.(`aab` < `aba`) |> Bool.to-string |> Debug.log in % true
 let () = String.(`bbb` < `bbba`) |> Bool.to-string |> Debug.log in % true
 
 let () = Debug.log `==== List ====` in
-let lst = [1;3;2;4;5] in
+let lst = [1,3,2,4,5] in
 let () = lst |> List.bubblesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
 let () = lst |> List.insertsort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
 let () = lst |> List.mergesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
-let lst = [(1,2);(2,1);(1,1)] in
+let lst = [(1,2),(2,1),(1,1)] in
 let ord = Ord.make (fun (n1,_) (n2,_) -> Ord.compare Int.ord n1 n2) in
 let show (n1,n2) = `(` ^ String.of-int n1 ^ `,` ^ String.of-int n2 ^ `)` in
 let () = lst |> List.bubblesort ord |> List.map show |> List.fold-left (^) ` ` |> Debug.log in
@@ -79,25 +81,26 @@ let () = a |> Array.get 0 |> String.of-int |> Debug.log in
 let () = a |> Array.set 0 43 in
 let () = a |> Array.get 0 |> String.of-int |> Debug.log in
 let a = 10 |> Array.init id in
-let is = [0;1;2;3;4;5;6;7;8;9] in
+let is = [0,1,2,3,4,5,6,7,8,9] in
 let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
 let () = is |> List.iter (fun i -> a |> Array.set i (10 - i)) in
 let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
 let () = a |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
-let a1 = Array.of-list [0;1;2;3;4;] in
-let a2 = Array.of-list [5;6;7;8;9] in
+let a1 = Array.of-list [0,1,2,3,4,] in
+let a2 = Array.of-list [5,6,7,8,9] in
 let a = Array.append a1 a2 in
 let () = Debug.log (String.of-int (Array.get 0 a)) in
 let () = Array.append a1 a2 |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
 
 let () = Debug.log `==== RegExp ====` in
-open RegExp in
+let open RegExp in
 %let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
 let print-result r =
   r |> List.iter (fun s -> (
     match s with
     | None -> Debug.log `None`
     | Some (i, s) -> Debug.log (`Some(` ^ String.of-int i ^ `, "` ^ s ^ `")`)
+    end
   )) in
 %let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
 %let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
@@ -114,7 +117,7 @@ let re3 = many (many char-a) in
 let () = `aaaaa` |> test re3 |> String.of-bool |> Debug.log in
 let re4 = seq (group (seq any (char (Char.make `e`)))) eof in
 let () = `the apple` |> exec re4 |> print-result in
-let re6 = sequence [bol; string `apple`; eol] in
+let re6 = sequence [bol, string `apple`, eol] in
 let () = `the apple
 apple
 leapple` |> exec re6 |> print-result in
@@ -150,12 +153,12 @@ let () = Debug.print (String.of-bool (RegExp.test (RegExp.of-string pat) input))
 
 let () = Debug.log `==== Parser ====` in
 let () =
-  open Parser in
-  `aaa` |> StringParser.run (many (StringParser.char (Char.make `a`)) >>= (fun cs -> (Debug.log (String.of-list cs) before ret cs))) |> Fn.ignore in
+  let open Parser in
+  `aaa` |> StringParser.run (many (StringParser.char (Char.make `a`)) >>= (fun cs -> (let () = Debug.log (String.of-list cs) in ret cs))) |> Fn.ignore in
 
 let () =
-  open Parser in
-  open StringParser in
+  let open Parser in
+  let open StringParser in
   let op name f = string name >> ret f in
   let addop = op `+` Int.add in
   let subop = op `-` Int.sub in
@@ -169,12 +172,12 @@ let () =
     expr
   ))
   in
-    `12/2/2` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore before
-    `1+2*4-12/2/2+4` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
+  let () = `12/2/2` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
+  `1+2*4-12/2/2+4` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
 
 let () =
-  open Parser in
-  open StringParser in
+  let open Parser in
+  let open StringParser in
   let p =
         (label `expected 'foo'` (string `foo`))
     <|> (string `bar`)
@@ -183,13 +186,14 @@ let () =
     match errs with
     | []       -> Debug.log `(something is wrong)`
     | err :: _ -> Debug.log err#desc
+    end
   )) |> Fn.ignore
 in
 
 let () = Debug.log `==== Lexer ====` in
 let rules = [
-  (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
-  (| kind = `whitespace`; regexp = spaces |);
+  (| kind = `identifier`, regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |),
+  (| kind = `whitespace`, regexp = spaces |),
 ] in
 let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
 let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
@@ -215,28 +219,29 @@ let () = p (13 |> Int.lor 10) in %==15
 let () = p (13 |> Int.lxor 10) in %==7
 let () = p (13 |> Int.lsr 2) in %==3
 let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
-let () = p (`12345678` |> Int.of-string ?:10) in
-let () = p (`-123` |> Int.of-string ?:10) in
-let () = p (`ffff` |> Int.of-string ?:16) in
+let () = p (Int.of-string ?(radix = 10) `12345678`) in
+let () = p (Int.of-string ?(radix = 10) `-123`) in
+let () = p (Int.of-string ?(radix = 16) `ffff`) in
 let () = p (2 |> Int.pow 3) in
 let () = p (2 |> Int.pow 0) in
-let () = p (Int.sup [1; 3; 2]) in
+let () = p (Int.sup [1, 3, 2]) in
 let () = p (Int.sup []) in
 let p-opt o =
   let s =
     match o with
     | None -> `None`
     | Some(i) -> `Some(` ^ Int.to-string i ^ `)`
+    end
   in
   Debug.log s
 in
-let () = p-opt(`123` |> Int.of-string-opt ?:10) in
-let () = p-opt(`-123` |> Int.of-string-opt ?:10) in
-let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
-let () = p-opt(`a` |> Int.of-string-opt ?:16) in
+let () = p-opt(Int.of-string-opt ?(radix = 10) `123`) in
+let () = p-opt(Int.of-string-opt ?(radix = 10) `-123`) in
+let () = p-opt(Int.of-string-opt ?(radix = 10) `12n`) in
+let () = p-opt(Int.of-string-opt ?(radix = 16) `a`) in
 
 let () = Debug.log `==== Map ====` in
-let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
+let m = Map.of-list [(1, `a`), (2, `b`), (3, `c`)] in
 let option-force (Some v) = v in
 let () = m |> Map.of- Int.eq 1 |> option-force |> Debug.log in
 let () = m |> Map.of- Int.eq 2 |> option-force |> Debug.log in
@@ -263,7 +268,7 @@ let () = Debug.log `==== Float ====` in
 let p f = f |> String.of-float |> Debug.log in
 let () = p Float.pi in
 let () = p Float.e in
-let l = [Float.inf; Float.ninf; Float.nan; 0.0; Float.neg 0.0; 1.0] in
+let l = [Float.inf, Float.ninf, Float.nan, 0.0, Float.neg 0.0, 1.0] in
 let _ = l |> List.iter (fun a ->
   l |> List.iter (fun b ->
     Debug.log (String.of-float a ^ #` == `# ^ String.of-float b ^ #` = `# ^ String.of-bool Float.(a == b))
@@ -282,25 +287,26 @@ let dbl-min = Stream.nat |> Stream.take 1022 |> Fn.flip Stream.fold 1.0 (fun f _
 let () = p dbl-min in
 let half-dbl-min = dbl-min /. 2.0 in
 let () = p half-dbl-min in
-let l = l |> List.append [dbl-min; half-dbl-min] in
+let l = l |> List.append [dbl-min, half-dbl-min] in
 let p-bool b = b |> String.of-bool |> Debug.log in
 let () = l |> List.iter (fun f -> p-bool (Float.is-zero f)) in
 let () = l |> List.iter (fun f -> p-bool (Float.is-inf f)) in
 let () = l |> List.iter (fun f -> p-bool (Float.is-nan f)) in
 let () = l |> List.iter (fun f -> p-bool (Float.is-normal f)) in
 let () = l |> List.iter (fun f -> p-bool (Float.is-subnormal f)) in
-let l = [2.3; 3.8; 5.5; Float.neg 2.3; Float.neg 3.8; Float.neg 5.5; 6.0] in
+let l = [2.3, 3.8, 5.5, Float.neg 2.3, Float.neg 3.8, Float.neg 5.5, 6.0] in
 let () = l |> List.iter (fun a -> (p (Float.round a))) in
 let () = l |> List.iter (fun a -> (p (Float.floor a))) in
 let () = l |> List.iter (fun a -> (p (Float.ceil a))) in
 let () = l |> List.iter (fun a -> (p (Float.truncate a))) in
 % virtually testing exp2i
-let () = [-1073; -1074; -1075; 1022; 1023; 1024] |> List.iter (fun a -> (p (1.0 |> Float.ldexp a))) in
+let () = [-1073, -1074, -1075, 1022, 1023, 1024] |> List.iter (fun a -> (p (1.0 |> Float.ldexp a))) in
 let p-opt o =
   let s =
     match o with
     | None -> `None`
     | Some(i) -> `Some(` ^ Float.to-string i ^ `)`
+    end
   in
   Debug.log s
 in
@@ -317,6 +323,7 @@ let p-opt o =
     match o with
     | None -> `None`
     | Some(i) -> `Some(` ^ Bool.to-string i ^ `)`
+    end
   in
   Debug.log s
 in
@@ -339,7 +346,7 @@ let () = 0 |> Fn.fix (fun loop n -> (
   if n >= 10 then
     Debug.log `done`
   else
-    Debug.log (String.of-int n) before
+    let () = Debug.log (String.of-int n) in
     loop (n + 1)
 ))
 in
@@ -351,37 +358,37 @@ let () = Debug.log `==== TreeSet ====` in
 let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> String.concat |> Debug.log in
 let s = TreeSet.empty in
 let () = p s in
-let s = TreeSet.of-list Int.ord [3;2;3;1] in
+let s = TreeSet.of-list Int.ord [3,2,3,1] in
 let () = p s in
 let () = Debug.log `check rotations:` in
 % right left rotation
-let s = [1;3;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let s = [1,3,2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let () = p s in
 % right left rotation
-let s = [3;1;2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let s = [3,1,2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let () = p s in
 % left rotation
-let s = [3;2;1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let s = [3,2,1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let () = p s in
 % right rotation
-let s = [1;2;3] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let s = [1,2,3] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let () = p s in
 %     16
 %  8      24
 % 4 12  20  28
-let s = [16;8;24;4;12;20;28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let s = [16,8,24,4,12,20,28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let () = p s in
 % right rotation
-let t = [3;2;1;0;-1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let t = [3,2,1,0,-1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
 let () = p t in
 % left rotation
-let t = [29;30;31;32;33] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let t = [29,30,31,32,33] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
 let () = p t in
 % right left rotation
-let t = [9;15;10;11] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let t = [9,15,10,11] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
 let () = p t in
 % left right rotation
-let t = [23;17;22;19] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
+let t = [23,17,22,19] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) s in
 let () = p t in
 let () = Debug.log `check size after insertion:` in
 let () = TreeSet.size TreeSet.empty |> String.of-int |> Debug.log in
@@ -404,7 +411,7 @@ let t = TreeSet.remove Int.ord 10 t in
 let () = p t in
 let () = TreeSet.size t |> String.of-int |> Debug.log in
 % See https://github.com/nyuichi/satysfi-base/pull/140#discussion_r550355160
-let t = [9;4;11;2;6;10;13;1;3;5;8;12;0;7] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+let t = [9,4,11,2,6,10,13,1,3,5,8,12,0,7] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
 let t = TreeSet.remove Int.ord 13 t in
 let () = p t in
 let () = Debug.log `check get:` in
@@ -412,11 +419,11 @@ let () = s |> TreeSet.get Int.ord 20 |> Option.unwrap-or (-1) |> String.of-int |
 let () = s |> TreeSet.get Int.ord 23 |> Option.unwrap-or (-1) |> String.of-int |> Debug.log in
 
 let () = Debug.log `==== TreeMap ====` in
-let m = TreeMap.of-list String.ord [(`apple`, 1); (`orange`, 3); (`pear`, 2)] in
+let m = TreeMap.of-list String.ord [(`apple`, 1), (`orange`, 3), (`pear`, 2)] in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
 let m = m |> TreeMap.insert String.ord `pear` 4 in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
 
-finish
+UtilSub.finish
