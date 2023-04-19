@@ -1,0 +1,411 @@
+@stage: persistent
+@import: base
+@import: ord
+@import: eq
+@import: int
+@import: list-ext
+@import: option-ext
+@import: string
+@import: bool
+
+module BigInt : sig
+
+  type t
+
+  val ord : (t Ord.t) implicit
+  val eq : (t Eq.t) implicit
+
+  val equal : t -> t -> bool
+
+  val (<) : t -> t -> bool
+  val (>) : t -> t -> bool
+  val (>=) : t -> t -> bool
+  val (<=) : t -> t -> bool
+  val (==) : t -> t -> bool
+
+  val succ : t -> t
+  val pred : t -> t
+  val neg : t -> t
+  val add : t -> t -> t
+  val sub : t -> t -> t
+  val mul : t -> t -> t
+  val div : t -> t -> t
+  val abs : t -> t
+  val pow : t -> t -> t
+  val max : t -> t -> t
+  val min : t -> t -> t
+  val mod- : t -> t -> t
+
+
+  val zero : t
+  val one : t
+  val minus-one : t
+
+  val to-string : t -> string
+  val of-string-opt : string -> t option
+  val of-string : string -> t
+
+  val to-int : t -> int
+  val of-int : int -> t
+
+end = struct
+
+  % 正の数のときにtrueで負の数の時falseとなる
+  % 桁が下の数がリストの先頭にくる
+  % ex:
+  % 123 -> (true, [3; 2; 1])
+  % -456 -> (false, [6; 5; 4])
+  type t = (bool * (int list))
+
+  let make is-positive l = (is-positive, l)
+
+
+  % 繰り上がり処理を行う
+  let carry-and-fix (is-positive, lst) =
+    % 繰り上げ・繰り下げの処理
+    let-rec sub1 stack lst =
+      match lst with
+      | [] -> []
+      | [x] -> x::stack
+      | x::y::zs -> (
+        if Int.(x >= 10) then
+          let k = x / 10 in
+          let new-x = x mod 10 in
+          let new-y = y + k in
+          sub1 (new-x::stack) (new-y::zs)
+        else if Int.(x < 0) then
+          let k = (Int.neg x) / 10 + 1 in
+          let new-x = x + (10 * k) in
+          let new-y = y - k in
+          sub1 (new-x::stack) (new-y::zs)
+        else
+          sub1 (x::stack) (y::zs)
+      )
+    in
+    % 一番上の桁が10以上のときに桁数を増やす
+    % 一番上の桁が0未満の時は再度処理を行わせるためにfalseを変えさせる
+    let-rec sub2 lst =
+      match lst with
+      | [] -> (true, [])
+      | x::xs -> (
+        if Int.(x >= 10) then
+          let k = x / 10 in
+          let new-x = x mod 10 in
+          sub2 (k::new-x::xs)
+        else if Int.(x < 0) then
+          (false, lst)
+        else
+          (true, lst)
+      )
+    in
+    % 一番上の桁の0を消しつつリストを反転させる
+    let-rec sub3 stack is-zero lst =
+      match lst with
+      | [] -> stack
+      | x::xs -> (
+        if is-zero && Int.(x == 0) then
+          sub3 stack true xs
+        else
+          sub3 (x::stack) false xs
+      )
+    in
+    match lst |> sub1 [] |> sub2 with
+      | (_, [0]) -> (true, [0])
+      | (true, new-lst) -> (is-positive, sub3 [] true new-lst)
+      | (false, new-lst) -> (
+        let new-lst =
+          new-lst
+          |> List.reverse
+          |> List.map Int.neg
+          |> sub1 []
+        in
+        (not is-positive, sub3 [] true new-lst)
+      )
+
+
+
+  let ord =
+    Ord.make (fun tl tr -> (
+      let-rec sub lstl lstr =
+          match (lstl, lstr) with
+          | ([],[]) -> Eq
+          | (_, []) -> panic `BigInt.ord: invalid data`
+          | ([],_) -> panic `BigInt.ord: invalid data`
+          | (nl::xl,nr::xr) -> (
+              if Int.(nl < nr) then
+                  Lt
+              else
+                  if Int.(nl > nr) then
+                      Gt
+                  else
+                      sub xl xr
+          )
+      in
+      match (carry-and-fix tl, carry-and-fix tr) with
+      | ((_,[0]), (_,[0])) -> Eq
+      | ((true,_), (false,_)) -> Gt
+      | ((false,_), (true,_)) -> Lt
+      | ((true,lstl), (true,lstr)) ->
+        if Int.(List.length lstl < List.length lstr) then
+          Lt
+        else if Int.(List.length lstl > List.length lstr) then
+          Gt
+        else
+          sub (List.reverse lstl) (List.reverse lstr)
+      | ((false,lstl), (false,lstr)) -> (
+        if Int.(List.length lstl < List.length lstr) then
+          Gt
+        else if Int.(List.length lstl > List.length lstr) then
+          Lt
+        else
+          match sub (List.reverse lstl) (List.reverse lstr) with
+          | Lt -> Gt
+          | Gt -> Lt
+          | Eq -> Eq
+      )
+    ))
+
+
+  let eq = Ord.derive-eq ord
+  let equal = Eq.equal eq
+
+  let max = Ord.max ord
+  let min = Ord.min ord
+  let (<) = Ord.lt ord
+  let (>) = Ord.gt ord
+  let (>=) = Ord.ge ord
+  let (<=) = Ord.le ord
+  let (==) = Ord.eq ord
+
+
+  let zero = (true, [0])
+  let one = (true, [1])
+  let minus-one = (false, [1])
+
+
+  % 足し算引き算は演算子が違う以外は共通化できる
+  let-rec add-sub op l1 l2 =
+    match (l1, l2) with
+    | ([], []) -> []
+    | (x1::xs1, []) -> (op x1 0) :: (add-sub op xs1 [])
+    | ([], x2::xs2) -> (op 0 x2) :: (add-sub op [] xs2)
+    | (x1::xs1, x2::xs2) -> (op x1 x2) :: (add-sub op xs1 xs2)
+
+
+  let add (is-positive-1, lst1) (is-positive-2, lst2) =
+    let op =
+      % 正負が同じときは和を求め、違う場合は差を求める
+      if Bool.equal is-positive-1 is-positive-2 then
+        (+)
+      else
+        (-)
+    in
+    % 足される数の正負がそのまま計算結果の正負と等しくなる
+    % -123 + 234 = 111 となるので一見違うように思えるが、
+    % add-sub関数で計算させるときには絶対値での和差を出すので
+    % add-subの結果は 123 - 234 = -111となり、
+    % 最後は符号を反転させるために false を指定するのが
+    % 正しい操作となる
+    % carry-and-fix関数は符号の補正までしてくれるので、
+    % そこに投げるのが良い
+    carry-and-fix (is-positive-1, add-sub op lst1 lst2)
+
+  let sub (is-positive-1, lst1) (is-positive-2, lst2) =
+    let op =
+      if Bool.equal is-positive-1 is-positive-2 then
+        (-)
+      else
+        (+)
+    in
+    carry-and-fix (is-positive-1, add-sub op lst1 lst2)
+
+  let succ t = add t one
+  let pred t = sub t one
+  let neg (is-positive,l) = (not is-positive, l)
+  let abs (_,lst) = (true, lst)
+
+
+  let-rec add-zero i lst =
+    if Int.(i <= 0) then
+      lst
+    else
+      add-zero (i - 1) (0::lst)
+  let-rec all-sum i lst-lst =
+    let i-opt-lst =
+      lst-lst
+      |> List.map (List.nth i)
+    in
+    let sum =
+      let f sum i-opt =
+        match i-opt with
+        | Some(i) -> sum + i
+        | None -> sum
+      in
+      List.fold-left f 0 i-opt-lst
+    in
+    if Int.(sum == 0) then
+      []
+    else
+      sum :: (all-sum (i + 1) lst-lst)
+
+  % 例：
+  % 123 * 456
+  % -> [3; 2; 1] * [6; 5; 4]
+  % -> [[18; 15; 12]; [12; 10; 8]; [6; 5; 4]]
+  % -> [[18; 15; 12]; [0; 12; 10; 8]; [0; 0; 6; 5; 4]]
+  % -> [18; 27; 28; 13; 4]
+  % -> [8; 8; 0; 6; 5]
+  % -> 56088
+  let mul-sub l1 l2 =
+    l1
+    % まず全桁同士かけ合わせる
+    |> List.map (fun i -> List.map (fun j -> i * j) l2)
+    % 桁数の数だけ後ろに0をつけて桁を正しくする
+    |> List.mapi add-zero
+    % 全て足す
+    |> all-sum 0
+
+  % 多くのSATySFiプログラムでは数百桁の多倍長整数は扱わないと予想するため、karatsuba法は採用していない
+  let mul (is-positive-1, lst1) (is-positive-2, lst2) =
+    carry-and-fix (Bool.equal is-positive-1 is-positive-2, mul-sub lst1 lst2)
+
+
+
+  % lst2に0から9までをかけてlst1比較することで商と余りを出す
+  % lst1が割られる数でlst2が割る数
+  % `div-sub-sub2 0 zero lst1 lst2`と使うことを想定している
+  let-rec div-sub-sub2 i num lst1 lst2 =
+    let new-num = add (true, lst2) num in
+    if (true, lst1) < new-num then
+      % 超えた場合は、iより一つ小さい数が商となる
+      let (_,surplus-lst) = sub (true, lst1) num in
+      (i, surplus-lst)
+    else if (true, lst1) == new-num then
+      % ちょうど割り切れた場合
+      (i + 1, [0])
+    else
+      % まだ割られる数が大きいのでiを一つ大きくする
+      div-sub-sub2 (i + 1) new-num lst1 lst2
+
+  % 一つ前の割り算の余りに一つ下に数字を足して割り算を行う
+  let-rec div-sub-sub stack before-lst1 after-lst1 lst2 =
+    match after-lst1 with
+    | [] -> (
+      (stack, before-lst1)
+    )
+    | x::xs -> (
+      let (answer, surplus-lst) =
+        div-sub-sub2 0 zero (x::before-lst1) lst2
+      in
+      div-sub-sub (answer::stack) surplus-lst xs lst2
+    )
+
+  % 答えと剰余を同時に出す
+  let div-sub (is-positive-1, lst1) (is-positive-2, lst2) =
+    if Int.((List.length lst1) < (List.length lst2)) then
+      (zero, (is-positive-2, lst2))
+    else
+      let answer-is-positive =
+        Bool.equal is-positive-1 is-positive-2
+      in
+      let surplus-is-positive = is-positive-1 || is-positive-2 in
+      let d = (List.length lst1) - (List.length lst2) in
+      let (left-lst1, right-lst1) = List.split-at d lst1 in
+      let (answer-lst, surplus-lst) =
+        div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2
+      in
+      (
+        carry-and-fix (answer-is-positive, answer-lst),
+        carry-and-fix (surplus-is-positive, surplus-lst)
+      )
+
+
+  let div t1 t2 =
+    let (answer,_) = div-sub t1 t2 in
+    answer
+
+  let mod- t1 t2 =
+    let (_,surplus) = div-sub t1 t2 in
+    surplus
+
+
+  % Int.powと実装が同じ
+  let pow p base = % REQUIRE(p >= 0)
+    let two = (true, [2]) in
+    let-rec aux p pp acc =
+      if p == zero then
+        acc
+      else if (mod- p two) == one then
+        aux (div p two) (mul pp pp) (mul acc pp)
+      else
+        aux (div p two) (mul pp pp) acc
+    in aux p base one
+
+
+  let to-string t =
+    let-rec sub lst str =
+      match lst with
+      | [] -> str
+      | i::is -> sub is ((Int.to-string i)^str)
+    in
+    let (is-positive, lst) = t in
+    if is-positive then
+      sub lst String.empty
+    else
+      `-` ^ (sub lst String.empty)
+
+
+  let of-string-opt str =
+    let clst = string-explode str in
+    let-rec sub clst lst =
+      match clst with
+      | [] -> Some(lst)
+        % 0x0030 == `0`
+        % 0x0039 == `9`
+        % 数字の文字コードから0x0030を引くことで、数を表す文字を整数値に直している
+      | x::xs when Int.(0x0030 <= x) && Int.(x <= 0x0039) -> (
+        let i = x - 0x0030 in
+        sub xs (i::lst)
+      )
+      | _ -> None
+    in
+    match clst with
+    | [] -> None
+      % 0x002D == `-`
+      % 先頭にマイナス記号があるときには負の値にする必要があるので、それのチェック
+    | 0x002D::xs -> sub xs [] |> Option.map (fun lst -> (false, lst))
+    | _ -> sub clst [] |> Option.map (fun lst -> (true, lst))
+
+
+  let of-string s =
+    let msg = `BigInt.of-string: invalid string: `# ^ s in
+    s |> of-string-opt |> Option.expect msg
+
+  % Int.max-valueを超えているときの挙動は未定義
+  % リストの先頭が1の位
+  let to-int (is-positive, lst) =
+    let-rec sub lst n m =
+      match lst with
+      | [] -> m
+      | x::xs -> sub xs (n * 10) (x * n + m)
+    in
+    if is-positive then
+      sub lst 1 0
+    else
+      Int.neg (sub lst 1 0)
+
+
+  let of-int i =
+    % 10で割ったときの余りを登録していく
+    let-rec sub n lst =
+      if Int.(n < 10) then
+        n::lst
+      else
+        sub (n / 10) ((n mod 10)::lst)
+    in
+    if Int.(i < 0) then
+      (false, List.reverse (sub (Int.neg i) []))
+    else
+      (true, List.reverse (sub i []))
+
+end

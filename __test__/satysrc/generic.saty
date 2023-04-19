@@ -35,6 +35,7 @@
 @import: ../../src/bool
 @import: ../../src/tree-set
 @import: ../../src/tree-map
+@import: ../../src/big-int
 
 open Fn in
 
@@ -418,5 +419,85 @@ let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.
 let m = m |> TreeMap.insert String.ord `pear` 4 in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `orange` |> Option.unwrap)) in
 let () = Debug.log (String.of-int (m |> TreeMap.get String.ord `pear` |> Option.unwrap)) in
+
+let () = Debug.log `==== BigInt ====` in
+let p t = t |> BigInt.to-string |> Debug.log in
+let () = p (BigInt.of-string `42`) in
+let () = p (BigInt.of-string `-123`) in
+let () = p (BigInt.of-string `-10`) in
+let () = p BigInt.zero in
+let () = p BigInt.one in
+let () = p BigInt.minus-one in
+
+let () = BigInt.((BigInt.of-string `42`) < (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
+let () = BigInt.((BigInt.of-string `42`) <= (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
+let () = BigInt.((BigInt.of-string `42`) > (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
+let () = BigInt.((BigInt.of-string `42`) >= (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
+let () = BigInt.((BigInt.of-string `42`) == (BigInt.of-string `136`)) |> Bool.to-string |> Debug.log in
+let () = BigInt.((BigInt.of-string `-42`) < (BigInt.of-string `-136`)) |> Bool.to-string |> Debug.log in
+
+let ord-to-string o = match o with | Lt -> `Lt` | Gt -> `Gt` | Eq -> `Eq` in
+let p-ord n m =
+  Ord.compare BigInt.ord n m
+  |> ord-to-string
+  |> Debug.log
+in 
+let () = p-ord (BigInt.of-string `123`) (BigInt.of-string `-456`) in
+let () = p-ord (BigInt.of-string `-123`) (BigInt.of-string `456`) in
+let () = p-ord (BigInt.of-string `333`) (BigInt.of-string `333`) in
+let () = p-ord (BigInt.of-string `-333`) (BigInt.of-string `-333`) in
+let () = p-ord (BigInt.of-string `1234`) (BigInt.of-string `432`) in
+let () = p-ord (BigInt.of-string `432`) (BigInt.of-string `1234`) in
+let () = p-ord (BigInt.of-string `-1234`) (BigInt.of-string `-432`) in
+let () = p-ord (BigInt.of-string `-432`) (BigInt.of-string `-1234`) in
+let () = p-ord (BigInt.of-string `332`) (BigInt.of-string `333`) in
+let () = p-ord (BigInt.of-string `333`) (BigInt.of-string `332`) in
+let () = p-ord (BigInt.of-string `-332`) (BigInt.of-string `-333`) in
+let () = p-ord (BigInt.of-string `-333`) (BigInt.of-string `-332`) in
+
+
+
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `39`)) in
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `39`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.add (BigInt.of-string `42`) (BigInt.of-string `-45`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.add (BigInt.of-string `-42`) (BigInt.of-string `-45`)) in
+
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `39`)) in
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `39`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `-39`)) in
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.sub (BigInt.of-string `42`) (BigInt.of-string `-45`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `45`)) in
+let () = p (BigInt.sub (BigInt.of-string `-42`) (BigInt.of-string `-45`)) in
+
+let () = p (BigInt.mul (BigInt.of-string `157`) (BigInt.of-string `16`)) in
+let () = p (BigInt.mul (BigInt.of-string `157`) (BigInt.of-string `-16`)) in
+let () = p (BigInt.mul (BigInt.of-string `-157`) (BigInt.of-string `16`)) in
+let () = p (BigInt.mul (BigInt.of-string `-157`) (BigInt.of-string `-16`)) in
+
+let () = p (BigInt.div (BigInt.of-string `12345`) (BigInt.of-string `43`)) in
+let () = p (BigInt.mod- (BigInt.of-string `12345`) (BigInt.of-string `43`)) in
+let () = p (BigInt.div (BigInt.of-string `1111111`) (BigInt.of-string `4649`)) in
+let () = p (BigInt.mod- (BigInt.of-string `1111111`) (BigInt.of-string `4649`)) in
+let () = p (BigInt.div (BigInt.of-string `-12345`) (BigInt.of-string `43`)) in
+let () = p (BigInt.mod- (BigInt.of-string `-12345`) (BigInt.of-string `43`)) in
+let () = p (BigInt.div (BigInt.of-string `12345`) (BigInt.of-string `-43`)) in
+let () = p (BigInt.mod- (BigInt.of-string `12345`) (BigInt.of-string `-43`)) in
+let () = p (BigInt.div (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
+let () = p (BigInt.mod- (BigInt.of-string `-12345`) (BigInt.of-string `-43`)) in
+let () = p (BigInt.of-string `2` |> BigInt.pow (BigInt.of-string `3`)) in
+let () = p (BigInt.of-string `2` |> BigInt.pow (BigInt.of-string `0`)) in
+
+
+let () = p (BigInt.of-int 12345) in
+let () = p (BigInt.of-int (-12345)) in
+let () = Debug.log (Int.to-string(BigInt.to-int (BigInt.of-int 12345))) in
+let () = Debug.log (Int.to-string(BigInt.to-int (BigInt.of-int (-12345)))) in
+
 
 finish
