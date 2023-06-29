@@ -146,6 +146,8 @@ end = struct
     |> List.nth n
 
 
+  % 検索する語と検索される語が先頭から一致するかどうかを判定する
+  % 一致しない場合は先頭の文字を渡す
   let-rec search-and-get-next-char is-eq clst slst =
     match (clst, slst) with
     | ([], []) -> (is-eq, None)
@@ -158,15 +160,17 @@ end = struct
         search-and-get-next-char false cs ss
     )
 
-  let-rec find-next-char-pos n lst c clst =
+  % 検索される語の先頭の文字が、検索する語の中で何番目にあたるかを調べる
+  % 検索される後の先頭の文字が、検索する語の中にない場合はNoneが返る
+  let-rec find-next-char-pos n n-opt c clst =
     match clst with
     | x::xs -> (
       if Char.equal x c then
-        find-next-char-pos (n + 1) (n::lst) c xs
+        find-next-char-pos (n + 1) (Some n) c xs
       else
-        find-next-char-pos (n + 1) lst c xs
+        find-next-char-pos (n + 1) None c xs
     )
-    | [] -> lst
+    | [] -> n-opt
 
 
   let-rec shift n lst =
@@ -179,6 +183,7 @@ end = struct
 
 
   % Quick-Search
+  % こちらを参考に実装：https://www.m3tech.blog/entry/2020/09/28/120000
   let contains s str =
     let clst = to-list s in
     let-rec sub l =
@@ -186,11 +191,11 @@ end = struct
       | (true, _) -> true
       | (false, None) -> false
       | (false, Some(c)) -> (
-        let nlst = find-next-char-pos 0 [] c clst in
+        let n-opt = find-next-char-pos 0 None c clst in
         let n =
-          match nlst with
-          | n::_ -> List.length clst - n
-          | _ -> List.length clst
+          match n-opt with
+          | Some(n) -> List.length clst - n
+          | None -> List.length clst + 1
         in
         let new-l = shift n l in
         sub new-l
