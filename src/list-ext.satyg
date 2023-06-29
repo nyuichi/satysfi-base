@@ -224,7 +224,7 @@ end = struct
     match lst with
     | []      -> []
     | x :: xs -> (
-        if i < 0 then
+        if i <= 0 then
           []
         else
           x :: (take (i - 1) xs)
@@ -232,17 +232,14 @@ end = struct
 
 
   let-rec drop i lst =
-    if i < 0 then
-      lst
-    else
-      match lst with
-      | []      -> []
-      | x :: xs -> (
-          if i < 1 then
-            xs
-          else
-            drop (i - 1) xs
-      )
+    match lst with
+    | []      -> []
+    | _ :: xs -> (
+      if i <= 0 then
+        lst
+      else
+        drop (i - 1) xs
+    )
 
 
   let-rec take-while f lst =
@@ -537,7 +534,7 @@ end = struct
     | [] -> []
     | [x] -> [x]
     | _ ->
-      let (ys, zs) = splitat (((length lst) / 2) - 1) lst in
+      let (ys, zs) = splitat ((length lst) / 2) lst in
         merge (mergesort ord ys) (mergesort ord zs)
 
   let acons k v alist = (k, v) :: alist
