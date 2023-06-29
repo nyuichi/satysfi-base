@@ -64,6 +64,14 @@ let () = String.(`bbb` < `bbba`) |> Bool.to-string |> Debug.log in % true
 
 let () = Debug.log `==== List ====` in
 let lst = [1;3;2;4;5] in
+let () = lst |> List.take 0 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % ` `
+let () = lst |> List.take 1 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `1`
+let () = lst |> List.take 7 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `13245`
+let () = lst |> List.drop 0 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `13245`
+let () = lst |> List.drop 2 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `245`
+let () = lst |> List.drop 7 |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % ``
+let () = lst |> List.split-at 3 |> (fun (xs,_) -> xs) |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `132`
+let () = lst |> List.split-at 3 |> (fun (_,ys) -> ys) |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `45`
 let () = lst |> List.bubblesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
 let () = lst |> List.insertsort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
 let () = lst |> List.mergesort Int.ord |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in
