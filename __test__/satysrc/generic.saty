@@ -93,6 +93,7 @@ let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.lo
 let () = is |> List.iter (fun i -> a |> Array.set i (10 - i)) in
 let () = is |> List.iter (fun i -> a |> Array.get i |> String.of-int |> Debug.log) in
 let () = a |> Array.to-list |> List.iter (fun i -> i |> String.of-int |> Debug.log) in
+let () = [0;1;2;3;4;] |> Array.of-list |> Array.sub 2 3 |> Array.to-list  |> List.map String.of-int |> List.fold-left (^) ` ` |> Debug.log in % `234`
 let a1 = Array.of-list [0;1;2;3;4;] in
 let a2 = Array.of-list [5;6;7;8;9] in
 let a = Array.append a1 a2 in

@@ -69,6 +69,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 3[0m
 [32m[debug.log] 2[0m
 [32m[debug.log] 1[0m
+[32m[debug.log] 234[0m
 [32m[debug.log] 0[0m
 [32m[debug.log] 0[0m
 [32m[debug.log] 1[0m
