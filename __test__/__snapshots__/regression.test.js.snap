@@ -9,6 +9,7 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] 1[0m
 [32m[debug.log] ==== String ====[0m
 [32m[debug.log] abc[0m
+[32m[debug.log] a;b;c[0m
 [32m[debug.log] true[0m
 [32m[debug.log] spam[0m
 [32m[debug.log] ham[0m
@@ -21,6 +22,17 @@ exports[`Check compiler outputs 1`] = `
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
 [32m[debug.log] true[0m
+[32m[debug.log] true[0m
+[32m[debug.log] false[0m
+[32m[debug.log] false[0m
+[32m[debug.log] abc[0m
+[32m[debug.log] [0m
+[32m[debug.log] abc   [0m
+[32m[debug.log]  abc[0m
+[32m[debug.log] GRüßE, JüRGEN[0m
+[32m[debug.log] grÜße, jÜrgen[0m
+[32m[debug.log] TiTle[0m
+[32m[debug.log] tiTle[0m
 [32m[debug.log] ==== List ====[0m
 [32m[debug.log] [0m
 [32m[debug.log] 1[0m
