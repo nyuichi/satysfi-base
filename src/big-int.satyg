@@ -310,7 +310,7 @@ end = struct
       in
       let surplus-is-positive = is-positive-1 || is-positive-2 in
       let d = (List.length lst1) - (List.length lst2) in
-      let (left-lst1, right-lst1) = List.split-at d lst1 in
+      let (left-lst1, right-lst1) = List.split-at (d + 1) lst1 in
       let (answer-lst, surplus-lst) =
         div-sub-sub [] right-lst1 (List.reverse left-lst1) lst2
       in
