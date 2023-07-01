@@ -146,45 +146,48 @@ end = struct
     |> List.nth n
 
 
-  % 検索する語と検索される語が先頭から一致するかどうかを判定する
-  % 一致しない場合は先頭の文字を渡す
-  let-rec search-and-get-next-char is-eq clst slst =
-    match (clst, slst) with
-    | ([], []) -> (is-eq, None)
-    | ([], s::_) -> (is-eq, Some(s))
-    | (_, []) -> (false, None)
-    | (c::cs, s::ss) -> (
-      if Char.equal c s && is-eq then
-        search-and-get-next-char true cs ss
-      else
-        search-and-get-next-char false cs ss
-    )
-
-  % 検索される語の先頭の文字が、検索する語の中で何番目にあたるかを調べる
-  % 検索される後の先頭の文字が、検索する語の中にない場合はNoneが返る
-  let-rec find-next-char-pos n n-opt c clst =
-    match clst with
-    | x::xs -> (
-      if Char.equal x c then
-        find-next-char-pos (n + 1) (Some n) c xs
-      else
-        find-next-char-pos (n + 1) None c xs
-    )
-    | [] -> n-opt
-
-
-  let-rec shift n lst =
-    if n <= 0 then
-      lst
-    else
-      match lst with
-      | [] -> []
-      | _::xs -> shift (n - 1) xs
 
 
   % Quick-Search
   % こちらを参考に実装：https://www.m3tech.blog/entry/2020/09/28/120000
   let contains s str =
+    % 検索する語と検索される語が先頭から一致するかどうかを判定する
+    % 一致しない場合は先頭の文字を渡す
+    let-rec search-and-get-next-char is-eq clst slst =
+      match (clst, slst) with
+      | ([], []) -> (is-eq, None)
+      | ([], s::_) -> (is-eq, Some(s))
+      | (_, []) -> (false, None)
+      | (c::cs, s::ss) -> (
+        if Char.equal c s && is-eq then
+          search-and-get-next-char true cs ss
+        else
+          search-and-get-next-char false cs ss
+      )
+    in
+
+    % 検索される語の先頭の文字が、検索する語の中で何番目にあたるかを調べる
+    % 検索される後の先頭の文字が、検索する語の中にない場合はNoneが返る
+    let-rec find-next-char-pos n n-opt c clst =
+      match clst with
+      | x::xs -> (
+        if Char.equal x c then
+          find-next-char-pos (n + 1) (Some n) c xs
+        else
+          find-next-char-pos (n + 1) None c xs
+      )
+      | [] -> n-opt
+    in
+
+    let-rec shift n lst =
+      if n <= 0 then
+        lst
+      else
+        match lst with
+        | [] -> []
+        | _::xs -> shift (n - 1) xs
+    in
+
     let clst = to-list s in
     let-rec sub l =
       match search-and-get-next-char true clst l with
