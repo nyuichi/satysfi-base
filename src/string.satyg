@@ -26,9 +26,7 @@ module String : sig
   val of-char : Char.t -> string
   val of-length : length -> string
   val append : string -> string -> string
-  val with-concat : string -> string list -> string
-  val concat : string list -> string
-  val cat : string -> string -> string
+  val concat : string ?-> string list -> string
   val is-empty : string -> bool
   val starts-with : string -> string -> bool
   val ends-with : string -> string -> bool
@@ -67,15 +65,21 @@ end = struct
   let append s1 s2 = s1 ^ s2
 
 
-  let-rec with-concat s xs =
-    match xs with
-    | [] -> empty
-    | [x] -> x
-    | x :: xs -> x ^ s ^ with-concat s xs
 
-  let concat xs = with-concat empty xs
+  let concat ?:s xs =
+    let s =
+      match s with
+      | None -> empty
+      | Some(s) -> s
+    in
+    let-rec sub xs =
+      match xs with
+      | [] -> empty
+      | [x] -> x
+      | x :: xs -> x ^ s ^ sub xs
+    in
+    sub xs
 
-  let cat = (^)
 
   let is-empty s =
     equal s empty
@@ -96,7 +100,7 @@ end = struct
     |> List.map Char.of-codepoint
 
   let of-list chars =
-    chars |> List.map Char.to-string |> concat
+    chars |> List.map Char.to-string |> (fun slst -> concat slst)
 
   let pow n s =
     let-rec go i acc = if i == n then acc else go (i + 1) (acc ^ s) in

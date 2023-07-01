@@ -53,7 +53,7 @@ let () = Debug.log (String.of-int (Ref.get r)) in % 1
 
 let () = Debug.log `==== String ====` in
 let () = Debug.log (String.concat [`a`; `b`; `c`;]) in
-let () = Debug.log (String.with-concat `;` [`a`; `b`; `c`;]) in
+let () = Debug.log (String.concat ?:(`;`) [`a`; `b`; `c`;]) in
 let () = Debug.log (String.of-bool (String.is-empty `  `)) in % true
 let _ = String.split-by (Char.make `;`) `spam;ham;eggs;` |> List.map Debug.log in
 let _ = String.to-list `abc` |> List.map (fun c -> (c |> String.of-char |> Debug.log)) in
@@ -360,7 +360,7 @@ let () = Debug.log `==== TreeSet ====` in
 % REMARK:
 % This test relies on the fact that the order of elements of a result from TreeSet.to-list is
 % level-order (BFS). If the implementation is changed, the following tests have to be updated.
-let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> String.concat |> Debug.log in
+let p s = s |> TreeSet.to-list |> List.map String.of-int |> List.intersperse `,` |> (fun l -> String.concat l) |> Debug.log in
 let s = TreeSet.empty in
 let () = p s in
 let s = TreeSet.of-list Int.ord [3;2;3;1] in
