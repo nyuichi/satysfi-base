@@ -8,15 +8,22 @@
 @import: ../src/string
 
 let string-test-cases = open Test in
+  let streq = Eq.equal String.eq in
+  let strleq = Eq.equal (List.eq String.eq) in
   describe `String module` [
     it `check equality of strings` (fun () -> (
-      Eq.equal String.eq `abc` `abc`
-      && not Eq.equal String.eq `abc` `abd`
+      streq `abc` `abc`
+      && not streq `abc` `abd`
       |> Expect.is-true
     ));
     it `concatenate strings` (fun () -> (
       String.concat [`a`; `b`; `c`]
-      |> string-same `abc`
+      |> streq `abc`
+      |> Expect.is-true
+    ));
+    it `concatenate strings with delimiter` (fun () -> (
+      String.concat ?:(`;`) [`a`; `b`; `c`]
+      |> streq `a;b;c`
       |> Expect.is-true
     ));
     it `check emptiness of string` (fun () -> (
@@ -26,33 +33,51 @@ let string-test-cases = open Test in
     ));
     it `split string with a given delimiter` (fun () -> (
       let delimiter = Char.make `;` in
-      `spam;ham;eggs;`
-      |> String.split-by delimiter
-      |> Eq.equal (List.eq String.eq) [`spam`; `ham`; `eggs`; ` `]
+      String.split-by delimiter `spam;ham;eggs;`
+      |> strleq [`spam`; `ham`; `eggs`; ` `]
       |> Expect.is-true
     ));
     it `convert a string to a list of characters` (fun () -> (
-      let expected = [
+      String.to-list `abc`
+      |> Eq.equal (List.eq Char.eq) [
         Char.make `a`;
         Char.make `b`;
         Char.make `c`;
-      ] in
-      String.to-list `abc`
-      |> Eq.equal (List.eq Char.eq) expected
+      ]
       |> Expect.is-true
     ));
     it `compare strings with lexicographical order` (fun () -> (
-      let subject = Ord.compare String.ord in
+      let strcmp = Ord.compare String.ord in
       [
-        subject `a` `a`;
-        subject `a` `b`;
-        subject `ab` `ba`;
-        subject `aab` `aba`;
-        subject `bbb` `bbba`;
+        strcmp `a` `a`;
+        strcmp `a` `b`;
+        strcmp `ab` `ba`;
+        strcmp `aab` `aba`;
+        strcmp `bbb` `bbba`;
       ] |> Eq.equal (List.eq Ordering.eq) [
         Eq; Lt; Lt; Lt; Lt;
       ] |> Expect.is-true
     ));
+    it `check containment` (fun () -> (
+      String.contains `abc` `1abcdef`
+      && not String.contains `abc` `abdef`
+      && not String.contains `abc` `ef`
+      |> Expect.is-true
+    ));
+    it `trim heading and trailing spaces` (fun () -> (
+      streq (String.trim #` abc   `#) `abc`
+      && streq (String.trim #`   `#) ` `
+      && streq (String.trim-start #` abc   `#) #`abc   `#
+      && streq (String.trim-end #` abc   `#) #` abc`#
+      |> Expect.is-true
+    ));
+    it `change case of ascii` (fun () ->
+      streq (String.uppercase-ascii `Grüße, Jürgen`) `GRüßE, JüRGEN`
+      && streq (String.lowercase-ascii `GRÜßE, JÜRGEN`) `grÜße, jÜrgen`
+      && streq (String.capitalize-ascii `tiTle`) `TiTle`
+      && streq (String.uncapitalize-ascii `TiTle`) `tiTle`
+      |> Expect.is-true
+    )
     % TODO
     % * sub
     % * of-bool
