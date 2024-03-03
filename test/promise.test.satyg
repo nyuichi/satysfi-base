@@ -1,0 +1,20 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/base0
+@import: ../src/ref
+@import: ../src/promise
+
+let promise-test-cases = open Test in
+  describe `Promise module` [
+    it `evaluate lazily` (fun () -> (
+      let r = Ref.make 0 in
+      let p = Promise.delay ~(!!(&(let () = r |> Ref.inc in 1))) in
+      Ref.get r == 0
+      && (let _ = Promise.force p in
+      Ref.get r == 1
+      && (let _ = Promise.force p in
+      Ref.get r == 1))
+      |> Expect.is-true
+    ));
+  ]

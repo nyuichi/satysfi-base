@@ -13,6 +13,7 @@
 @import: list.test
 @import: map.test
 @import: parser.test
+@import: promise.test
 @import: ref.test
 @import: regex.test
 @import: string.test
@@ -26,6 +27,7 @@ describe `base` [
   list-test-cases;
   map-test-cases;
   parser-test-cases;
+  promise-test-cases;
   ref-test-cases;
   regex-test-cases;
   string-test-cases;
