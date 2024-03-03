@@ -37,9 +37,6 @@
 @import: ../../src/tree-map
 @import: ../../src/big-int
 
-let _ = Color.of-css `#F5F5DC` in
-let _ = Color.of-css `beige` in
-
 let () = Debug.log `==== Promise ====` in
 let p = Promise.delay ~(!!(&(let () = Debug.log `foo` in 1))) in
 let () = Debug.log `bar` in
