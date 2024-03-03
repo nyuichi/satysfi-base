@@ -10,6 +10,7 @@
 @import: int.test
 @import: lexer.test
 @import: list.test
+@import: map.test
 @import: parser.test
 @import: ref.test
 @import: regex.test
@@ -21,6 +22,7 @@ describe `base` [
   int-test-cases;
   lexer-test-cases;
   list-test-cases;
+  map-test-cases;
   parser-test-cases;
   ref-test-cases;
   regex-test-cases;
