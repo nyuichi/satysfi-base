@@ -9,17 +9,19 @@
 @import: array.test
 @import: int.test
 @import: list.test
+@import: parser.test
 @import: ref.test
 @import: regex.test
 @import: string.test
 
 open Test in
 describe `base` [
-  ref-test-cases;
-  string-test-cases;
-  list-test-cases;
   array-test-cases;
-  regex-test-cases;
   int-test-cases;
+  list-test-cases;
+  parser-test-cases;
+  ref-test-cases;
+  regex-test-cases;
+  string-test-cases;
 ]
 |> run

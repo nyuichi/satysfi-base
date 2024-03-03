@@ -37,45 +37,7 @@
 @import: ../../src/tree-map
 @import: ../../src/big-int
 
-open Fn in
-let () = Debug.log `==== RegExp ====` in
-open RegExp in
-%let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
-let print-result r =
-  r |> List.iter (fun s -> (
-    match s with
-    | None -> Debug.log `None`
-    | Some (i, s) -> Debug.log (`Some(` ^ String.of-int i ^ `, "` ^ s ^ `")`)
-  )) in
-%let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
-%let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
-let char-a = char (Char.make `a`) in
-let char-b = char (Char.make `b`) in
-let char-c = char (Char.make `c`) in
-
 let () = Debug.log `==== Parser ====` in
-let () =
-  open Parser in
-  `aaa` |> StringParser.run (many (StringParser.char (Char.make `a`)) >>= (fun cs -> (Debug.log (String.of-list cs) before ret cs))) |> Fn.ignore in
-
-let () =
-  open Parser in
-  open StringParser in
-  let op name f = string name >> ret f in
-  let addop = op `+` Int.add in
-  let subop = op `-` Int.sub in
-  let mulop = op `*` Int.mul in
-  let divop = op `/` Int.div in
-  let number = some digit >>= (fun cs -> ret (Int.of-string (String.of-list cs))) in
-  let expr = fix (fun expr -> (
-    let factor = between (string `(`) (string `)`) expr <|> number in
-    let term = factor |> some-chain-left (mulop <|> divop) in
-    let expr = term |> some-chain-left (addop <|> subop) in
-    expr
-  ))
-  in
-    `12/2/2` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore before
-    `1+2*4-12/2/2+4` |> run expr |> Result.map (Fn.compose Debug.log String.of-int) |> Fn.ignore in
 
 let () =
   open Parser in
