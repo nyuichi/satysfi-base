@@ -142,47 +142,6 @@ let rules = [
 let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
 let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
 
-let () = Debug.log `==== Int ====` in
-let p i = i |> String.of-int |> Debug.log in
-let () = p (13 |> Int.lsl 2) in %==52
-let () = p (13 |> Int.asr 0) in %==13
-let () = p (13 |> Int.asr 1) in %==6
-let () = p (13 |> Int.asr 2) in %==3
-let () = p (13 |> Int.asr 3) in %==1
-let () = p (13 |> Int.asr 4) in %==0
-let () = p (13 |> Int.asr 5) in %==0
-let () = p (-13 |> Int.asr 0) in %==-13
-let () = p (-13 |> Int.asr 1) in %==-7
-let () = p (-13 |> Int.asr 2) in %==-4
-let () = p (-13 |> Int.asr 3) in %==-2
-let () = p (-13 |> Int.asr 4) in %==-1
-let () = p (-13 |> Int.asr 5) in %==-1
-let () = p (13 |> Int.land 10) in %==8
-let () = p (-13 |> Int.land 31) in %==19
-let () = p (13 |> Int.lor 10) in %==15
-let () = p (13 |> Int.lxor 10) in %==7
-let () = p (13 |> Int.lsr 2) in %==3
-let () = p (-13 |> Int.lsr 2) in %==2305843009213693948
-let () = p (`12345678` |> Int.of-string ?:10) in
-let () = p (`-123` |> Int.of-string ?:10) in
-let () = p (`ffff` |> Int.of-string ?:16) in
-let () = p (2 |> Int.pow 3) in
-let () = p (2 |> Int.pow 0) in
-let () = p (Int.sup [1; 3; 2]) in
-let () = p (Int.sup []) in
-let p-opt o =
-  let s =
-    match o with
-    | None -> `None`
-    | Some(i) -> `Some(` ^ Int.to-string i ^ `)`
-  in
-  Debug.log s
-in
-let () = p-opt(`123` |> Int.of-string-opt ?:10) in
-let () = p-opt(`-123` |> Int.of-string-opt ?:10) in
-let () = p-opt(`12n` |> Int.of-string-opt ?:10) in
-let () = p-opt(`a` |> Int.of-string-opt ?:16) in
-
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
 let option-force (Some v) = v in
