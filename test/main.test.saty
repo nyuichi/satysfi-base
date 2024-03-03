@@ -8,6 +8,7 @@
 
 @import: array.test
 @import: int.test
+@import: lexer.test
 @import: list.test
 @import: parser.test
 @import: ref.test
@@ -18,6 +19,7 @@ open Test in
 describe `base` [
   array-test-cases;
   int-test-cases;
+  lexer-test-cases;
   list-test-cases;
   parser-test-cases;
   ref-test-cases;

@@ -37,31 +37,6 @@
 @import: ../../src/tree-map
 @import: ../../src/big-int
 
-let () = Debug.log `==== Parser ====` in
-
-let () =
-  open Parser in
-  open StringParser in
-  let p =
-        (label `expected 'foo'` (string `foo`))
-    <|> (string `bar`)
-  in
-  `bar` |> run p |> Result.map Debug.log |> Result.map-err (fun errs -> (
-    match errs with
-    | []       -> Debug.log `(something is wrong)`
-    | err :: _ -> Debug.log err#desc
-  )) |> Fn.ignore
-in
-
-let () = Debug.log `==== Lexer ====` in
-let rules = [
-  (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
-  (| kind = `whitespace`; regexp = spaces |);
-] in
-let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
-let () = tokens |> List.iter (fun tk -> (Debug.log (`(| kind = `# ^ tk#kind ^ `, data = "`# ^ tk#data ^ `" |)`))) in
-
-
 let () = Debug.log `==== Map ====` in
 let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
 let option-force (Some v) = v in

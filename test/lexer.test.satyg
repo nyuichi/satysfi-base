@@ -1,0 +1,28 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/lexer
+@import: ../src/result
+
+let lexer-test-cases = open Test in
+  let streq = Eq.equal String.eq in
+  let eq-token = Eq.make (fun a b -> (string-same a#kind b#kind) && (string-same a#data b#data)) in
+  describe `Lexer module` [
+    it `tokenize string` (fun () -> (
+      open RegExp in
+      let rules = [
+        (| kind = `identifier`; regexp = seq alpha (many (alt alpha (alt digit (char (Char.make `-`))))) |);
+        (| kind = `whitespace`; regexp = spaces |);
+      ] in
+      let (Some tokens) = Lexer.lex rules `abc defg   hijklMNL op123 ` in
+      tokens |> Eq.equal (List.eq eq-token) [
+        (| kind = `identifier`; data = `abc`|);
+        (| kind = `whitespace`; data = #` `# |);
+        (| kind = `identifier`; data = `defg` |);
+        (| kind = `whitespace`; data = #`   `# |);
+        (| kind = `identifier`; data = `hijklMNL` |);
+        (| kind = `whitespace`; data = #` `# |);
+        (| kind = `identifier`; data = `op123` |)
+      ] |> Expect.is-true
+    ));
+  ]
