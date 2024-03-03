@@ -15,10 +15,12 @@ let regex-test-cases = open Test in
     % let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
     % let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
     it `test "(a+)(b+)"` (fun () -> (
-      let re1 = (seq (group (many1 char-a)) (group (many1 char-b))) in
-      let re2 = (alt char-a char-b) in
-      test re1 `aabbb`
-      && test re2 `aabbb`
+      test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb`
+      |> Expect.is-true
+    ));
+    % TODO GH-142: Is this right description?
+    it `test "a|b"` (fun () -> (
+      test (alt char-a char-b) `aabbb`
       |> Expect.is-true
     ));
     it `exec "(a+|(c))(b+)"` (fun () -> (
@@ -33,8 +35,7 @@ let regex-test-cases = open Test in
     ));
     % TODO GH-142: Is this right description?
     it `test "a**"` (fun () -> (
-      let re = many (many char-a) in
-      test re `aaaaa`
+      test (many (many char-a)) `aaaaa`
       |> Expect.is-true
     ));
     % TODO GH-142: Is this right description?
@@ -65,12 +66,19 @@ leapple` in
       `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`)
       |> Expect.is-true
     ));
-    % let _ = RegExp.of-string `^\s\d$` in TODO GH-142: What do we wanna test?
-    % % let _ = RegExp.of-string `[]` in TODO GH-142: Do we wanna keep this?
-    % let _ = RegExp.of-string `[a-z]` in TODO GH-142: What do we wanna test?
+    it `compile "^\s\d" successfully` (fun () -> (
+      let _ = RegExp.of-string `^\s\d$` in
+      Expect.always-pass
+    ));
+    % fails to compile "[]"
+    it `compile "[a-z]" successfully` (fun () -> (
+      let _ = RegExp.of-string `[a-z]` in
+      Expect.always-pass
+    ));
     it `match prefix of header of hexadecimal literal` (fun () -> (
       let re = (RegExp.of-string `0[xX]`) in
       test re `0x`
+      && test re `0X`
       && not test re `0a`
       |> Expect.is-true
     ));
@@ -90,7 +98,7 @@ leapple` in
       |> test (RegExp.of-string `[][-]+`)
       |> Expect.is-true
     ));
-    it `test against long input` (fun () -> (
+    it `failing test with long input won't take that long` (fun () -> (
       % NOTE GH-142: Do we want to set timelimit?
       let input = ` I do not know why but it seems code2 is slow if it contains a long line.
 wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
