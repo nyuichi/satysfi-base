@@ -37,25 +37,6 @@
 @import: ../../src/tree-map
 @import: ../../src/big-int
 
-let () = Debug.log `==== Bool ====` in
-let p b = b |> Bool.to-string |> Debug.log in
-let p-opt o =
-  let s =
-    match o with
-    | None -> `None`
-    | Some(i) -> `Some(` ^ Bool.to-string i ^ `)`
-  in
-  Debug.log s
-in
-let () = p Bool.max-value in
-let () = p Bool.min-value in
-let () = p-opt(0 |> Bool.of-int-opt) in
-let () = p-opt(1 |> Bool.of-int-opt) in
-let () = p-opt(2 |> Bool.of-int-opt) in
-let () = p-opt(`false` |> Bool.of-string-opt) in
-let () = p-opt(`true` |> Bool.of-string-opt) in
-let () = p-opt(`hoge` |> Bool.of-string-opt) in
-
 let () = Debug.log `==== Fn ====` in
 let () = 0 |> Fn.fix (fun loop n -> (
   if n >= 10 then
