@@ -8,6 +8,7 @@
 
 @import: array.test
 @import: color.test
+@import: float.test
 @import: int.test
 @import: lexer.test
 @import: list.test
@@ -22,6 +23,7 @@ open Test in
 describe `base` [
   array-test-cases;
   color-test-cases;
+  float-test-cases;
   int-test-cases;
   lexer-test-cases;
   list-test-cases;
