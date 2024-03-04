@@ -10,6 +10,7 @@
 @import: bool.test
 @import: color.test
 @import: float.test
+@import: fn.test
 @import: int.test
 @import: lexer.test
 @import: list.test
@@ -27,6 +28,7 @@ describe `base` [
   bool-test-cases;
   color-test-cases;
   float-test-cases;
+  fn-test-cases;
   int-test-cases;
   lexer-test-cases;
   list-test-cases;

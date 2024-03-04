@@ -37,16 +37,6 @@
 @import: ../../src/tree-map
 @import: ../../src/big-int
 
-let () = Debug.log `==== Fn ====` in
-let () = 0 |> Fn.fix (fun loop n -> (
-  if n >= 10 then
-    Debug.log `done`
-  else
-    Debug.log (String.of-int n) before
-    loop (n + 1)
-))
-in
-
 let () = Debug.log `==== TreeSet ====` in
 % REMARK:
 % This test relies on the fact that the order of elements of a result from TreeSet.to-list is
