@@ -1,0 +1,16 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/option-ext
+@import: ../src/tree-map
+
+let tree-map-test-cases = open Test in
+  let intoeq = Eq.equal (Option.eq Int.eq) in
+  describe `TreeMap module` [
+    it `get mapping` (fun () -> (
+      let m = TreeMap.of-list String.ord [(`apple`, 1); (`orange`, 3); (`pear`, 2)] in
+      (m |> TreeMap.get String.ord `orange` |> intoeq (Option.some 3))
+      && (m |> TreeMap.get String.ord `pear` |> intoeq (Option.some 2))
+      |> Expect.is-true
+    ))
+  ]
