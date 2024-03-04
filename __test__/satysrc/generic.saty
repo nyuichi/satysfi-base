@@ -56,11 +56,6 @@ let () = p-opt(`false` |> Bool.of-string-opt) in
 let () = p-opt(`true` |> Bool.of-string-opt) in
 let () = p-opt(`hoge` |> Bool.of-string-opt) in
 
-let () = Debug.log `==== Stream ====` in
-let () = Stream.fib |> Stream.take 30 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x) in
-let () = Stream.nat |> Stream.take 5 |> Stream.to-list |> List.iter (fun x -> Debug.log <| String.of-int x)
-in
-
 let () = Debug.log `==== Fn ====` in
 let () = 0 |> Fn.fix (fun loop n -> (
   if n >= 10 then

@@ -17,6 +17,7 @@
 @import: promise.test
 @import: ref.test
 @import: regex.test
+@import: stream.test
 @import: string.test
 
 open Test in
@@ -32,6 +33,7 @@ describe `base` [
   promise-test-cases;
   ref-test-cases;
   regex-test-cases;
+  stream-test-cases;
   string-test-cases;
 ]
 |> run
