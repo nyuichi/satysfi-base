@@ -21,6 +21,7 @@
 @import: regex.test
 @import: stream.test
 @import: string.test
+@import: treeset.test
 
 open Test in
 describe `base` [
@@ -39,5 +40,6 @@ describe `base` [
   regex-test-cases;
   stream-test-cases;
   string-test-cases;
+  tree-set-test-cases;
 ]
 |> run
