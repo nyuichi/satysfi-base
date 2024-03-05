@@ -65,7 +65,7 @@ jobs:
           eval $(opam env)
           opam update
           opam pin add satysfi ${{ matrix.satysfi-version }}
-          opam pin add --verbose --yes "."
+          opam pin add satysfi-base.opam "file://${PWD}"
           satyrographos install -l base
       - name: Run regression tests
         run: |
