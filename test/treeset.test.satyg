@@ -5,7 +5,7 @@
 @import: ../src/list-ext
 @import: ../src/tree-set
 
-let tree-set-test-cases = open Test in
+let treeset-test-cases = open Test in
   let intleq = Eq.equal (List.eq Int.eq) in
   describe `TreeSet module` [
     % REMARK:

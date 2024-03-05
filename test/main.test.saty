@@ -43,7 +43,7 @@ describe `base` [
   regex-test-cases;
   stream-test-cases;
   string-test-cases;
-  tree-map-test-cases;
-  tree-set-test-cases;
+  treemap-test-cases;
+  treeset-test-cases;
 ]
 |> run
