@@ -36,10 +36,11 @@ jobs:
       - if: always()
         name: Install Apt dependencies
         run: apt-get update && apt-get install -y xz-utils liblzma-dev
-      - name: Upload artifact
+      - if: ${{ failure() }}
+        name: Upload artifact
         uses: actions/upload-artifact@master
         with:
-          name: satysfi-test-report
+          name: satysfi-test-report-${{ matrix.version }}
           path: test/report.txt
   regression-test:
     name: Regression tests
