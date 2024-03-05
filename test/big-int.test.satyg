@@ -1,0 +1,99 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/big-int
+@import: ../src/eq
+@import: ../src/string
+
+let big-int-test-cases = open Test in
+  let b = BigInt.of-string in
+  let beq = Eq.equal BigInt.eq in
+  let streq = Eq.equal String.eq in
+  describe `BigInt module` [
+    it `parse and print` (fun () -> (
+        (b `42` |> BigInt.to-string |> streq `42`)
+        && (b `-123` |> BigInt.to-string |> streq `-123`)
+        && (b `-10` |> BigInt.to-string |> streq `-10`)
+        && (BigInt.zero |> BigInt.to-string |> streq `0`)
+        && (BigInt.one |> BigInt.to-string |> streq `1`)
+        && (BigInt.minus-one |> BigInt.to-string |> streq `-1`)
+        |> Expect.is-true
+    ));
+    it `compare via oparators` (fun () -> BigInt.(
+      b `42` < b `136`
+      && b `42` <= b `136`
+      && not (b `42` > b `136`)
+      && not (b `42` >= b `136`)
+      && not (b `42` == b `136`)
+      && not (b `-42` < b `-136`)
+      |> Expect.is-true
+    ));
+    it `compare via ord` (fun () -> (
+      let ord = Ord.compare BigInt.ord in
+      let ordeq = Eq.equal Ordering.eq in
+         (ord (b `123`)   (b `-456`)  |> ordeq Gt)
+      && (ord (b `-123`)  (b `456`)   |> ordeq Lt)
+      && (ord (b `333`)   (b `333`)   |> ordeq Eq)
+      && (ord (b `-333`)  (b `-333`)  |> ordeq Eq)
+      && (ord (b `1234`)  (b `432`)   |> ordeq Gt)
+      && (ord (b `432`)   (b `1234`)  |> ordeq Lt)
+      && (ord (b `-1234`) (b `-432`)  |> ordeq Lt)
+      && (ord (b `-432`)  (b `-1234`) |> ordeq Gt)
+      && (ord (b `332`)   (b `333`)   |> ordeq Lt)
+      && (ord (b `333`)   (b `332`)   |> ordeq Gt)
+      && (ord (b `-332`)  (b `-333`)  |> ordeq Gt)
+      && (ord (b `-333`)  (b `-332`)  |> ordeq Lt)
+      |> Expect.is-true
+    ));
+    it `add` (fun () -> (
+         (BigInt.add (b `42`)  (b `39`)  |> beq (b `81`))
+      && (BigInt.add (b `42`)  (b `-39`) |> beq (b `3`))
+      && (BigInt.add (b `-42`) (b `39`)  |> beq (b `-3`))
+      && (BigInt.add (b `-42`) (b `-39`) |> beq (b `-81`))
+      && (BigInt.add (b `42`)  (b `45`)  |> beq (b `87`))
+      && (BigInt.add (b `42`)  (b `-45`) |> beq (b `-3`))
+      && (BigInt.add (b `-42`) (b `45`)  |> beq (b `3`))
+      && (BigInt.add (b `-42`) (b `-45`) |> beq (b `-87`))
+      |> Expect.is-true
+    ));
+    it `sub` (fun () -> (
+         (BigInt.sub (b `42`)  (b `39`)  |> beq (b `3`))
+      && (BigInt.sub (b `42`)  (b `-39`) |> beq (b `81`))
+      && (BigInt.sub (b `-42`) (b `39`)  |> beq (b `-81`))
+      && (BigInt.sub (b `-42`) (b `-39`) |> beq (b `-3`))
+      && (BigInt.sub (b `42`)  (b `45`)  |> beq (b `-3`))
+      && (BigInt.sub (b `42`)  (b `-45`) |> beq (b `87`))
+      && (BigInt.sub (b `-42`) (b `45`)  |> beq (b `-87`))
+      && (BigInt.sub (b `-42`) (b `-45`) |> beq (b `3`))
+      |> Expect.is-true
+    ));
+    it `mul` (fun () -> (
+         (BigInt.mul (b `157`)  (b `16`)  |> beq (b `2512`))
+      && (BigInt.mul (b `157`)  (b `-16`) |> beq (b `-2512`))
+      && (BigInt.mul (b `-157`) (b `16`)  |> beq (b `-2512`))
+      && (BigInt.mul (b `-157`) (b `-16`) |> beq (b `2512`))
+      |> Expect.is-true
+    ));
+    it `div, mod, pow` (fun () -> (
+         (BigInt.div  (b `12345`)   (b `43`)   |> beq (b `287`))
+      && (BigInt.mod- (b `12345`)   (b `43`)   |> beq (b `4`))
+      && (BigInt.div  (b `1111111`) (b `4649`) |> beq (b `239`))
+      && (BigInt.mod- (b `1111111`) (b `4649`) |> beq (b `0`))
+      && (BigInt.div  (b `-12345`)  (b `43`)   |> beq (b `-287`)) % correct?
+      && (BigInt.mod- (b `-12345`)  (b `43`)   |> beq (b `4`))    % correct?
+      && (BigInt.div  (b `12345`)   (b `-43`)  |> beq (b `-287`)) % correct?
+      && (BigInt.mod- (b `12345`)   (b `-43`)  |> beq (b `4`))    % correct?
+      && (BigInt.div  (b `-12345`)  (b `-43`)  |> beq (b `287`))
+      && (BigInt.mod- (b `-12345`)  (b `-43`)  |> beq (b `-4`))
+      && (b `2` |> BigInt.pow (b `3`) |> beq (b `8`))
+      && (b `2` |> BigInt.pow (b `0`) |> beq (b `1`))
+      |> Expect.is-true
+    ));
+    it `convert from/to int` (fun () -> (
+      ((BigInt.of-int 12345) |> beq (b `12345`))
+      && ((BigInt.of-int (-12345)) |> beq (b `-12345`))
+      && ((BigInt.of-int 12345) |> BigInt.to-int |> (==) 12345)
+      && ((BigInt.of-int (-12345)) |> BigInt.to-int |> (==) (-12345))
+      |> Expect.is-true
+    ))
+  ]

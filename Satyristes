@@ -6,4 +6,4 @@
     ((packageDir "src")
 	))
   (opam "satysfi-base.opam")
-  (dependencies ((fonts-dejavu ()))))
+  (dependencies ((fonts-dejavu ()) (test ()))))

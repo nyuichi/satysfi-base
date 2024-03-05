@@ -1,0 +1,16 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/color-ext
+
+let color-test-cases = open Test in
+  describe `Color module` [
+    it `parse hex notation successfully` (fun () -> (
+        let _ = Color.of-css `#F5F5DC` in
+        Expect.always-pass
+    ));
+    it `parse names successfully` (fun () -> (
+        let _ =Color.of-css `beige` in
+        Expect.always-pass
+    ));
+  ]

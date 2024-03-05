@@ -1,0 +1,98 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/char
+@import: ../src/eq
+@import: ../src/list-ext
+@import: ../src/ord
+@import: ../src/string
+
+let string-test-cases = open Test in
+  let streq = Eq.equal String.eq in
+  let strleq = Eq.equal (List.eq String.eq) in
+  describe `String module` [
+    it `check equality of strings` (fun () -> (
+      streq `abc` `abc`
+      && not streq `abc` `abd`
+      |> Expect.is-true
+    ));
+    it `concatenate strings` (fun () -> (
+      String.concat [`a`; `b`; `c`]
+      |> streq `abc`
+      |> Expect.is-true
+    ));
+    it `concatenate strings with delimiter` (fun () -> (
+      String.concat ?:(`;`) [`a`; `b`; `c`]
+      |> streq `a;b;c`
+      |> Expect.is-true
+    ));
+    it `check emptiness of string` (fun () -> (
+      String.is-empty ` `
+      && (not String.is-empty `hi`)
+      |> Expect.is-true
+    ));
+    it `split string with a given delimiter` (fun () -> (
+      let delimiter = Char.make `;` in
+      String.split-by delimiter `spam;ham;eggs;`
+      |> strleq [`spam`; `ham`; `eggs`; ` `]
+      |> Expect.is-true
+    ));
+    it `convert a string to a list of characters` (fun () -> (
+      String.to-list `abc`
+      |> Eq.equal (List.eq Char.eq) [
+        Char.make `a`;
+        Char.make `b`;
+        Char.make `c`;
+      ]
+      |> Expect.is-true
+    ));
+    it `compare strings with lexicographical order` (fun () -> (
+      let strcmp = Ord.compare String.ord in
+      [
+        strcmp `a` `a`;
+        strcmp `a` `b`;
+        strcmp `ab` `ba`;
+        strcmp `aab` `aba`;
+        strcmp `bbb` `bbba`;
+      ] |> Eq.equal (List.eq Ordering.eq) [
+        Eq; Lt; Lt; Lt; Lt;
+      ] |> Expect.is-true
+    ));
+    it `check containment` (fun () -> (
+      String.contains `abc` `1abcdef`
+      && not String.contains `abc` `abdef`
+      && not String.contains `abc` `ef`
+      |> Expect.is-true
+    ));
+    it `trim heading and trailing spaces` (fun () -> (
+      streq (String.trim #` abc   `#) `abc`
+      && streq (String.trim #`   `#) ` `
+      && streq (String.trim-start #` abc   `#) #`abc   `#
+      && streq (String.trim-end #` abc   `#) #` abc`#
+      |> Expect.is-true
+    ));
+    it `change case of ascii` (fun () ->
+      streq (String.uppercase-ascii `Grüße, Jürgen`) `GRüßE, JüRGEN`
+      && streq (String.lowercase-ascii `GRÜßE, JÜRGEN`) `grÜße, jÜrgen`
+      && streq (String.capitalize-ascii `tiTle`) `TiTle`
+      && streq (String.uncapitalize-ascii `TiTle`) `tiTle`
+      |> Expect.is-true
+    )
+    % TODO
+    % * sub
+    % * of-bool
+    % * of-int
+    % * of-float
+    % * of-codepoints
+    % * of-char
+    % * of-length
+    % * append
+    % * starts-with
+    % * ends-with
+    % * of-list
+    % * pow
+    % * split
+    % * split-by-first
+    % * lines
+    % * index
+  ]

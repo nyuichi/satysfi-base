@@ -1,0 +1,31 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/option-ext
+@import: ../src/map
+@import: ../src/string
+
+let map-test-cases = open Test in
+  let stroeq = Eq.equal (Option.eq String.eq) in
+  let m = Map.of-list [(1, `a`); (2, `b`); (3, `c`)] in
+  describe `Map module` [
+    it `get corresponding value` (fun () -> (
+        (m |> Map.of- Int.eq 1
+          |> stroeq (Option.some `a`))
+        && (m |> Map.of- Int.eq 2
+          |> stroeq (Option.some `b`))
+        && (m |> Map.of- Int.eq 3
+          |> stroeq (Option.some `c`))
+        |> Expect.is-true
+    ));
+    it `rebind mapping` (fun () -> (
+        let m = m |> Map.bind 2 `d` in
+        (m |> Map.of- Int.eq 1
+          |> stroeq (Option.some `a`))
+        && (m |> Map.of- Int.eq 2
+          |> stroeq (Option.some `d`))
+        && (m |> Map.of- Int.eq 3
+          |> stroeq (Option.some `c`))
+        |> Expect.is-true
+    ));
+  ]

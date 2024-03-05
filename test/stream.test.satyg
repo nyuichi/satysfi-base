@@ -1,0 +1,22 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/eq
+@import: ../src/int
+@import: ../src/list-ext
+@import: ../src/stream
+
+let stream-test-cases = open Test in
+  let intleq = Eq.equal (List.eq Int.eq) in
+  describe `Stream module` [
+    it `nat` (fun () -> (
+      Stream.nat |> Stream.take 5 |> Stream.to-list
+      |> intleq [0; 1; 2; 3; 4]
+      |> Expect.is-true
+    ));
+    it `fib` (fun () -> (
+      Stream.fib |> Stream.take 15 |> Stream.to-list
+      |> intleq [1; 1; 2; 3; 5; 8; 13; 21; 34; 55; 89; 144; 233; 377; 610]
+      |> Expect.is-true
+    ));
+  ]

@@ -1,0 +1,49 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/eq
+@import: ../src/list-ext
+@import: ../src/ref
+@import: ../src/string
+
+@import: array.test
+@import: big-int.test
+@import: bool.test
+@import: color.test
+@import: float.test
+@import: fn.test
+@import: int.test
+@import: lexer.test
+@import: list.test
+@import: map.test
+@import: parser.test
+@import: promise.test
+@import: ref.test
+@import: regex.test
+@import: stream.test
+@import: string.test
+@import: treemap.test
+@import: treeset.test
+
+open Test in
+describe `base` [
+  array-test-cases;
+  big-int-test-cases;
+  bool-test-cases;
+  color-test-cases;
+  float-test-cases;
+  fn-test-cases;
+  int-test-cases;
+  lexer-test-cases;
+  list-test-cases;
+  map-test-cases;
+  parser-test-cases;
+  promise-test-cases;
+  ref-test-cases;
+  regex-test-cases;
+  stream-test-cases;
+  string-test-cases;
+  treemap-test-cases;
+  treeset-test-cases;
+]
+|> run

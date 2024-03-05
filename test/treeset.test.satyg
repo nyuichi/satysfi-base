@@ -1,0 +1,111 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/int
+@import: ../src/list-ext
+@import: ../src/tree-set
+
+let treeset-test-cases = open Test in
+  let intleq = Eq.equal (List.eq Int.eq) in
+  describe `TreeSet module` [
+    % REMARK:
+    % This test relies on the fact that the order of elements of a result from TreeSet.to-list is
+    % level-order (BFS). If the implementation is changed, the following tests have to be updated.
+    it `make an empty set` (fun _ -> (
+        TreeSet.empty |> TreeSet.to-list |> intleq []
+        |> Expect.is-true
+    ));
+    it `make a set from a given list` (fun () -> (
+      TreeSet.of-list Int.ord [3;2;3;1] |> TreeSet.to-list
+      |> intleq [2;1;3]
+      |> Expect.is-true
+    ));
+    it `check rotations 1` (fun () -> (
+      % right left rotation
+      ([1; 3; 2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty
+        |> TreeSet.to-list
+        |> intleq [2; 1; 3])
+      % right left rotation
+      && ([3; 1; 2] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty
+        |> TreeSet.to-list
+        |> intleq [2; 1; 3])
+      % left rotation
+      && ([3; 2; 1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty
+        |> TreeSet.to-list
+        |> intleq [2; 1; 3])
+      % right rotation
+      && ([3; 2; 1] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty
+        |> TreeSet.to-list
+        |> intleq [2; 1; 3])
+      |> Expect.is-true
+    ));
+    it `check rotations 2` (fun () -> (
+      %     16
+      %  8      24
+      % 4 12  20  28
+      let s = ([16; 8; 24; 4; 12; 20; 28]
+              |> List.fold-left (fun t x -> TreeSet.insert Int.ord x t) TreeSet.empty) in
+      ((s |> TreeSet.to-list
+        |> intleq [16; 8; 24; 4; 12; 20; 28]))
+      % right rotation
+      && ([3; 2; 1; 0; -1] |> List.fold-left (fun t x -> TreeSet.insert Int.ord x t) s
+        |> TreeSet.to-list
+        |> intleq [3; 1; 16; 0; 2; 8; 24; -1; 4; 12; 20; 28])
+      % left rotation
+      && ([29; 30; 31; 32; 33] |> List.fold-left (fun t x -> TreeSet.insert Int.ord x t) s
+        |> TreeSet.to-list
+        |> intleq [29; 16; 31; 8; 24; 30; 32; 4; 12; 20; 28; 33])
+      % right left rotation
+      && ([9; 15; 10; 11] |> List.fold-left (fun t x -> TreeSet.insert Int.ord x t) s
+        |> TreeSet.to-list
+        |> intleq [12; 9; 16; 8; 10; 15; 24; 4; 11; 20; 28])
+      % left right rotation
+      && ([23; 17; 22; 19] |> List.fold-left (fun t x -> TreeSet.insert Int.ord x t) s
+        |> TreeSet.to-list
+        |> intleq [20; 16; 23; 8; 17; 22; 24; 4; 12; 19; 28]))
+      |> Expect.is-true
+    );
+    it `check size after insertion` (fun () -> (
+      TreeSet.size TreeSet.empty == 0
+      && (let s = [16;8;24;4;12;20;28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+      TreeSet.size s == 7
+      && (s |> TreeSet.insert Int.ord 16
+        |> TreeSet.size
+        |> (==) 7)
+      && (s |> TreeSet.insert Int.ord 24
+        |> TreeSet.size
+        |> (==) 7)
+      && (s |> TreeSet.insert Int.ord 20
+        |> TreeSet.size
+        |> (==) 7)
+      ) |> Expect.is-true
+    ));
+    it `check remove 1` (fun () -> (
+      let s1 = [16; 8; 24; 4; 12; 20; 28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+      let s2 = TreeSet.remove Int.ord 16 s1 in
+      let s3 = TreeSet.remove Int.ord 28 s2 in
+      let s4 = TreeSet.remove Int.ord 24 s3 in
+      let s5 = TreeSet.remove Int.ord 10 s4 in
+      (s2 |> TreeSet.to-list |> intleq [20; 8; 24; 4; 12; 28])
+      && (s3 |> TreeSet.to-list |> intleq [20; 8; 24; 4; 12])
+      && (s4 |> TreeSet.to-list |> intleq [8; 4; 20; 12])
+      && (s4 |> TreeSet.size |> (==) 4)
+      && (s5 |> TreeSet.to-list |> intleq [8; 4; 20; 12])
+      && (s5 |> TreeSet.size |> (==) 4)
+      |> Expect.is-true
+    ));
+    % See https://github.com/nyuichi/satysfi-base/pull/140#discussion_r550355160
+    it `check remove 2` (fun () -> (
+      [9;4;11;2;6;10;13;1;3;5;8;12;0;7] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty
+      |> TreeSet.remove Int.ord 13
+      |> TreeSet.to-list
+      |> intleq [4; 2; 9; 1; 3; 6; 11; 0; 5; 8; 10; 12; 7]
+      |> Expect.is-true
+    ));
+    it `check get` (fun () -> (
+      let s = [16; 8; 24; 4; 12; 20; 28] |> List.fold-left (fun s x -> TreeSet.insert Int.ord x s) TreeSet.empty in
+      (s |> TreeSet.get Int.ord 20 |> Option.unwrap-or (-1) |> (==) 20)
+      && (s |> TreeSet.get Int.ord 23 |> Option.unwrap-or (-1) |> (==) (-1))
+      |> Expect.is-true
+    ))
+  ]

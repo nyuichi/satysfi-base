@@ -1,4 +1,5 @@
 @stage: persistent
+@import: eq
 
 module Unit : sig
   val make : unit
@@ -11,9 +12,18 @@ module Pair : sig
   val fst : ('a * 'b) -> 'a
   val snd : ('a * 'b) -> 'b
   val swap : ('a * 'b) -> ('b * 'a)
+
+  val eq : ('a Eq.t) implicit -> ('b Eq.t) implicit -> (('a * 'b) Eq.t) implicit
 end = struct
   let make x y = (x, y)
   let fst (x, _) = x
   let snd (_, y) = y
   let swap (x, y) = (y, x)
+  let eq a b =
+    Eq.make (fun x y -> (
+      let (xa, xb) = x in
+      let (ya, yb) = y in
+      Eq.equal a xa ya
+      && Eq.equal b xb yb
+    ))
 end

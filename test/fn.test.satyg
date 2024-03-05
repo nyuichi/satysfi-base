@@ -1,0 +1,17 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/fn
+
+let fn-test-cases = open Test in
+  describe `Fn module` [
+    it `make recursive function with fix` (fun x -> (
+      Fn.fix (fun loop n -> (
+        if n >= 10 then
+          0
+        else
+          n + loop (n + 1))) 0
+      |> (==) 45
+      |> Expect.is-true
+    ))
+  ]

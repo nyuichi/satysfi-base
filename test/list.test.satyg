@@ -1,0 +1,98 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/int
+@import: ../src/list-ext
+@import: ../src/tuple
+
+let list-test-cases = open Test in
+  let intleq = Eq.equal (List.eq Int.eq) in
+  describe `List module` [
+    it `take elements` (fun () -> (
+      let lst = [1;3;2;4;5] in
+      intleq (List.take 0 lst) []
+      && intleq (List.take 1 lst) [1]
+      && intleq (List.take 7 lst) [1;3;2;4;5]
+      |> Expect.is-true
+    ));
+    it `drop elements` (fun () -> (
+      let lst = [1;3;2;4;5] in
+      intleq (List.drop 0 lst) [1;3;2;4;5]
+      && intleq (List.drop 2 lst) [2;4;5]
+      && intleq (List.drop 7 lst) []
+      |> Expect.is-true
+    ));
+    it `split at the given index` (fun () -> (
+      List.split-at 3 [1;3;2;4;5]
+      |> Eq.equal (Pair.eq (List.eq Int.eq) (List.eq Int.eq))
+         ([1;3;2], [4;5])
+      |> Expect.is-true
+    ));
+    it `sort list` (fun () -> (
+      let l = [5;1;3;2;4] in
+      let expected = [1;2;3;4;5] in
+      (List.bubblesort Int.ord l |> intleq expected)
+      && (List.insertsort Int.ord l |> intleq expected)
+      && (List.mergesort Int.ord l |> intleq expected)
+      |> Expect.is-true
+    ));
+    it `sort with custom ord` (fun () -> (
+      let l = [(1,2);(2,1);(1,1)] in
+      let expected = [(1,2);(1,1);(2,1)] in
+      let ord = Ord.make (fun (n1,_) (n2,_) -> Ord.compare Int.ord n1 n2) in
+      let eq = Eq.equal (List.eq (Pair.eq Int.eq Int.eq)) in
+      (List.bubblesort ord l |> eq expected)
+      && (List.insertsort ord l |> eq expected)
+      && (List.mergesort ord l |> eq expected)
+      |> Expect.is-true
+    ));
+  % TODO
+  % * eq
+  % * null
+  % * nil
+  % * cons
+  % * uncons
+  % * map
+  % * mapi
+  % * iter
+  % * iteri
+  % * filter
+  % * reverse
+  % * append
+  % * concat
+  % * length
+  % * nth
+  % * intersperse
+  % * find
+  % * apply
+  % * take-while
+  % * drop-while
+  % * span
+  % * break
+  % * head
+  % * tail
+  % * last
+  % * init
+  % * reverse-append
+  % * reverse-map
+  % * all
+  % * any
+  % * zip
+  % * unzip
+  % * find
+  % * partition
+  % * iterate
+  % * repeat
+  % * cycle-
+  % * acons
+  % * max
+  % * min
+  % * fold
+  % % unstable API (may subject to change in the future)
+  % * fold-left
+  % * fold-lefti
+  % * fold-right
+  % * fold-left-adjacent
+  % * map-adjacent
+  % * mapi-adjacent
+  ]

@@ -1,0 +1,124 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/bool
+@import: ../src/eq
+@import: ../src/float
+@import: ../src/stream
+@import: ../src/string
+
+let float-test-cases = open Test in
+  let streq = Eq.equal String.eq in
+  let strleq = Eq.equal (List.eq String.eq) in
+  let boolleq = Eq.equal (List.eq Bool.eq) in
+  let flleq = Eq.equal (List.eq Float.eq) in
+  let floleq = Eq.equal (List.eq (Option.eq Float.eq)) in
+  % smallest normal value
+  let dbl-min = Stream.nat
+        |> Stream.take 1022
+        |> Fn.flip Stream.fold 1.0 (fun f _ -> f /. 2.0) in
+  % subnormal value
+  let half-dbl-min = dbl-min /. 2.0 in
+  describe `Float module` [
+    it `provide constants` (fun () -> (
+      (String.of-float Float.pi
+        |> streq `3.14159265359`)
+      && (String.of-float Float.e
+        |> streq `2.71828182846`)
+      |> Expect.is-true
+    ));
+    it `check equality of special values` (fun () -> (
+      Float.(
+        inf == inf
+        && ninf == ninf
+        && not (nan == nan)
+        && not (nan == Float.neg nan)
+        && 0.0 == 0.0
+        && 0.0 == Float.neg 0.0
+      ) |> Expect.is-true
+    ));
+    it `calculate division with zero` (fun () -> (
+      Float.(
+        1.0 /. 0.0 == inf
+        && 1.0 /. (neg 0.0) == ninf
+        && (0.0 /. 0.0 |> is-nan)
+      ) |> Expect.is-true
+    ));
+    it `calculuate exp, log, pow, sqrt, log10` (fun () -> (
+      (Float.exp Float.pi
+        |> String.of-float
+        |> streq `23.1406926328`)
+      && (Float.log Float.pi
+        |> String.of-float
+        |> streq `1.14472988585`)
+      && (Float.pi |> Float.pow Float.pi
+        |> String.of-float
+        |> streq `36.4621596072`)
+      && (2.1 |> Float.pow 54.0
+        |> String.of-float
+        |> streq `2.51097226443e+17`)
+      && (Float.sqrt 2.0
+        |> String.of-float
+        |> streq `1.41421356237`)
+      && (Float.log10 Float.pi
+        |> String.of-float
+        |> streq `0.497149872694`)
+      |> Expect.is-true
+    ));
+    it `prnit smallest normal value and subnormal value` (fun () -> (
+      (dbl-min |> String.of-float |> streq `2.22507385851e-308`)
+      && (half-dbl-min |> String.of-float |> streq `1.11253692925e-308`)
+      |> Expect.is-true
+    ));
+    it `check props of special values` (fun () -> (
+      let props f = [
+        Float.is-zero f;
+        Float.is-inf f;
+        Float.is-nan f;
+        Float.is-normal f;
+        Float.is-subnormal f;
+      ] in
+      (props Float.inf          |> boolleq [false; true;  false; false; false])
+      && (props Float.ninf      |> boolleq [false; true;  false; false; false])
+      && (props Float.nan       |> boolleq [false; false; true;  false; false])
+      && (props 0.0             |> boolleq [true;  false; false; false; false])
+      && (props (Float.neg 0.0) |> boolleq [true;  false; false; false; false])
+      && (props 1.0             |> boolleq [false; false; false; true;  false])
+      && (props dbl-min         |> boolleq [false; false; false; true;  false])
+      && (props half-dbl-min    |> boolleq [false; false; false; false; true ])
+      |> Expect.is-true
+    ));
+    it `round, floor, ceil, truncate` (fun () -> (
+      open Float in
+      let l = [2.3; 3.8; 5.5; neg 2.3; neg 3.8; neg 5.5; 6.0] in
+      (l |> List.map round
+        |> flleq [2.; 4.; 6.; neg 2.; neg 4.; neg 6.; 6.])
+      && (l |> List.map floor
+        |> flleq [2.; 3.; 5.; neg 3.; neg 4.; neg 6.; 6.])
+      && (l |> List.map ceil
+        |> flleq [3.; 4.; 6.; neg 2.; neg 3.; neg 5.; 6.])
+      && (l |> List.map truncate
+        |> flleq [2.; 3.; 5.; neg 2.; neg 3.; neg 5.; 6.])
+      |> Expect.is-true
+    ));
+    it `virtually test exp2i` (fun () -> (
+      [-1073; -1074; -1075; 1022; 1023; 1024]
+      |> List.map (fun a -> 1.0 |> Float.ldexp a)
+      |> List.map String.of-float
+      |> strleq [
+        `9.88131291682e-324`;
+        `4.94065645841e-324`;
+        `0.`;
+        `4.49423283716e+307`;
+        `8.98846567431e+307`;
+        `inf`;
+      ]
+      |> Expect.is-true
+    ));
+    it `parse float` (fun () -> (
+      [`123.45`; `-123.45`; `123.0`; `0.111`; `0.1a11`]
+      |> List.map Float.of-string-opt
+      |> floleq Option.([some 123.45; some (Float.neg 123.45); some 123.0; some 0.111; none])
+      |> Expect.is-true
+    ))
+  ]
