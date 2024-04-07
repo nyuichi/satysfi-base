@@ -1,0 +1,169 @@
+@import: float
+
+module Gray :sig
+
+  val make-gray : float -> color
+
+  val red : color
+  val green : color
+  val blue : color
+  val brown : color
+  val lime : color
+  val orange : color
+  val pink : color
+  val purple : color
+  val teal : color
+  val violet : color
+  val cyan : color
+  val magenta : color
+  val yellow : color
+  val olive : color
+  val black : color
+  val darkgray : color
+  val gray : color
+  val lightgray : color
+  val white : color
+
+end = struct
+
+  let make-gray gr = Gray(gr)
+
+
+  let red = make-gray 0.3
+  let green = make-gray 0.59
+  let blue = make-gray 0.11
+  let brown = make-gray 0.5475
+  let lime = make-gray 0.815
+  let orange = make-gray 0.595
+  let pink = make-gray 0.825
+  let purple = make-gray 0.2525
+  let teal = make-gray 0.35
+  let violet = make-gray 0.205
+
+  let cyan = make-gray 0.7
+  let magenta = make-gray 0.41
+  let yellow = make-gray 0.89
+  let olive = make-gray 0.39
+
+  let black = make-gray 0.0
+  let darkgray = make-gray 0.25
+  let gray = make-gray 0.5
+  let lightgray = make-gray 0.75
+  let white = make-gray 1.0
+
+
+end
+
+module RGB :sig
+
+  val make-rgb : float -> float -> float -> color
+  val make-rgb-256 : int -> int -> int -> color % 0 - 255
+
+  val red : color
+  val green : color
+  val blue : color
+  val brown : color
+  val lime : color
+  val orange : color
+  val pink : color
+  val purple : color
+  val teal : color
+  val violet : color
+  val cyan : color
+  val magenta : color
+  val yellow : color
+  val olive : color
+  val black : color
+  val darkgray : color
+  val gray : color
+  val lightgray : color
+  val white : color
+
+end = struct
+
+  let make-rgb r g b = RGB(r, g, b)
+  let make-rgb-256 r g b =
+    let to-bit n = (Float.of-int n) /. 255.0 in
+      RGB(to-bit r, to-bit g, to-bit b)
+
+
+  let red = make-rgb 1.0 0.0 0.0
+  let green = make-rgb 0.0 1.0 0.0
+  let blue = make-rgb 0.0 0.0 1.0
+  let brown = make-rgb 0.75 0.5 0.25
+  let lime = make-rgb 0.75 0.5 0.25
+  let orange = make-rgb 1.0 0.5 0.0
+  let pink = make-rgb 1.0 0.75 0.75
+  let purple = make-rgb 0.75 0.0 0.25
+  let teal = make-rgb 0.0 0.5 0.5
+  let violet = make-rgb 0.5 0.0 0.5
+
+  let cyan = make-rgb 0.0 1.0 1.0
+  let magenta = make-rgb 1.0 0.0 1.0
+  let yellow = make-rgb 1.0 1.0 0.0
+  let olive = make-rgb 0.5 0.5 0.0
+
+  let black = make-rgb 0.0 0.0 0.0
+  let darkgray = make-rgb 0.25 0.25 0.25
+  let gray = make-rgb 0.5 0.5 0.5
+  let lightgray = make-rgb 0.75 0.75 0.75
+  let white = make-rgb 1.0 1.0 1.0
+
+end
+
+module CMYK :sig
+
+  val make-cmyk : float -> float -> float -> float -> color
+  val make-cmyk-256 : int -> int -> int -> int -> color % 0 - 255
+
+  val red : color
+  val green : color
+  val blue : color
+  val brown : color
+  val lime : color
+  val orange : color
+  val pink : color
+  val purple : color
+  val teal : color
+  val violet : color
+  val cyan : color
+  val magenta : color
+  val yellow : color
+  val olive : color
+  val black : color
+  val darkgray : color
+  val gray : color
+  val lightgray : color
+  val white : color
+
+end = struct
+
+  let make-cmyk c m y k = CMYK(c, m, y, k)
+  let make-cmyk-256 c m y k =
+    let to-bit n = (Float.of-int n) /. 255.0 in
+      CMYK(to-bit c, to-bit m, to-bit y, to-bit k)
+
+
+  let red = make-cmyk 0.0 1.0 1.0 0.0
+  let green = make-cmyk 1.0 0.0 1.0 0.0
+  let blue = make-cmyk 1.0 1.0 0.0 0.0
+  let brown = make-cmyk 0.0 0.25 0.5 0.25
+  let lime = make-cmyk 0.25 0.0 1.0 0.0
+  let orange = make-cmyk 0.0 0.5 1.0 0.0
+  let pink = make-cmyk 0.0 0.25 0.25 0.0
+  let purple = make-cmyk 0.0 0.74 0.5 0.25
+  let teal = make-cmyk 0.5 0.0 0.0 0.5
+  let violet = make-cmyk 0.0 0.5 0.0 0.5
+
+  let cyan = make-cmyk 1.0 0.0 0.0 0.0
+  let magenta = make-cmyk 0.0 1.0 0.0 0.0
+  let yellow = make-cmyk 0.0 0.0 1.0 0.0
+  let olive = make-cmyk 0.0 0.0 1.0 0.5
+
+  let black = make-cmyk 0.0 0.0 0.0 1.0
+  let darkgray = make-cmyk 0.0 0.0 0.0 0.75
+  let gray = make-cmyk 0.0 0.0 0.0 0.5
+  let lightgray = make-cmyk 0.0 0.0 0.0 0.25
+  let white = make-cmyk 0.0 0.0 0.0 0.0
+
+end
