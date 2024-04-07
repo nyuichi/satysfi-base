@@ -3,6 +3,45 @@ name: CI
 on: [push, pull_request]
 
 jobs:
+  unit-test:
+    name: unit tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        version: [
+          0.0.6,
+          0.0.7,
+          0.0.8,
+          0.0.9-6-ge0304803,
+          0.0.10,
+          0.0.11
+        ]
+    container:
+      image: amutake/satysfi:${{ matrix.version }}
+    steps:
+      - uses: actions/checkout@v1
+      - name: Install Satyrographos dependencies
+        run: |
+          export HOME=/root
+          eval $(opam env)
+          opam update
+          opam pin add satysfi ${{ matrix.version }}
+          opam pin add satysfi-base.opam "file://${PWD}"
+          satyrographos install -l base
+      - name: Run tests
+        run: |
+          export HOME=/root
+          eval $(opam env)
+          cd test && sh run-test.sh -v
+      - if: always()
+        name: Install Apt dependencies
+        run: apt-get update && apt-get install -y xz-utils liblzma-dev
+      - if: ${{ failure() }}
+        name: Upload artifact
+        uses: actions/upload-artifact@master
+        with:
+          name: satysfi-test-report-${{ matrix.version }}
+          path: test/report.txt
   regression-test:
     name: Regression tests
     runs-on: ubuntu-latest
@@ -12,7 +51,6 @@ jobs:
       matrix:
         satysfi-version:
           [
-            0.0.5,
             0.0.6,
             0.0.7,
           ]
@@ -26,7 +64,7 @@ jobs:
           eval $(opam env)
           opam update
           opam pin add satysfi ${{ matrix.satysfi-version }}
-          opam pin add --verbose --yes "."
+          opam pin add satysfi-base.opam "file://${PWD}"
           satyrographos install -l base
       - name: Run regression tests
         run: |

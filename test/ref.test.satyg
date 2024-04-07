@@ -1,0 +1,32 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/ref
+
+let ref-test-cases = open Test in
+  describe `Ref module` [
+    it `make 1 contains 1` (fun () -> (
+      (Ref.make 1 |> Ref.get) == 1
+      |> Expect.is-true
+    ));
+    it `set overrides the value of ref` (fun () -> (
+      let r = Ref.make 1 in
+      let () = r |> Ref.set 2 in
+      (r |> Ref.get) == 2
+      |> Expect.is-true
+    ));
+    it `swap two refs` (fun () -> (
+      let r1 = Ref.make 1 in
+      let r2 = Ref.make 2 in
+      let () = Ref.swap r1 r2 in
+      (Ref.get r1 == 2) && (Ref.get r2 == 1)
+      |> Expect.is-true
+    ));
+    it `set temporarily value of ref` (fun () -> (
+      let r = Ref.make 1 in
+      let r-tmp-value = r |> Ref.set-temporarily 2 (fun _ -> (Ref.get r)) in
+      let r-value = Ref.get r in
+      (r-tmp-value == 2) && (r-value == 1)
+      |> Expect.is-true
+    ))
+  ]

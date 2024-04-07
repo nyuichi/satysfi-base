@@ -1,0 +1,67 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/array
+@import: ../src/eq
+@import: ../src/fn
+@import: ../src/int
+
+let array-test-cases = open Test in
+  % Note: We want (Array.eq : Array.t Eq.t)
+  let intaeq a b =
+    Eq.equal (List.eq Int.eq) (Array.to-list a) (Array.to-list b) in
+  let eq-to-intl l a = Eq.equal (List.eq Int.eq) l (Array.to-list a) in
+  describe `Array module` [
+    it `checks equality of arrays (test util function)` (fun () -> (
+      intaeq (Array.make 3 2) (Array.make 3 2)
+      && not intaeq (Array.make 3 2) (Array.make 4 2)
+      && not intaeq (Array.make 3 2) (Array.make 3 1)
+      |> Expect.is-true
+    ));
+    it `make array and get contents and length` (fun () -> (
+      let a = Array.make 3 2 in
+      (Array.get 0 a == 3)
+      && (Array.get 1 a == 3)
+      && (Array.length a == 2)
+      |> Expect.is-true
+    ));
+    it `overwrite value by index` (fun () -> (
+      let a = Array.make 3 2 in
+      let () = a |> Array.set 0 43 in
+      (Array.get 0 a == 43)
+      && (Array.get 1 a == 3)
+      && (Array.length a == 2)
+      |> Expect.is-true
+    ));
+    it `convert to list` (fun () -> (
+      let a = Array.init Fn.id 10 in
+      let expected = [0;1;2;3;4;5;6;7;8;9] in
+      a
+      |> Array.to-list
+      |> Eq.equal (List.eq Int.eq) expected
+      |> Expect.is-true
+    ));
+    it `convert from list` (fun () -> (
+      let actual = Array.of-list [0;1;2;3;4] in
+      let expected = Array.init Fn.id 5 in
+      actual
+      |> intaeq expected
+      |> Expect.is-true
+    ));
+    it `make subarray` (fun () -> (
+      Array.of-list [0;1;2;3;4]
+      |> Array.sub 2 3
+      |> eq-to-intl [2;3;4]
+      |> Expect.is-true
+    ));
+    it `append arrays` (fun () -> (
+      let a = Array.of-list [0;1;2;3;4] in
+      let b = Array.of-list [5;6;7;8;9] in
+      Array.append a b
+      |> eq-to-intl [0;1;2;3;4;5;6;7;8;9]
+      |> Expect.is-true
+    ));
+    % TODO
+    % * concat
+    % * map
+  ]

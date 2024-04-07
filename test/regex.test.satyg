@@ -1,0 +1,122 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/regexp
+
+let regex-test-cases = open Test in
+  open RegExp in
+  let char-a = char (Char.make `a`) in
+  let char-b = char (Char.make `b`) in
+  let char-c = char (Char.make `c`) in
+  let result-eq = Eq.equal (List.eq (Option.eq (Pair.eq Int.eq String.eq))) in
+  describe `RegExp module` [
+    % TODO: Do we need this?
+    % let () = RegExp.test (RegExp.of-string `ab.*ef`) `abcdef` |> String.of-bool |> Debug.log in
+    % let () = exec (compile (seq (many1 char-a) (many1 char-b))) `aabbb` |> String.of-bool |> Debug.log in
+    % let () = exec re-example1 `aabbb` |> String.of-bool |> Debug.log in
+    it `test "(a+)(b+)"` (fun () -> (
+      test (seq (group (many1 char-a)) (group (many1 char-b))) `aabbb`
+      |> Expect.is-true
+    ));
+    % TODO GH-142: Is this right description?
+    it `test "a|b"` (fun () -> (
+      test (alt char-a char-b) `aabbb`
+      |> Expect.is-true
+    ));
+    it `exec "(a+|(c))(b+)"` (fun () -> (
+      let re = seq (group (alt (many1 char-a) (group char-c))) (group (many1 char-b)) in
+      exec re `aabbb`
+      |> result-eq [
+        Option.some (0, `aabbb`);
+        Option.some (0, `aa`);
+        Option.none;
+        Option.some (2, `bbb`);
+      ] |> Expect.is-true
+    ));
+    % TODO GH-142: Is this right description?
+    it `test "a**"` (fun () -> (
+      test (many (many char-a)) `aaaaa`
+      |> Expect.is-true
+    ));
+    % TODO GH-142: Is this right description?
+    it `exec "(.e)$"` (fun () -> (
+      let re = seq (group (seq any (char (Char.make `e`)))) eof in
+      exec re `the apple`
+      % TODO GH-142: Is this right expectation?
+      |> result-eq [
+        Option.some (7, `le`);
+        Option.some (7, `le`);
+      ] |> Expect.is-true
+    ));
+    it `exec "^apple$"` (fun () -> (
+      let re = sequence [bol; string `apple`; eol] in
+      let text = `the apple
+apple
+leapple` in
+      exec re text
+      |> result-eq [ Option.some (10, `apple`) ]
+      |> Expect.is-true
+    ));
+    it `exec spaces` (fun () -> (
+      exec spaces #`  asdf`#
+      |> result-eq [ Option.some (0, #`  `#)]
+      |> Expect.is-true
+    ));
+    it `compile and test "(a+|(c))(b+)"` (fun () -> (
+      `aaabb` |> test (RegExp.of-string `(a+|(c))(b+)`)
+      |> Expect.is-true
+    ));
+    it `compile "^\s\d" successfully` (fun () -> (
+      let _ = RegExp.of-string `^\s\d$` in
+      Expect.always-pass
+    ));
+    % fails to compile "[]"
+    it `compile "[a-z]" successfully` (fun () -> (
+      let _ = RegExp.of-string `[a-z]` in
+      Expect.always-pass
+    ));
+    it `match prefix of header of hexadecimal literal` (fun () -> (
+      let re = (RegExp.of-string `0[xX]`) in
+      test re `0x`
+      && test re `0X`
+      && not test re `0a`
+      |> Expect.is-true
+    ));
+    it `match hexadecimal literal` (fun () -> (
+      let re = (RegExp.of-string `0[xX][A-Fa-f0-9]+$`) in
+      test re `0x1f2e3d`
+      && not test re `0xaZb`
+      |> Expect.is-true
+    ));
+    it `idk what it is` (fun () -> ( % TODO GH-142: Please give right description
+      `][][`
+      |> test (RegExp.of-string `[][]+`)
+      |> Expect.is-true
+    ));
+    it `idk what it is 2` (fun () -> ( % TODO GH-142: Please give right description
+      `][]-[`
+      |> test (RegExp.of-string `[][-]+`)
+      |> Expect.is-true
+    ));
+    it `failing test with long input won't take that long` (fun () -> (
+      % NOTE GH-142: Do we want to set timelimit?
+      let input = ` I do not know why but it seems code2 is slow if it contains a long line.
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo
+wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo wakegawakaranaiyo` in
+      input
+      |> test (RegExp.of-string `wk`)
+      |> Expect.is-false
+    ))
+  ]

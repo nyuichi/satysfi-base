@@ -1,0 +1,34 @@
+@require: test/test
+@require: test/expect
+
+@import: ../src/eq
+@import: ../src/int
+@import: ../src/bool
+@import: ../src/option-ext
+
+let bool-test-cases = open Test in
+  let booleq = Eq.equal Bool.eq in
+  let boololeq = Eq.equal (List.eq (Option.eq Bool.eq)) in
+  let stroeq = Eq.equal (Option.eq Bool.eq) in
+  describe `Bool module` [
+    it `have max and min` (fun () -> (
+        booleq Bool.max-value true
+        && booleq Bool.min-value false
+        |> Expect.is-true
+    ));
+    it `coerce int value to bool` (fun () -> (
+      [0; 1; 2]
+      |> List.map Bool.of-int-opt
+      |> boololeq Option.([some false; some true; none])
+      |> Expect.is-true
+    ));
+    it `parse bool` (fun () -> (
+      [`false`; `true`; `hoge`]
+      |> List.map Bool.of-string-opt
+      |> boololeq Option.([
+        some false;
+        some true;
+        none;
+      ]) |> Expect.is-true
+    ))
+  ]
