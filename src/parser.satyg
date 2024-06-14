@@ -288,6 +288,9 @@ end
 
 module StringParser : sig
   val run : 'a Char.t Parser.t -> string -> 'a ((Char.t parse-error) list) result
+  % [run-with-init-position p init-pos s] runs parser [p] for input [s].
+  % Here, [init-pos] stands for the initial position of the input.
+  val run-with-init-position : 'a Char.t Parser.t -> token-position -> string -> 'a ((Char.t parse-error) list) result
   val char : Char.t -> Char.t Char.t Parser.t
   val string : string -> string Char.t Parser.t  % wrapped with `try`
   val satisfy : (Char.t -> bool) -> Char.t Char.t Parser.t
@@ -311,7 +314,7 @@ end = struct
     | (c :: cs) = char c >> aux cs
     in try (aux (String.to-list str))
 
-  let lex-string input =
+  let lex-string init-pos input =
     Stream.unfold (fun (cs, pos) -> (
       match List.uncons cs with
       | None -> Option.none
@@ -322,10 +325,13 @@ end = struct
           let column = if Char.equal c Char.newline then 0 else pos#column + 1 in
           (| line = line; column = column |)
         in Option.some (token, (new-cs, new-pos))
-    )) (String.to-list input, Token.initial-position)
+    )) (String.to-list input, init-pos)
 
   let run p input =
-    input |> lex-string |> Parser.run p
+    input |> lex-string Token.initial-position |> Parser.run p
+
+  let run-with-init-position p init-pos input =
+    input |> lex-string init-pos |> Parser.run p
 
   let satisfy f =
     Parser.satisfy (fun t -> f (Token.data t)) <&> Token.data
